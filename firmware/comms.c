@@ -1,5 +1,5 @@
 #define __packed
-#include "../../../arm/einkTags/patchedfw/proto.h"
+#include "proto.h"
 #include "asmUtil.h"
 #include "printf.h"
 #include "radio.h"

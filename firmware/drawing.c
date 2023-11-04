@@ -1,5 +1,7 @@
 #include <stdbool.h>
+#if defined(DATAMATRIX)
 #include "datamatrix.h"
+#endif
 #include "barcode.h"
 #include "asmUtil.h"
 #include "drawing.h"
