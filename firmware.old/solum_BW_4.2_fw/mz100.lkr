@@ -1,0 +1,86 @@
+
+MEMORY
+{
+	rom2	: ORIGIN = 0x00103070, LENGTH = 0x000012d8
+	rom		: ORIGIN = 0x0010D298, LENGTH = 0x00001d40
+	vermark	: ORIGIN = 0x0010EFD8, LENGTH = 0x00000008
+	ram		: ORIGIN = 0x2012570C, LENGTH = 0x00001000
+	trash1	: ORIGIN = 0x30000000, LENGTH = 0x00010000
+	trash2	: ORIGIN = 0x31000000, LENGTH = 0x00010000
+}
+
+SECTIONS
+{
+	.text2 : { *(.text2) *(.text2.*) ; }  > rom2
+	.text : { *(.vectors) *(.text) *(.text.*) ; }  > rom
+	.rodata : { *(.rodata) *(.rodata.*) ;  . = ALIGN(4); __data_data = ABSOLUTE(.) ; }  > rom
+	
+	.ver : { *(.ver) *(.ver.*) ; } > vermark
+	
+	.data : AT ( ADDR ( .rodata ) + SIZEOF ( .rodata ) ) { __data_start = ADDR ( .data ) + . ;  . = ALIGN(4); *(.data) ; *(.data.*) ;  . = ALIGN(4); __data_end = ADDR ( .data ) + . ; } > ram
+	.bss  :  {  . = ALIGN(4); __bss_start  = ABSOLUTE(.) ; *(.bss) *(.bss.*) *(COMMON) ; . = ALIGN(4); __bss_end  = ABSOLUTE(.) ; } > ram
+	
+	.trash1  :  { *(.ARM.exidx) *(.ARM.exidx.*) } > trash1
+	.trash2  :  { *(.init) *(.init.*) *(.fini) *(.fini.*) } > trash2
+}
+
+/* value exports */
+versionEePos					= ADDR ( .ver ) - 0x00100000 + 0x20;
+
+/* function exports */
+pr								= 0x001025B0;
+vsnprintf						= 0x00102D30;
+
+gHeapMemory						= 0x20110900;
+
+sleepForMsec					= 0x00109ADC;
+
+qspiWrite						= 0x00100FF6;
+qspiEraseSector					= 0x00100EC0;
+qspiRead						= 0x00100D4E;
+qspiChipSleepWake				= 0x00000594;
+
+gEinkLuts						= 0x2010F148;
+einkPowerOff					= 0x00104388;
+einkInterfaceInit				= 0x00104408;
+einkLlSendCommand				= 0x00104348;
+einkLlSendData					= 0x001044DE;
+einkLlRawSpiByte				= 0x001019FE;
+einkLlTempToCalibRange			= 0x00104626;
+einkLlSendTempCalib				= 0x001045DA;
+
+fwBatteryRawMeasure				= 0x00100458;
+adcConfigTempMeas				= 0x0010058C;
+adcDoMeasure					= 0x001005C4;
+adcOff							= 0x0010036C;
+
+radioTx							= 0x0010A512;
+radioSetChannel					= 0x00106ECE;
+radioSetFilterShortAddr			= 0x0010A168;
+radioSetFilterLongAddr			= 0x0010A12A;
+radioSetFilterPan				= 0x0010A0F8;
+radioSetFilterPan				= 0x0010A0F8;
+radioRxAreThereQueuedPackets	= 0x00106C52;
+radioRxGetNextRxedPacket		= 0x0010717E;
+radioRxReleaseBuffer			= 0x001070B0;
+radioLoadCalibData				= 0x00105FA3;
+radioRxFilterEnable				= 0x0010A208;
+radioSetTxPower					= 0x00101DF4;
+radioEarlyInit					= 0x00106B64;
+radioRxQueueInit				= 0x001070C0;
+
+gpioGet							= 0x001010A8;
+gpioSet							= 0x00101094;
+
+wdtPet							= 0x00101BFC;
+
+VECTORS							= 0x20100000;
+
+memcpy							= 0x0010BBAC;
+memset							= 0x0010BBE2;
+memcmp							= 0x0010BBF4;
+bzero							= 0x0010BBDE;
+strnlen							= 0x00102F98;
+ENTRY(__entry)
+
+
