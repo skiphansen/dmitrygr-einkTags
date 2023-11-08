@@ -1,7 +1,7 @@
-FLAGS += -Icpu/8051
+FLAGS += -I$(FIRMWARE_ROOT)/cpu/8051
 
-FLAGS += -mmcs51 --std-c2x --opt-code-size --peep-file cpu/8051/peep.def --fomit-frame-pointer
-SOURCES += cpu/8051/asmUtil.c
+FLAGS += -mmcs51 --std-c2x --opt-code-size --peep-file $(CPU_DIR)/peep.def --fomit-frame-pointer
+SOURCES += $(CPU_DIR)/asmUtil.c
 CC = sdcc
 
 TARGETS	= main.ihx main.bin

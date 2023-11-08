@@ -20,7 +20,6 @@ fi
 SDCC_PATH=${SDCC_VER_DIR}/bin
 echo $PATH | grep ${SDCC_PATH} > /dev/null
 if [ $? -ne 0 ]; then
-   export CC=sdcc
    export SDCC_PATH_SAVE=$PATH
    export PATH=${SDCC_PATH}:$PATH
    echo "Added ${SDCC_PATH} to PATH"

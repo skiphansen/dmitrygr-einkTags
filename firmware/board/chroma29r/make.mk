@@ -1,5 +1,5 @@
 
-SOURCES += soc/cc111x/u1shared.c
+SOURCES += $(FIRMWARE_ROOT)/soc/cc111x/u1shared.c
 
 FLAGS += --code-size 0x7f80
 

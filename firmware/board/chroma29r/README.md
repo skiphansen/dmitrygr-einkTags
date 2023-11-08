@@ -10,15 +10,16 @@ EEPROM is a MX25V1006E (128k bytes)
 For example:
 
 ````bash
-skip@Dell-7040:~/dmitrygr-einkTags/firmware$ . ../sdcc/setup_sdcc.sh
+skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$ . ../../sdcc/setup_sdcc.sh
 Added /home/skip/dmitrygr-einkTags/sdcc/sdcc-4.0.7/bin to PATH
-skip@Dell-7040:~/dmitrygr-einkTags/firmware$ make BUILD=chroma29r
+skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$ make BUILD=chroma29r
 sdcc -c main.c --code-size 0x7f80 -Isoc/cc111x --xram-loc 0xf000 --xram-size 0xda2 --model-medium -Icpu/8051 -mmcs51 --std-c2x --opt-code-size --peep-file cpu/8051/peep.def --fomit-frame-pointer -Iboard/chroma29r -Isoc/cc111x -Icpu/8051 -DBARCODE -I. -o main.rel
 
 (truncated...)
 
-objcopy main.ihx main.bin -I ihex -O binary
-skip@Dell-7040:~/dmitrygr-einkTags/firmware$
+objcopy /home/skip/dmitrygr-einkTags/firmware/builds/chroma29r/main.ihx /home/skip/dmitrygr-einkTags/firmware/builds/chroma29r/main.bin -I ihex -O binary
+cp /home/skip/dmitrygr-einkTags/firmware/builds/chroma29r/main.bin /home/skip/dmitrygr-einkTags/firmware/prebuilt/chroma29r.bin
+skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 ````
 
 ## Chroma 29 Test points

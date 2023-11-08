@@ -10,6 +10,5 @@ fi
 if [ ! "${SDCC_PATH_SAVE}x" = "x" ]; then
    export PATH=${SDCC_PATH_SAVE}
    export SDCC_PATH_SAVE=
-   export CC=
 fi
 
