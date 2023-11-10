@@ -62,4 +62,5 @@ The pinout matches a cable I already had for another project,
 |2|TP7 | Serial out | Yellow |
 |3|TP9 | Serial in | Orange |
 
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma29_connections.png" width=50%>
 
