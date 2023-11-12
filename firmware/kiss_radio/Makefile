@@ -4,7 +4,7 @@ LDFLAGS_FLASH = --code-loc $(BOOTLOADER_SIZE)
 USB_DEVICE_SERIAL_NUMBER="`./new_serial.py`"
 
 CC=sdcc
-CFLAGS=-Iinclude -DBUILD_VERSION=`../revision.sh`
+CFLAGS=-Iinclude -DBUILD_VERSION=`./revision.sh`
 CFLAGSold=--no-pack-iram $(CF)
 LFLAGS=--xram-loc 0xF000 
 
