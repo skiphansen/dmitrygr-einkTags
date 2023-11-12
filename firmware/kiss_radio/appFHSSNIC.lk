@@ -1,0 +1,25 @@
+-muwx
+-i appFHSSNIC.ihx
+-M
+-b HOME = 0x1400
+-b XSEG = 0xf000
+-b PSEG = 0xf000
+-b ISEG = 0x0000
+-b BSEG = 0x0000
+-k /home/skip/sdcc/sdcc-4.2.0/bin/../share/sdcc/lib/small
+-k /home/skip/esl/OpenEPaperLink/sdcc/sdcc/../sdcc-4.2.0/share/sdcc/lib/small
+-l mcs51
+-l libsdcc
+-l libint
+-l liblong
+-l libfloat
+appFHSSNIC.rel
+chipcon_usb.rel
+chipcon_usbdebug.rel
+chipcon_dma.rel
+bootloader.rel
+cc1111rf.rel
+global.rel
+cc1111_aes.rel
+
+-e
