@@ -1,0 +1,224 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+    Version="10.0"
+    VendorName="SlickEdit"
+    TemplateName="Other C/C++"
+    WorkingDir="../firmware/main">
+    <Config
+        Name="Debug"
+        Type="cpp"
+        DebugCallbackName="gdb"
+        OutputFile="%bddmitrygr-einkTags"
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                CaptureOutputWith="ProcessBuffer"
+                OutputExts="*.o"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link">
+                <Exec CmdLine='cc -g -o "%o" %f %libs'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='vsdebugio -prog "%o"'/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%o"'/>
+            </Target>
+        </Menu>
+    </Config>
+    <Config
+        Name="Release"
+        Type="cpp"
+        DebugCallbackName="gdb"
+        OutputFile="%bddmitrygr-einkTags"
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveCurrent"
+                OutputExts="*.o"
+                RunFromDir="%rw">
+                <Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link">
+                <Exec CmdLine='cc -O -o "%o" %f %libs'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='vsdebugio -prog "%o"'/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%o"'/>
+            </Target>
+        </Menu>
+    </Config>
+    <Rules Name="Compile">
+        <Rule
+            InputExts="*.s"
+            OutputExts="*.o"
+            LinkObject="1">
+            <Exec CmdLine='as -o "%bd%n.o" "%f"'/>
+        </Rule>
+    </Rules>
+    <Files>
+        <Folder
+            Name="Source Files"
+            Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="../firmware/soc/cc111x/adc.c"/>
+            <F N="../firmware/cpu/8051/aes.c"/>
+            <F N="../firmware/soc/cc111x/aes.c"/>
+            <F N="../firmware/cpu/8051/asmUtil.c"/>
+            <F N="../firmware/common/barcode.c"/>
+            <F N="../firmware/board/chroma29r/board.c"/>
+            <F N="../firmware/board/boardChroma.c"/>
+            <F N="../firmware/board/boardCommon.h"/>
+            <F N="../firmware/common/ccm.c"/>
+            <F N="../firmware/common/chars.c"/>
+            <F N="../firmware/common/comms.c"/>
+            <F N="../firmware/cpu/8051/cpu.c"/>
+            <F N="../firmware/common/drawing.c"/>
+            <F N="../firmware/common/eeprom.c"/>
+            <F N="../firmware/main/main.c"/>
+            <F N="../firmware/cpu/8051/printf.c"/>
+            <F N="../firmware/soc/cc111x/printf.c"/>
+            <F N="../firmware/soc/cc111x/radio.c"/>
+            <F N="../firmware/cpu/8051/random.c"/>
+            <F N="../firmware/board/chroma29r/screen.c"/>
+            <F N="../firmware/common/settings.c"/>
+            <F N="../firmware/soc/cc111x/sleep.c"/>
+            <F N="../firmware/soc/cc111x/soc.c"/>
+            <F N="../firmware/soc/cc111x/timer.c"/>
+            <F N="../firmware/soc/cc111x/u1shared.c"/>
+            <F N="../firmware/soc/cc111x/wdt.c"/>
+        </Folder>
+        <Folder
+            Name="Header Files"
+            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="../firmware/common/adc.h"/>
+            <F N="../firmware/common/aes.h"/>
+            <F N="../firmware/common/asmUtil.h"/>
+            <F N="../firmware/common/barcode.h"/>
+            <F N="../firmware/board/chroma29r/board.h"/>
+            <F N="../firmware/soc/cc111x/cc111x.h"/>
+            <F N="../firmware/common/ccm.h"/>
+            <F N="../firmware/common/chars.h"/>
+            <F N="../firmware/common/comms.h"/>
+            <F N="../firmware/cpu/8051/cpu.h"/>
+            <F N="../firmware/common/drawing.h"/>
+            <F N="../firmware/common/eeprom.h"/>
+            <F N="../firmware/soc/zbs243/flash.h"/>
+            <F N="../firmware/soc/zbs243/i2c.h"/>
+            <F N="../firmware/common/printf.h"/>
+            <F N="../firmware/common/proto.h"/>
+            <F N="../firmware/soc/cc111x/radio.h"/>
+            <F N="../firmware/soc/zbs243/radio.h"/>
+            <F N="../firmware/soc/radioCommon.h"/>
+            <F N="../firmware/board/chroma29r/screen.h"/>
+            <F N="../firmware/common/settings.h"/>
+            <F N="../firmware/common/sleep.h"/>
+            <F N="../firmware/soc/cc111x/soc.h"/>
+            <F N="../firmware/soc/zbs243/soc.h"/>
+            <F N="../firmware/soc/zbs243/spi.h"/>
+            <F N="../firmware/soc/cc111x/timer.h"/>
+            <F N="../firmware/soc/zbs243/timer.h"/>
+            <F N="../firmware/soc/cc111x/u1.h"/>
+            <F N="../firmware/soc/zbs243/uart.h"/>
+            <F N="../firmware/soc/zbs243/zbs243.h"/>
+        </Folder>
+        <Folder
+            Name="Makefiles"
+            Filters="">
+            <F
+                N="../firmware/make/common.mk"
+                Type="Makefile"/>
+            <F
+                N="../firmware/board/chroma29r/make.mk"
+                Type="Makefile"/>
+            <F
+                N="../firmware/cpu/8051/make.mk"
+                Type="Makefile"/>
+            <F
+                N="../firmware/soc/cc111x/make.mk"
+                Type="Makefile"/>
+            <F
+                N="../firmware/main/Makefile"
+                Type="Makefile"/>
+            <F
+                N="../firmware/make/rules.mk"
+                Type="Makefile"/>
+        </Folder>
+        <Folder
+            Name="Other Files"
+            Filters="">
+            <F N="../README.md"/>
+            <F N="../firmware/board/chroma29r/README.md"/>
+            <F N="../sdcc/README.md"/>
+        </Folder>
+    </Files>
+</Project>
