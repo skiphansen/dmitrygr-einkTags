@@ -1,7 +1,7 @@
 -muwx
 -i appFHSSNIC.ihx
 -M
--b HOME = 0x1400
+-b HOME = 0x0000
 -b XSEG = 0xf000
 -b PSEG = 0xf000
 -b ISEG = 0x0000
@@ -14,10 +14,9 @@
 -l liblong
 -l libfloat
 appFHSSNIC.rel
-chipcon_usb.rel
+cc1110_spicom.rel
 chipcon_usbdebug.rel
 chipcon_dma.rel
-bootloader.rel
 cc1111rf.rel
 global.rel
 cc1111_aes.rel
