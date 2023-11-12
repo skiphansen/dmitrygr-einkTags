@@ -1,9 +1,13 @@
 # Dmitry Grinberg's Custom firmware for various eInk price tags
 
-This code was taken from einkTags_0002_8051.zip downloaded from 
+This code was taken from einkTags_0001.zip and einkTags_0002_8051.zip downloaded from 
 [dmitry.gr](https://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags).
 
-I've modified the code to get it to compile by adding a header file (proto.h)
+The tag code is from inkTags_0002_8051.zip, everything else is from inkTags_0001_8051.zip.
+These two code bases are slightly incompatible with each other, but I'm working on
+reconciling them.
+
+The code has been modified to get it to compile by adding a header file (proto.h)
 and excluding the missing datamatrix.h header unless DATAMATRIX is defined.
 
 ## License
@@ -46,9 +50,7 @@ that I'd like to use them for:
 
 <img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma74_first_contact.png" width=50%>
 
-The Chroma74r target works!  
-
-At least as far as putting an image on the screen, I haven't built a station
+The Chroma74r target works at least as far as putting an image on the screen. I haven't built a station
 yet so I don't know if it's fully functional or not.
 
 ## Chroma29r Status
