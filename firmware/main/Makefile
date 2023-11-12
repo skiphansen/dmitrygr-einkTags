@@ -1,14 +1,9 @@
 BUILD		?= chroma74y
 
-FIRMWARE_ROOT=$(abspath ..)
-BUILD_DIR=$(BUILDS_DIR)/$(BUILD)
-
 #file containing main() must be first!
-SOURCES	= main.c
-include $(FIRMWARE_ROOT)/make/common.mk
-
-SOURCES	+= eeprom.c drawing.c ccm.c comms.c settings.c chars.c cpu.c board.c
-SOURCES += screen.c
+SOURCES	= main.c eeprom.c drawing.c ccm.c comms.c settings.c chars.c cpu.c 
+SOURCES += board.c screen.c
+include ../make/common.mk
 
 ifeq ($(BARCODE),barcode)
   FLAGS += -DBARCODE
@@ -27,6 +22,7 @@ EEPROMDRV ?= eeprom.c
 SOURCES += $(EEPROMDRV)
 FLAGS += -I.
 
+BUILD_DIR=$(BUILDS_DIR)/$(BUILD)
 include $(FIRMWARE_ROOT)/make/rules.mk
 
 

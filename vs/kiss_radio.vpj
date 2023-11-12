@@ -1,162 +1,166 @@
 <!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
 <Project
-    Version="10.0"
-    VendorName="SlickEdit"
-    TemplateName="Other C/C++"
-    WorkingDir="../firmware/kiss_radio">
-    <Config
-        Name="Debug"
-        Type="cpp"
-        DebugCallbackName="gdb"
-        OutputFile="%bdkiss_radio"
-        CompilerConfigName="Latest Version">
-        <Menu>
-            <Target
-                Name="Compile"
-                MenuCaption="&amp;Compile"
-                CaptureOutputWith="ProcessBuffer"
-                OutputExts="*.o"
-                SaveOption="SaveCurrent"
-                RunFromDir="%rw">
-                <Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
-            </Target>
-            <Target
-                Name="Link"
-                MenuCaption="&amp;Link">
-                <Exec CmdLine='cc -g -o "%o" %f %libs'/>
-            </Target>
-            <Target
-                Name="Build"
-                MenuCaption="&amp;Build"
-                CaptureOutputWith="ProcessBuffer"
-                SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
-            </Target>
-            <Target
-                Name="Rebuild"
-                MenuCaption="&amp;Rebuild"
-                CaptureOutputWith="ProcessBuffer"
-                SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
-            </Target>
-            <Target
-                Name="Debug"
-                MenuCaption="&amp;Debug"
-                SaveOption="SaveNone"
-                BuildFirst="1"
-                CaptureOutputWith="ProcessBuffer"
-                RunFromDir="%rw">
-                <Exec CmdLine='vsdebugio -prog "%o"'/>
-            </Target>
-            <Target
-                Name="Execute"
-                MenuCaption="E&amp;xecute"
-                SaveOption="SaveNone"
-                BuildFirst="1"
-                CaptureOutputWith="ProcessBuffer"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%o"'/>
-            </Target>
-        </Menu>
-    </Config>
-    <Config
-        Name="Release"
-        Type="cpp"
-        DebugCallbackName="gdb"
-        OutputFile="%bdkiss_radio"
-        CompilerConfigName="Latest Version">
-        <Menu>
-            <Target
-                Name="Compile"
-                MenuCaption="&amp;Compile"
-                CaptureOutputWith="ProcessBuffer"
-                SaveOption="SaveCurrent"
-                OutputExts="*.o"
-                RunFromDir="%rw">
-                <Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
-            </Target>
-            <Target
-                Name="Link"
-                MenuCaption="&amp;Link">
-                <Exec CmdLine='cc -O -o "%o" %f %libs'/>
-            </Target>
-            <Target
-                Name="Build"
-                MenuCaption="&amp;Build"
-                CaptureOutputWith="ProcessBuffer"
-                SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
-            </Target>
-            <Target
-                Name="Rebuild"
-                MenuCaption="&amp;Rebuild"
-                CaptureOutputWith="ProcessBuffer"
-                SaveOption="SaveWorkspaceFiles"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
-            </Target>
-            <Target
-                Name="Debug"
-                MenuCaption="&amp;Debug"
-                SaveOption="SaveNone"
-                BuildFirst="1"
-                CaptureOutputWith="ProcessBuffer"
-                RunFromDir="%rw">
-                <Exec CmdLine='vsdebugio -prog "%o"'/>
-            </Target>
-            <Target
-                Name="Execute"
-                MenuCaption="E&amp;xecute"
-                SaveOption="SaveNone"
-                BuildFirst="1"
-                CaptureOutputWith="ProcessBuffer"
-                RunFromDir="%rw">
-                <Exec CmdLine='"%o"'/>
-            </Target>
-        </Menu>
-    </Config>
-    <Rules Name="Compile">
-        <Rule
-            InputExts="*.s"
-            OutputExts="*.o"
-            LinkObject="1">
-            <Exec CmdLine='as -o "%bd%n.o" "%f"'/>
-        </Rule>
-    </Rules>
-    <Files>
-        <Folder
-            Name="Source Files"
-            Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
-            <F N="../firmware/kiss_radio/appFHSSNIC.c"/>
-            <F N="../firmware/kiss_radio/cc1110_spicom.c"/>
-            <F N="../firmware/kiss_radio/cc1111_aes.c"/>
-            <F N="../firmware/kiss_radio/cc1111rf.c"/>
-            <F N="../firmware/kiss_radio/chipcon_dma.c"/>
-            <F N="../firmware/kiss_radio/chipcon_usbdebug.c"/>
-            <F N="../firmware/kiss_radio/global.c"/>
-        </Folder>
-        <Folder
-            Name="Header Files"
-            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
-            <F N="../firmware/kiss_radio/include/bits.h"/>
-            <F N="../firmware/kiss_radio/include/cc1110-ext.h"/>
-            <F N="../firmware/kiss_radio/include/cc1110_spicom.h"/>
-            <F N="../firmware/kiss_radio/include/cc1111.h"/>
-            <F N="../firmware/kiss_radio/include/cc1111_aes.h"/>
-            <F N="../firmware/kiss_radio/include/cc1111rf.h"/>
-            <F N="../firmware/kiss_radio/include/chipcon_dma.h"/>
-            <F N="../firmware/kiss_radio/include/chipcon_usb.h"/>
-            <F N="../firmware/kiss_radio/include/chipcon_usbdebug.h"/>
-            <F N="../firmware/kiss_radio/include/FHSS.h"/>
-            <F N="../firmware/kiss_radio/include/global.h"/>
-            <F N="../firmware/kiss_radio/include/nic.h"/>
-            <F N="../firmware/kiss_radio/include/types.h"/>
-        </Folder>
-        <Folder
-            Name="Other Files"
-            Filters=""/>
-    </Files>
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="Other C/C++"
+	WorkingDir="../firmware/kiss_radio">
+	<Config
+		Name="Debug"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdkiss_radio"
+		CompilerConfigName="Latest Version">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -g -o "%o" %f %libs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
+			</Target>
+		</Menu>
+	</Config>
+	<Config
+		Name="Release"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdkiss_radio"
+		CompilerConfigName="Latest Version">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				OutputExts="*.o"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -O -o "%o" %f %libs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
+			</Target>
+		</Menu>
+	</Config>
+	<Rules Name="Compile">
+		<Rule
+			InputExts="*.s"
+			OutputExts="*.o"
+			LinkObject="1">
+			<Exec CmdLine='as -o "%bd%n.o" "%f"'/>
+		</Rule>
+	</Rules>
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+			<F N="../firmware/kiss_radio/appFHSSNIC.c"/>
+			<F N="../firmware/kiss_radio/cc1110_spicom.c"/>
+			<F N="../firmware/kiss_radio/cc1111_aes.c"/>
+			<F N="../firmware/kiss_radio/cc1111rf.c"/>
+			<F N="../firmware/kiss_radio/chipcon_dma.c"/>
+			<F N="../firmware/kiss_radio/chipcon_usbdebug.c"/>
+			<F N="../firmware/kiss_radio/global.c"/>
+		</Folder>
+		<Folder
+			Name="Header Files"
+			Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+			<F N="../firmware/kiss_radio/include/bits.h"/>
+			<F N="../firmware/kiss_radio/include/cc1110-ext.h"/>
+			<F N="../firmware/kiss_radio/include/cc1110_spicom.h"/>
+			<F N="../firmware/kiss_radio/include/cc1111.h"/>
+			<F N="../firmware/kiss_radio/include/cc1111_aes.h"/>
+			<F N="../firmware/kiss_radio/include/cc1111rf.h"/>
+			<F N="../firmware/kiss_radio/include/chipcon_dma.h"/>
+			<F N="../firmware/kiss_radio/include/chipcon_usb.h"/>
+			<F N="../firmware/kiss_radio/include/chipcon_usbdebug.h"/>
+			<F N="../firmware/kiss_radio/include/FHSS.h"/>
+			<F N="../firmware/kiss_radio/include/global.h"/>
+			<F N="../firmware/kiss_radio/include/nic.h"/>
+			<F N="../firmware/kiss_radio/include/types.h"/>
+		</Folder>
+		<Folder
+			Name="Other Files"
+			Filters="">
+			<F
+				N="../firmware/kiss_radio/Makefile"
+				Type="Makefile"/>
+		</Folder>
+	</Files>
 </Project>

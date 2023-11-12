@@ -1,3 +1,5 @@
+BUILD_DIR?=$(BUILDS_DIR)/build
+
 OBJS = $(patsubst %.c,$(BUILD_DIR)/%.$(OBJFILEEXT),$(notdir $(SOURCES)))
 
 $(BUILD_DIR)/%.$(OBJFILEEXT): %.c
@@ -11,8 +13,8 @@ $(BUILD_DIR)/main.elf: $(OBJS)
 	$(CC) $(FLAGS) -o $(BUILD_DIR)/$(notdir $@) $^
 
 %.bin: %.ihx
-	objcopy $^ $(BUILD_DIR)/$(notdir $@) -I ihex -O binary
-	cp $(BUILD_DIR)/$(notdir $@) $(PREBUILT_DIR)/$(BUILD).bin
+	objcopy $^ $(BUILD_DIR)/$(IMAGE_NAME).bin -I ihex -O binary
+	cp $(BUILD_DIR)/$(IMAGE_NAME).bin $(PREBUILT_DIR)
 
 all: $(BUILD_DIR) $(PREBUILT_DIR) $(TARGETS)
 
@@ -32,7 +34,7 @@ veryclean:
 	rm -rf $(PREBUILT_DIR)
 
 debug:
-	@echo "BOARD_DIR=$(BOARD_DIR)"
+	@echo "FIRMWARE_ROOT=$(FIRMWARE_ROOT)"
 	@echo "SOC_DIR=$(SOC_DIR)"
 	@echo "CPU_DIR=$(CPU_DIR)"
 	@echo "BUILD=$(BUILD)"
