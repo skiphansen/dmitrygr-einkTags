@@ -20,7 +20,7 @@ endif
 
 EEPROMDRV ?= eeprom.c
 SOURCES += $(EEPROMDRV)
-FLAGS += -I.
+FLAGS += -I. -MD
 
 BUILD_DIR=$(BUILDS_DIR)/$(BUILD)
 include $(FIRMWARE_ROOT)/make/rules.mk
