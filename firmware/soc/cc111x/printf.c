@@ -706,9 +706,13 @@ void pr(const char __code *fmt, ...) __reentrant
 	va_list vl;
 	
 	va_start(vl, fmt);
+#ifndef NO_AUTO_UART_SWITCH
 	dbgUartOn();
+#endif
 	prvPrintFormat(prPrvPutchar, 0, fmt, vl);
+#ifndef NO_AUTO_UART_SWITCH
 	dbgUartOff();
+#endif
 	va_end(vl);
 }
 
