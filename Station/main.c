@@ -1,5 +1,5 @@
 #include "nrf52840_bitfields.h"
-#include "../patchedfw/proto.h"
+#include "../firmware/common/proto.h"
 #include "timebase.h"
 #include "imgStore.h"
 #include "nrf52840.h"
