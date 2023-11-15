@@ -16,9 +16,6 @@ $(BUILD_DIR)/main.elf: $(OBJS)
 	objcopy $^ $(BUILD_DIR)/$(IMAGE_NAME).bin -I ihex -O binary
 	cp $(BUILD_DIR)/$(IMAGE_NAME).bin $(PREBUILT_DIR)
 
-all: $(BUILD_DIR) $(PREBUILT_DIR) $(TARGETS)
-
-.PHONY: clean veryclean
 
 $(BUILD_DIR):
 	if [ ! -e $(BUILD_DIR) ]; then mkdir -p $(BUILD_DIR); fi
@@ -26,12 +23,22 @@ $(BUILD_DIR):
 $(PREBUILT_DIR):
 	if [ ! -e $(PREBUILT_DIR) ]; then mkdir -p $(PREBUILT_DIR); fi
 
+.PHONY: all clean veryclean flash reset
+
+all: $(BUILD_DIR) $(PREBUILT_DIR) $(TARGETS)
+
 clean:
 	rm -rf $(BUILD_DIR)
 
 veryclean: 
 	rm -rf $(BUILDS_DIR)
 	rm -rf $(PREBUILT_DIR)
+
+flash:	$(PREBUILT_DIR)/$(IMAGE_NAME).bin
+	cc-tool -e -w $^
+
+reset:	
+	cc-tool --reset
 
 debug:
 	@echo "FIRMWARE_ROOT=$(FIRMWARE_ROOT)"
