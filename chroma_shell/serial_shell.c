@@ -42,15 +42,6 @@
 
 #define FWVER_MAX_LEN         8
 
-int gVerbose = 0;
-int gPromptDisplayed = 0;
-
-typedef struct AsyncMsg_TAG {
-   struct AsyncMsg_TAG *Link; // NB: must be first
-   int MsgLen;
-   uint8_t  Msg[];   // Actually variable length
-} AsyncMsg;
-
 AsyncMsg *gMsgQueueHead;
 AsyncMsg *gMsgQueueTail;
 int gSerialFd = -1;
@@ -112,6 +103,7 @@ void Sleep(int Milliseconds);
 #define VERBOSE_DUMP_RAW_RX      0x10
 #define VERBOSE_SHOW_DEBUG_OUT   0x20   
 #define VERBOSE_TIMESTAMPS       0x40
+#define VERBOSE_DUMP_RAW_MSGS    0x80
 
 struct {
    int   Mask;
@@ -122,13 +114,21 @@ struct {
    {VERBOSE_DUMP_RAW_RX,"Dump RAW async data received"},
    {VERBOSE_SHOW_DEBUG_OUT,"Display debug output from device"},
    {VERBOSE_TIMESTAMPS,"Time stamp RAW I/O"},
+   {VERBOSE_DUMP_RAW_MSGS,"Display RAW messages received"},
    {0},  // end of table
 };
 
 typedef struct {
-   int HandlingRegistration:1;
+   bool PromptDisplayed;
+   bool InCommand;
+   bool LineNoiseHidden;
 } Flags;
 Flags gFlags;
+
+typedef struct {
+   unsigned int Verbose;
+} Globals;
+Globals g;
 
 void SendByte(uint8_t SendByte);
 
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
                }
                bExit = true;
             }
-            else if(sscanf(optarg,"%x",&gVerbose) != 1) {
+            else if(sscanf(optarg,"%x",&g.Verbose) != 1) {
                Ret = EINVAL;
             }
             break;
@@ -245,7 +245,6 @@ int ConCB(const char *CmdLine)
 
    do {
       linenoiseEditStop(&gLs);
-      gPromptDisplayed = false;
       if(CmdLine == NULL || CmdLine[0] == 0) {
       // empty line or Ctrl-C save history and exit
          linenoiseHistorySave(GetHistoryPath());
@@ -257,7 +256,10 @@ int ConCB(const char *CmdLine)
          *cp = 0; // remove newline from CmdLine
       }
    // process command
+      gFlags.PromptDisplayed = false;
+      gFlags.InCommand = true;
       ParseCmd((char *)CmdLine);
+      gFlags.InCommand = false;
    } while(false);
 
    return Ret;
@@ -275,11 +277,17 @@ int MainLoop()
    PrintHeader();
    fflush(stdout);
    for( ; ; ) {
-      if(!gPromptDisplayed) {
-         gPromptDisplayed = true;
+      if(!gFlags.PromptDisplayed) {
+         gFlags.PromptDisplayed = true;
          linenoiseEditStart(&gLs,-1,-1,CmdLineBuf,sizeof(CmdLineBuf),PROMPT);
          fflush(stdout);
       }
+
+      if(gFlags.LineNoiseHidden) {
+         gFlags.LineNoiseHidden = false;
+         linenoiseShow(&gLs);
+      }
+
       if((Ret = WaitEvent(100,ConCB,ProcessSerialData)) < 0) {
          break;
       }
@@ -287,7 +295,7 @@ int MainLoop()
       if((pMsg = gMsgQueueHead) != NULL) {
       // we received a new message
          gMsgQueueHead = pMsg->Link;
-         if(gVerbose & VERBOSE_DUMP_RAW_RX) {
+         if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
             LOG("Received %d byte message:\n",pMsg->MsgLen);
             DumpHex(pMsg->Msg,pMsg->MsgLen);
          }
@@ -487,9 +495,9 @@ int ParseSerialData(uint8_t *Buf,int Len)
    int j;
    int MsgLen;
 
-   if(gVerbose & VERBOSE_DUMP_RAW_RX) {
+   if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
       printf("\n");
-      if(gVerbose & VERBOSE_TIMESTAMPS) {
+      if(g.Verbose & VERBOSE_TIMESTAMPS) {
          PrintTime(true);
       }
       LOG("Read %d raw bytes:\n",Len);
@@ -500,7 +508,7 @@ int ParseSerialData(uint8_t *Buf,int Len)
       if(MsgLen == 0) {
       // Byte wasn't part of a message
          printf("%c",Buf[j]);
-         if(Buf[j] == 0xa && (gVerbose & VERBOSE_TIMESTAMPS)) {
+         if(Buf[j] == 0xa && (g.Verbose & VERBOSE_TIMESTAMPS)) {
             PrintTime(false);
          }
       }
@@ -510,7 +518,7 @@ int ParseSerialData(uint8_t *Buf,int Len)
          int MallocLen = sizeof(AsyncMsg) + MsgLen + 1;
          AsyncMsg *p;
 
-         if(gVerbose & VERBOSE_DUMP_RAW_RX) {
+         if(g.Verbose & VERBOSE_DUMP_RAW_MSGS) {
             LOG("Received %d byte message:\n",MsgLen);
             DumpHex(RxBuf,MsgLen);
          }
@@ -568,9 +576,10 @@ int SendAsyncMsg(uint8_t *Msg,int MsgLen)
 {
    int Ret = -1;    // Assume the worse
 
+
    gTxMsgLen = 0;
-   if(gVerbose & VERBOSE_DUMP_RAW_TX) {
-      if(gVerbose & VERBOSE_TIMESTAMPS) {
+   if(g.Verbose & VERBOSE_DUMP_RAW_TX) {
+      if(g.Verbose & VERBOSE_TIMESTAMPS) {
          PrintTime(true);
       }
       LOG("Writing %d bytes:\n",gTxMsgLen);
@@ -735,7 +744,7 @@ void RunOneCommand(char *Command)
       if((pMsg = gMsgQueueHead) != NULL) {
       // we received a new message
          gMsgQueueHead = pMsg->Link;
-         if(gVerbose & VERBOSE_DUMP_RAW_RX) {
+         if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
             LOG("Received %d byte message:\n",pMsg->MsgLen);
             DumpHex(pMsg->Msg,pMsg->MsgLen);
          }
@@ -887,6 +896,13 @@ bool OpenSerialPort(const char *Device,int Baudrate)
    return Ret;
 }
 
+// int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
+// 
+// args:
+//    Timeout max time to wait for input in milliseconds
+//    ConCB function to call when console input is available
+//    SerialDataCB function to call when serial data is avalable
+// 
 // Returns:
 //    < 0 - error
 //    = 0 - timeout
@@ -898,7 +914,9 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
    struct timeval time_out;
    int Err;
    int Ret = 0;
+   struct timeval Timer;
 
+   SetTimeout(Timeout,&Timer);
    while(Ret == 0) {
       FD_ZERO(&ReadFdSet);
       FD_ZERO(&WriteFdSet);
@@ -924,8 +942,12 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
          }
       }
 
-      if(ConCB != NULL && FD_ISSET(0,&ReadFdSet)) {
+      if(FD_ISSET(0,&ReadFdSet)) {
       // Console is ready
+         if(ConCB == NULL) {
+         // No call back function provided, return a timeout
+            break;
+         }
          char *Line = linenoiseEditFeed(&gLs);
          if(Line == NULL || Line != linenoiseEditMore) {
             Ret = ConCB(Line);
@@ -937,12 +959,53 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
          Ret = SerialCB();
       }
 
-      if(time_out.tv_usec == 0) {
+      if(IsTimedOut(&Timer)) {
          break;
       }
    }
 
    return Ret;
+}
+
+// Wait for response to specified command
+// Timeout = max time to wait in milliseconds
+AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout)
+{
+   AsyncMsg *pMsg = NULL;
+   uint8_t Response = Cmd | CMD_RESP;
+   struct timeval Timer;
+
+   do {
+      SetTimeout(Timeout,&Timer);
+      if(WaitEvent(Timeout,NULL,ProcessSerialData) <= 0) {
+      // Error or timeout
+         printf("%s#%d\n",__FUNCTION__,__LINE__);
+         if(IsTimedOut(&Timer)) {
+            LOG("Timeout waiting for %s response\n",Cmd2Str(Cmd));
+         }
+         else {
+            LOG("Some error occurred\n");
+         }
+         break;
+      }
+
+      if((pMsg = gMsgQueueHead) != NULL && pMsg->Msg[0] == Response) {
+      // we have received the response we were waiting for
+         gMsgQueueHead = pMsg->Link;
+         if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
+            LOG("Received %d byte message:\n",pMsg->MsgLen);
+            DumpHex(pMsg->Msg,pMsg->MsgLen);
+         }
+         if(pMsg->Msg[1] != 0) {
+            printf("%s returned %s.\n",Cmd2Str(Cmd),Rcode2Str(pMsg->Msg[1]));
+            free(pMsg);
+            pMsg = NULL;
+         }
+         break;
+      }
+   } while(true);
+
+   return pMsg;
 }
 
 bool SendSerialData(uint8_t *Buf,int Len)
@@ -976,5 +1039,18 @@ int RecvSerialData(uint8_t *Buf,int BufLen)
       }
    }
    return Ret;
+}
+
+void _log(const char *fmt,...)
+{
+   va_list args;
+   va_start(args,fmt);
+
+   if(gFlags.PromptDisplayed && !gFlags.LineNoiseHidden) {
+      gFlags.LineNoiseHidden = true;
+      linenoiseHide(&gLs);
+   }
+   vprintf(fmt,args);
+   va_end(args);
 }
 

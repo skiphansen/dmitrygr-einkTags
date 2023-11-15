@@ -14,17 +14,22 @@
 #ifndef _LOGGING_H_
 #define _LOGGING_H_
 
+void _log(const char *fmt,...);
 // The ALOG macro always prints
 #ifndef ALOG
-#define ALOG(format, ...) printf(format,## __VA_ARGS__)
+#define ALOG(format, ...) _log(format,## __VA_ARGS__)
 #endif
+
+#define PRINTF(format, ...) _log(format,## __VA_ARGS__)
+
 
 void DumpHex(void *AdrIn,int Len);
 
 #define DEBUG_LOGGING
 #ifdef DEBUG_LOGGING
 #define DUMP_HEX(x,y) DumpHex(x,y)
-#define _LOG(format, ...) printf(format,## __VA_ARGS__)
+#define _LOG(format, ...) _log(format,## __VA_ARGS__)
+
 #define ELOG(format, ...) _LOG("%s#%d: " format,__FUNCTION__,__LINE__,## __VA_ARGS__)
       
 // The LOG macro only prints when the DEBUG define is set

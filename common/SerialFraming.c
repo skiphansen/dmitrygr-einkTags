@@ -114,6 +114,7 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
 
       case SPECIAL_ESCAPE:
       // The last character was an SPECIAL
+         Ret = -1;
          if(RxByte == FLAG) {
          // frame boundary
             if(RxCount == 0) {

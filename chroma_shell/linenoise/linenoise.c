@@ -137,25 +137,25 @@ static int history_len = 0;
 static char **history = NULL;
 
 enum KEY_ACTION{
-	KEY_NULL = 0,	    /* NULL */
-	CTRL_A = 1,         /* Ctrl+a */
-	CTRL_B = 2,         /* Ctrl-b */
-	CTRL_C = 3,         /* Ctrl-c */
-	CTRL_D = 4,         /* Ctrl-d */
-	CTRL_E = 5,         /* Ctrl-e */
-	CTRL_F = 6,         /* Ctrl-f */
-	CTRL_H = 8,         /* Ctrl-h */
-	TAB = 9,            /* Tab */
-	CTRL_K = 11,        /* Ctrl+k */
-	CTRL_L = 12,        /* Ctrl+l */
-	ENTER = 13,         /* Enter */
-	CTRL_N = 14,        /* Ctrl-n */
-	CTRL_P = 16,        /* Ctrl-p */
-	CTRL_T = 20,        /* Ctrl-t */
-	CTRL_U = 21,        /* Ctrl+u */
-	CTRL_W = 23,        /* Ctrl+w */
-	ESC = 27,           /* Escape */
-	BACKSPACE =  127    /* Backspace */
+   KEY_NULL = 0,      /* NULL */
+   CTRL_A = 1,         /* Ctrl+a */
+   CTRL_B = 2,         /* Ctrl-b */
+   CTRL_C = 3,         /* Ctrl-c */
+   CTRL_D = 4,         /* Ctrl-d */
+   CTRL_E = 5,         /* Ctrl-e */
+   CTRL_F = 6,         /* Ctrl-f */
+   CTRL_H = 8,         /* Ctrl-h */
+   TAB = 9,            /* Tab */
+   CTRL_K = 11,        /* Ctrl+k */
+   CTRL_L = 12,        /* Ctrl+l */
+   ENTER = 13,         /* Enter */
+   CTRL_N = 14,        /* Ctrl-n */
+   CTRL_P = 16,        /* Ctrl-p */
+   CTRL_T = 20,        /* Ctrl-t */
+   CTRL_U = 21,        /* Ctrl+u */
+   CTRL_W = 23,        /* Ctrl+w */
+   ESC = 27,           /* Escape */
+   BACKSPACE =  127    /* Backspace */
 };
 
 static void linenoiseAtExit(void);
@@ -707,10 +707,16 @@ void linenoiseHide(struct linenoiseState *l) {
         refreshMultiLine(l,REFRESH_CLEAN);
     else
         refreshSingleLine(l,REFRESH_CLEAN);
+    if(rawmode) {
+       disableRawMode(l->ifd);
+    }
 }
 
 /* Show the current line, when using the multiplexing API. */
 void linenoiseShow(struct linenoiseState *l) {
+   if(!rawmode) {
+      enableRawMode(l->ifd);
+   }
     if (l->in_completion) {
         refreshLineWithCompletion(l,NULL,REFRESH_WRITE);
     } else {

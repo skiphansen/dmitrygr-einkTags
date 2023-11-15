@@ -1,57 +1,198 @@
-<Project Version="10.0" VendorName="SlickEdit" TemplateName="Other C/C++" WorkingDir="../chroma_shell">
-    <Config Name="Debug" Type="cpp" DebugCallbackName="gdb" OutputFile="%bdchroma_shell" CompilerConfigName="Latest Version">
-        <Menu>
-            <Target Name="Compile" MenuCaption="&amp;Compile" CaptureOutputWith="ProcessBuffer" OutputExts="*.o" SaveOption="SaveCurrent" RunFromDir="%rw">
-                <Exec CmdLine="cc -c -g %i %defd -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
-            </Target>
-            <Target Name="Link" MenuCaption="&amp;Link">
-                <Exec CmdLine="cc -g -o &quot;%o&quot; %f %libs" />
-            </Target>
-            <Target Name="Build" MenuCaption="&amp;Build" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; build &quot;%w&quot; &quot;%r&quot;" />
-            </Target>
-            <Target Name="Rebuild" MenuCaption="&amp;Rebuild" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; rebuild &quot;%w&quot; &quot;%r&quot;" />
-            </Target>
-            <Target Name="Debug" MenuCaption="&amp;Debug" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-                <Exec CmdLine="vsdebugio -prog &quot;%o&quot;" />
-            </Target>
-            <Target Name="Execute" MenuCaption="E&amp;xecute" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%o&quot;" />
-            </Target>
-        </Menu>
-    </Config>
-    <Config Name="Release" Type="cpp" DebugCallbackName="gdb" OutputFile="%bdchroma_shell" CompilerConfigName="Latest Version">
-        <Menu>
-            <Target Name="Compile" MenuCaption="&amp;Compile" CaptureOutputWith="ProcessBuffer" SaveOption="SaveCurrent" OutputExts="*.o" RunFromDir="%rw">
-                <Exec CmdLine="cc -c -O %i %defd -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
-            </Target>
-            <Target Name="Link" MenuCaption="&amp;Link">
-                <Exec CmdLine="cc -O -o &quot;%o&quot; %f %libs" />
-            </Target>
-            <Target Name="Build" MenuCaption="&amp;Build" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; build &quot;%w&quot; &quot;%r&quot;" />
-            </Target>
-            <Target Name="Rebuild" MenuCaption="&amp;Rebuild" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; rebuild &quot;%w&quot; &quot;%r&quot;" />
-            </Target>
-            <Target Name="Debug" MenuCaption="&amp;Debug" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-                <Exec CmdLine="vsdebugio -prog &quot;%o&quot;" />
-            </Target>
-            <Target Name="Execute" MenuCaption="E&amp;xecute" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-                <Exec CmdLine="&quot;%o&quot;" />
-            </Target>
-        </Menu>
-    </Config>
-    <Rules Name="Compile">
-        <Rule InputExts="*.s" OutputExts="*.o" LinkObject="1">
-            <Exec CmdLine="as -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
-        </Rule>
-    </Rules>
-    <Files>
-        <Folder Name="Source Files" Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d"><F N="../firmware/board/chroma29r/board.c" /><F N="../firmware/board/boardChroma.c" /><F N="../firmware/common/eeprom.c" /><F N="../common/SerialFraming.c" /><F N="../firmware/cpu/8051/asmUtil.c" /><F N="../firmware/soc/cc111x/adc.c" /><F N="../firmware/soc/cc111x/aes.c" /><F N="../firmware/soc/cc111x/printf.c" /><F N="../firmware/soc/cc111x/radio.c" /><F N="../firmware/soc/cc111x/sleep.c" /><F N="../firmware/soc/cc111x/soc.c" /><F N="../firmware/soc/cc111x/timer.c" /><F N="../firmware/soc/cc111x/u1shared.c" /><F N="../firmware/soc/cc111x/wdt.c" /><F N="../firmware/proxy/main.c" /></Folder><Folder Name="Header Files" Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if"><F N="../firmware/board/boardCommon.h" /><F N="../firmware/board/chroma29r/board.h" /><F N="../firmware/board/chroma29r/screen.h" /><F N="../firmware/common/adc.h" /><F N="../firmware/common/aes.h" /><F N="../firmware/common/asmUtil.h" /><F N="../firmware/common/eeprom.h" /><F N="../firmware/common/printf.h" /><F N="../common/proxy_msgs.h" /><F N="../common/SerialFraming.h" /><F N="../firmware/common/sleep.h" /><F N="../firmware/common/wdt.h" /><F N="../firmware/cpu/8051/cpu.h" /><F N="../firmware/soc/cc111x/cc111x.h" /><F N="../firmware/soc/radioCommon.h" /><F N="../firmware/soc/cc111x/radio.h" /><F N="../firmware/soc/cc111x/soc.h" /><F N="../firmware/soc/cc111x/timer.h" /><F N="../firmware/soc/cc111x/u1.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/asm/mcs51/features.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/sdcc-lib.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdarg.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdbool.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stddef.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdint.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdio.h" /><F N="../sdcc/sdcc-4.2.0/share/sdcc/include/string.h" /></Folder><Folder Name="Other Files" Filters="">
-            <F N="../chroma_shell/.gitignore" />
-            <F N="../chroma_shell/CMakeLists.txt" />
-        </Folder>
-    </Files>
+<Project
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="Other C/C++"
+	WorkingDir="../chroma_shell">
+	<Config
+		Name="Debug"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdchroma_shell"
+		CompilerConfigName="Latest Version">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -g -o "%o" %f %libs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
+			</Target>
+		</Menu>
+	</Config>
+	<Config
+		Name="Release"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdchroma_shell"
+		CompilerConfigName="Latest Version">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				OutputExts="*.o"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -O -o "%o" %f %libs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
+			</Target>
+		</Menu>
+	</Config>
+	<Rules Name="Compile">
+		<Rule
+			InputExts="*.s"
+			OutputExts="*.o"
+			LinkObject="1">
+			<Exec CmdLine='as -o "%bd%n.o" "%f"'/>
+		</Rule>
+	</Rules>
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+			<F N="../firmware/soc/cc111x/adc.c"/>
+			<F N="../firmware/soc/cc111x/aes.c"/>
+			<F N="../firmware/cpu/8051/asmUtil.c"/>
+			<F N="../firmware/board/chroma29r/board.c"/>
+			<F N="../firmware/board/boardChroma.c"/>
+			<F N="../firmware/common/eeprom.c"/>
+			<F N="../firmware/proxy/main.c"/>
+			<F N="../firmware/soc/cc111x/printf.c"/>
+			<F N="../firmware/soc/cc111x/radio.c"/>
+			<F N="../common/SerialFraming.c"/>
+			<F N="../firmware/soc/cc111x/sleep.c"/>
+			<F N="../firmware/soc/cc111x/soc.c"/>
+			<F N="../firmware/soc/cc111x/timer.c"/>
+			<F N="../firmware/soc/cc111x/u1shared.c"/>
+			<F N="../firmware/soc/cc111x/wdt.c"/>
+		</Folder>
+		<Folder
+			Name="Header Files"
+			Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+			<F N="../firmware/common/adc.h"/>
+			<F N="../firmware/common/aes.h"/>
+			<F N="../firmware/common/asmUtil.h"/>
+			<F N="../firmware/board/chroma29r/board.h"/>
+			<F N="../firmware/board/boardCommon.h"/>
+			<F N="../firmware/soc/cc111x/cc111x.h"/>
+			<F N="../firmware/cpu/8051/cpu.h"/>
+			<F N="../firmware/common/eeprom.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/asm/mcs51/features.h"/>
+			<F N="../firmware/common/printf.h"/>
+			<F N="../common/proxy_msgs.h"/>
+			<F N="../firmware/soc/cc111x/radio.h"/>
+			<F N="../firmware/soc/radioCommon.h"/>
+			<F N="../firmware/board/chroma29r/screen.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/sdcc-lib.h"/>
+			<F N="../common/SerialFraming.h"/>
+			<F N="../firmware/common/sleep.h"/>
+			<F N="../firmware/soc/cc111x/soc.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdarg.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdbool.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stddef.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdint.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/stdio.h"/>
+			<F N="../sdcc/sdcc-4.2.0/share/sdcc/include/string.h"/>
+			<F N="../firmware/soc/cc111x/timer.h"/>
+			<F N="../firmware/soc/cc111x/u1.h"/>
+			<F N="../firmware/common/wdt.h"/>
+		</Folder>
+		<Folder
+			Name="Makefiles"
+			Filters="">
+			<F
+				N="../firmware/make/common.mk"
+				Type="Makefile"/>
+			<F
+				N="../firmware/proxy/Makefile"
+				Type="Makefile"/>
+			<F
+				N="../firmware/make/rules.mk"
+				Type="Makefile"/>
+		</Folder>
+		<Folder
+			Name="Other Files"
+			Filters="">
+			<F N="../chroma_shell/.gitignore"/>
+		</Folder>
+	</Files>
 </Project>
