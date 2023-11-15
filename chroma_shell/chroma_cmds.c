@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
 #include "serial_shell.h"
 #include "cmds.h"
@@ -24,21 +25,26 @@
 #include "proxy_msgs.h"
 #include "linenoise.h"
 
-static uint32_t gEEPROM_Len;
 
-int NopCmd(char *CmdLine);
-int EEPROM_Read(char *CmdLine);
+int PingCmd(char *CmdLine);
 int ResetCmd(char *CmdLine);
+int EEPROM_Read(char *CmdLine);
+int EEPROM_Backup(char *CmdLine);
 
 struct COMMAND_TABLE commandtable[] = {
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_Read},
-   { "ping",  "Send a ping",NULL,0,NopCmd},
+   { "backup_eeprom",  "Write EEPROM data to a file","eerd <path>",0,EEPROM_Backup},
+   { "ping",  "Send a ping",NULL,0,PingCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
    { "?", NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { "help",NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { NULL}  // end of table
 };
+
+
+int EEPROM_Internal(int Adr,int Len,FILE *fp);
+
 
 const char *Cmd2Str(uint8_t Cmd)
 {
@@ -74,15 +80,35 @@ const char *Rcode2Str(uint8_t Rcode)
    return Ret;
 }
 
-int EEPROM_Read(char *CmdLine)
+int GetEEPROM_Len(void)
+{
+   static int EEPROM_Len;
+   AsyncMsg *pMsg;
+   uint8_t Cmd[2];
+
+   if(EEPROM_Len == 0) do {
+      Cmd[0] = CMD_EEPROM_LEN;
+      if(SendAsyncMsg(&Cmd[0],1) != 0) {
+         break;
+      }
+
+      if((pMsg = Wait4Response(CMD_EEPROM_LEN,100)) == NULL) {
+         break;
+      }
+      memcpy(&EEPROM_Len,&pMsg->Msg[2],sizeof(EEPROM_Len));
+      free(pMsg);
+   } while(false);
+
+   return EEPROM_Len;
+}
+
+int EEPROM_Internal(int Adr,int Len,FILE *fp)
 {
    #define DUMP_BYTES_PER_LINE   16
    #define READ_CHUNK_LINES      4
    #define READ_CHUNK_LEN        (READ_CHUNK_LINES * 16)
 
    int Ret = RESULT_USAGE;
-   int Adr;
-   int Len;
    uint8_t Cmd[6];
    AsyncMsg *pMsg;
    int Bytes2Read;
@@ -90,40 +116,19 @@ int EEPROM_Read(char *CmdLine)
    int DumpOffset;
    int BytesRead = 0;
    int MsgLen = 0;
+   int LastProgress = -1;
+   int Progress = 0;
 
    do {
-      if(gEEPROM_Len == 0) {
-         Cmd[0] = CMD_EEPROM_LEN;
-         if(SendAsyncMsg(&Cmd[0],1) != 0) {
-            break;
-         }
-
-         if((pMsg = Wait4Response(CMD_EEPROM_LEN,100)) == NULL) {
-            break;
-         }
-         memcpy(&gEEPROM_Len,&pMsg->Msg[2],sizeof(gEEPROM_Len));
-         PRINTF("EEPROM len %dK (%d) bytes\n",gEEPROM_Len / 1024,gEEPROM_Len);
-         free(pMsg);
-      }
-
-      if(sscanf(CmdLine,"%x %d",&Adr,&Len) != 2) {
-         break;
-      }
-      if(Adr < 0 || Adr > gEEPROM_Len-1) {
-         LOG_RAW("Invalid address (0x%x > 0x%x)\n",Adr,gEEPROM_Len-1);
-         break;
-      }
-      if(Len < 0 || (Len + Adr) > gEEPROM_Len) {
-         PRINTF("Invalid length %d\n",Len);
-         break;
-      }
-
       while(BytesRead < Len) {
-         Bytes2Read = Len;
+         Bytes2Read = (Len - BytesRead);
       // ensure the second line dumped starts on an 16 byte boundary,
       // it's just easier to read that way
          if(Adr & 0xf) {
-            Bytes2Read = DUMP_BYTES_PER_LINE - (Adr & 0xf);
+            int Adjusted = DUMP_BYTES_PER_LINE - (Adr & 0xf);
+            if(Bytes2Read > Adjusted) {
+               Bytes2Read = Adjusted;
+            }
          }
          if(Bytes2Read > READ_CHUNK_LEN) {
             Bytes2Read = READ_CHUNK_LEN;
@@ -143,28 +148,99 @@ int EEPROM_Read(char *CmdLine)
          if((pMsg = Wait4Response(CMD_EEPROM_RD,100)) == NULL) {
             break;
          }
+
          BytesRead += Bytes2Read;
-         DumpOffset = 2;
-         while(Bytes2Read > 0) {
-            LOG_RAW("%06x ",Adr);
-            Bytes2Dump = Bytes2Read;
-            if(Bytes2Dump > DUMP_BYTES_PER_LINE) {
-               Bytes2Dump = DUMP_BYTES_PER_LINE;
+         if(fp != NULL) {
+         // Saving EEPROM
+            Progress = (100 * BytesRead) / Len;
+            if(LastProgress != Progress) {
+               LastProgress = Progress;
+               printf("\r%d%% complete",LastProgress);
+               fflush(stdout);
             }
-            DumpHex(&pMsg->Msg[DumpOffset],Bytes2Dump);
-            Adr += Bytes2Dump;
-            DumpOffset += Bytes2Dump;
-            Bytes2Read -= Bytes2Dump;
+            if(fwrite(&pMsg->Msg[2],Bytes2Read,1,fp) != 1) {
+               printf("fwrite failed\n");
+               break;
+            }
+            Adr += Bytes2Read;
+         }
+         else {
+         // Dumping EEPROM
+            DumpOffset = 2;
+            while(Bytes2Read > 0) {
+               LOG_RAW("%06x ",Adr);
+               Bytes2Dump = Bytes2Read;
+               if(Bytes2Dump > DUMP_BYTES_PER_LINE) {
+                  Bytes2Dump = DUMP_BYTES_PER_LINE;
+               }
+               DumpHex(&pMsg->Msg[DumpOffset],Bytes2Dump);
+               Adr += Bytes2Dump;
+               DumpOffset += Bytes2Dump;
+               Bytes2Read -= Bytes2Dump;
+            }
          }
          free(pMsg);
       }
       Ret = RESULT_OK;
    } while(false);
 
+   if(fp != NULL) {
+      printf("\n");
+   }
+
    return Ret;
 }
 
-int NopCmd(char *CmdLine)
+int EEPROM_Read(char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int Adr;
+   int Len;
+   int EEPROM_Len = GetEEPROM_Len();
+
+   do {
+      if(sscanf(CmdLine,"%x %d",&Adr,&Len) != 2) {
+         break;
+      }
+      if(Adr < 0 || Adr > EEPROM_Len-1) {
+         LOG_RAW("Invalid address (0x%x > 0x%x)\n",Adr,EEPROM_Len-1);
+         break;
+      }
+      if(Len < 0 || (Len + Adr) > EEPROM_Len) {
+         PRINTF("Invalid length %d\n",Len);
+         break;
+      }
+
+      Ret = EEPROM_Internal(Adr,Len,NULL);
+   } while(false);
+
+   return Ret;
+}
+
+int EEPROM_Backup(char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int EEPROM_Len = GetEEPROM_Len();
+   FILE *fp = NULL;
+
+   do {
+      printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
+      if((fp = fopen(CmdLine,"w")) == NULL) {
+         LOG("fopen(\"%s\") failed - %s\n",strerror(errno));
+         Ret = RESULT_FAIL;
+         break;
+      }
+      Ret = EEPROM_Internal(0,EEPROM_Len,fp);
+   } while(false);
+
+   if(fp != NULL) {
+      fclose(fp);
+   }
+
+   return Ret;
+}
+
+int PingCmd(char *CmdLine)
 {
    int Ret = RESULT_OK; // Assume the best
    uint8_t Cmd = CMD_PING;

@@ -151,6 +151,7 @@
 			Filters="">
 			<F N="../chroma_shell/.gitignore"/>
 			<F N="../chroma_shell/CMakeLists.txt"/>
+			<F N="/cc1xxx/docs/notes.txt"/>
 		</Folder>
 	</Files>
 </Project>

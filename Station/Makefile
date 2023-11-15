@@ -4,7 +4,7 @@ OBJCOPY	= arm-none-eabi-objcopy
 LKR		= nrf52.lkr
 LTO		= -flto
 COMMON	= -g -ggdb3 -Os -mthumb -march=armv7e-m  -fomit-frame-pointer -I. $(LTO) -munaligned-access -fno-strict-aliasing -Wall -Werror -fsection-anchors -fconserve-stack -Wno-error=unused-function
-CCFLAGS	= $(COMMON) -ffunction-sections -fdata-sections -DNRF52840_XXAA
+CCFLAGS	= $(COMMON) -ffunction-sections -fdata-sections -DNRF52840_XXAA -MD
 LDFLAGS	= $(COMMON) -Wl,--gc-sections -Wl,-T $(LKR)
 
 APP = Station

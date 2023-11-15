@@ -6,8 +6,8 @@
 -b PSEG = 0xf000
 -b ISEG = 0x0000
 -b BSEG = 0x0000
--k /home/skip/sdcc/sdcc-4.2.0/bin/../share/sdcc/lib/small
--k /home/skip/esl/OpenEPaperLink/sdcc/sdcc/../sdcc-4.2.0/share/sdcc/lib/small
+-k /home/skip/esl/dmitrygr-einkTags/sdcc/sdcc-4.2.0/bin/../share/sdcc/lib/small
+-k /home/skip/esl/dmitrygr-einkTags/sdcc/sdcc/../sdcc-4.2.0/share/sdcc/lib/small
 -l mcs51
 -l libsdcc
 -l libint
