@@ -26,14 +26,18 @@
 #include "linenoise.h"
 
 
+int BoardTypeCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
 int ResetCmd(char *CmdLine);
-int EEPROM_Read(char *CmdLine);
-int EEPROM_Backup(char *CmdLine);
+int EEPROM_ReadCmd(char *CmdLine);
+int EEPROM_BackupCmd(char *CmdLine);
+int DumpRfRegsCmd(char *CmdLine);
 
 struct COMMAND_TABLE commandtable[] = {
-   { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_Read},
-   { "backup_eeprom",  "Write EEPROM data to a file","eerd <path>",0,EEPROM_Backup},
+   { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
+   { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
+   { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
+   { "backup_eeprom",  "Write EEPROM data to a file","eerd <path>",0,EEPROM_BackupCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
@@ -42,9 +46,67 @@ struct COMMAND_TABLE commandtable[] = {
    { NULL}  // end of table
 };
 
+const struct {
+   const char *Name;
+   uint16_t    Adr;
+} CC111xRegs[] = {
+   {"SYNC1",0xdf00},
+   {"SYNC0",0xdf01},
+   {"PKTLEN",0xdf02},
+   {"PKTCTRL1",0xdf03},
+   {"PKTCTRL0",0xdf04},
+   {"ADDR",0xdf05},
+   {"CHANNR",0xdf06},
+   {"FSCTRL1",0xdf07},
+   {"FSCTRL0",0xdf08},
+   {"FREQ2",0xdf09},
+   {"FREQ1",0xdf0a},
+   {"FREQ0",0xdf0b},
+   {"MDMCFG4",0xdf0c},
+   {"MDMCFG3",0xdf0d},
+   {"MDMCFG2",0xdf0e},
+   {"MDMCFG1",0xdf0f},
+   {"MDMCFG0",0xdf10},
+   {"DEVIATN",0xdf11},
+   {"MCSM2",0xdf12},
+   {"MCSM1",0xdf13},
+   {"MCSM0",0xdf14},
+   {"FOCCFG",0xdf15},
+   {"BSCFG",0xdf16},
+   {"AGCCTRL2",0xdf17},
+   {"AGCCTRL1",0xdf18},
+   {"AGCCTRL0",0xdf19},
+   {"FREND1",0xdf1a},
+   {"FREND0",0xdf1b},
+   {"FSCAL3",0xdf1c},
+   {"FSCAL2",0xdf1d},
+   {"FSCAL1",0xdf1e},
+   {"FSCAL0",0xdf1f},
+   {"TEST2",0xdf23},
+   {"TEST1",0xdf24},
+   {"TEST0",0xdf25},
+   {"PA_TABLE7",0xdf27},
+   {"PA_TABLE6",0xdf28},
+   {"PA_TABLE5",0xdf29},
+   {"PA_TABLE4",0xdf2a},
+   {"PA_TABLE3",0xdf2b},
+   {"PA_TABLE2",0xdf2c},
+   {"PA_TABLE1",0xdf2d},
+   {"PA_TABLE0",0xdf2e},
+   {"IOCFG2",0xdf2f},
+   {"IOCFG1",0xdf30},
+   {"IOCFG0",0xdf31},
+   {"PARTNUM",0xdf36},
+   {"VERSION",0xdf37},
+   {"FREQEST",0xdf38},
+   {"LQI",0xdf39},
+   {"RSSI",0xdf3a},
+   {"MARCSTATE",0xdf3b},
+   {"PKTSTATUS",0xdf3c},
+   {"VCO_VC_DAC",0xdf3d}
+};
 
 int EEPROM_Internal(int Adr,int Len,FILE *fp);
-
 
 const char *Cmd2Str(uint8_t Cmd)
 {
@@ -191,7 +253,7 @@ int EEPROM_Internal(int Adr,int Len,FILE *fp)
    return Ret;
 }
 
-int EEPROM_Read(char *CmdLine)
+int EEPROM_ReadCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
    int Adr;
@@ -217,7 +279,7 @@ int EEPROM_Read(char *CmdLine)
    return Ret;
 }
 
-int EEPROM_Backup(char *CmdLine)
+int EEPROM_BackupCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
    int EEPROM_Len = GetEEPROM_Len();
@@ -239,6 +301,36 @@ int EEPROM_Backup(char *CmdLine)
 
    return Ret;
 }
+
+int DumpRfRegsCmd(char *CmdLine)
+{
+   int Ret = RESULT_OK; // Assume the best
+   AsyncMsg *pMsg;
+   uint8_t Cmd[2];
+   int j = 0;
+
+   do {
+      Cmd[0] = CMD_GET_RF_REGS;
+      if(SendAsyncMsg(&Cmd[0],1) != 0) {
+         break;
+      }
+
+      if((pMsg = Wait4Response(Cmd[0],100)) == NULL) {
+         break;
+      }
+      for(int i = 2; i < pMsg->MsgLen; i++) {
+         if((CC111xRegs[j].Adr & 0xff) != i - 2) {
+            continue;
+         }
+         printf("%10s: 0x%02x\n",CC111xRegs[j++].Name,pMsg->Msg[i]);
+      }
+      DumpHex(&pMsg->Msg[2],pMsg->MsgLen);
+      free(pMsg);
+   } while(false);
+
+   return Ret;
+}
+
 
 int PingCmd(char *CmdLine)
 {
@@ -267,6 +359,28 @@ int SN2MACCmd(char *CmdLine)
    return Ret;
 }
 
+int BoardTypeCmd(char *CmdLine)
+{
+   int Ret = RESULT_OK; // Assume the best
+   uint8_t Cmd[2] = {CMD_BOARD_TYPE};
+   AsyncMsg *pMsg;
+
+   do {
+      if(SendAsyncMsg(&Cmd[0],1) != 0) {
+         break;
+      }
+
+      if((pMsg = Wait4Response(Cmd[0],100)) == NULL) {
+         break;
+      }
+      printf("Board type %s\n",&pMsg->Msg[2]);
+      free(pMsg);
+   } while(false);
+
+   return Ret;
+}
+
+
 void HandleResp(uint8_t *Msg,int MsgLen)
 {
    uint8_t Cmd = Msg[0] & ~CMD_RESP;
@@ -276,7 +390,6 @@ void HandleResp(uint8_t *Msg,int MsgLen)
    }
    else {
       uint16_t *pU16 = (uint16_t *) &Msg[2];
-      char *pChar = (char *) &Msg[2];
 
       switch(Cmd) {
          case CMD_PING:
@@ -294,7 +407,6 @@ void HandleResp(uint8_t *Msg,int MsgLen)
             break;
 
          case CMD_BOARD_TYPE:
-            PrintResponse("Board type %s\n",pChar);
             break;
 
          default:
@@ -305,6 +417,76 @@ void HandleResp(uint8_t *Msg,int MsgLen)
       }
    }
 }
+
+#if 0
+void DumpSetting()
+{
+   static const uint8_t magicNum[4] = {0x56, 0x12, 0x09, 0x85};
+   uint8_t tmpBuf[4];
+   uint8_t pg, gotLen = 0;
+   const char *Msg = NULL;
+   uint16_t addr;
+   uint16_t ofst;
+   bool end = false;
+
+   for(pg = 0; pg < 10; pg++) {
+      addr = pg EEPROM_ERZ_SECTOR_SZ;
+      eepromRead(addr, tmpBuf, 4);
+
+      if(xMemEqual(tmpBuf, magicNum, 4)) {
+         ofst = 4;
+         pr("Found setting's magic number in page %d @ 0x%x\n",pg,addr);
+         while(ofst < EEPROM_ERZ_SECTOR_SZ) {
+            eepromRead(addr + ofst, tmpBuf, 2);// first byte is type, (0xff for done), second is length
+
+            switch(tmpBuf[0]) {
+               case 0x0:
+                  break;
+
+               case 0x9:  // ADC intercept
+                  Msg = "ADC intercept";
+                  break;
+
+               case 0x12:  // ADC slope
+                  Msg = "ADC slope";
+                  break;
+
+               case 0x23:  // VCOM
+                  Msg = "VCOM";
+                  break;
+
+               case 0x01:  // MAC
+               case 0x2a:  // MAC
+                  Msg = "MAC";
+                  break;
+
+               case 0xff:
+                  Msg = "end of settings";
+                  end = true;
+                  break;
+
+               default:
+                  pr("Unknown type 0x%x, %d bytes @ 0x%x\n",
+                     tmpBuf[0],tmpBuf[1],addr + ofst);
+                  break;
+            }
+
+            if(Msg != NULL) {
+               pr("Found %d byte %s @ 0x%x\n",tmpBuf[1],Msg,addr + ofst);
+               Msg = NULL;
+               if(end) {
+                  break;
+               }
+            }
+            ofst += tmpBuf[1];
+            if(tmpBuf[1] == 0) {
+               break;
+            }
+         }
+      }
+   }
+}
+#endif
 
 void Usage()
 {
