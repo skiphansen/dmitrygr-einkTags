@@ -3,7 +3,24 @@
 
 #include <stdint.h>
 
-
+#define  RFTXRX_VECTOR  0    // RF TX done / RX ready
+#define  ADC_VECTOR     1    // ADC End of Conversion
+#define  URX0_VECTOR    2    // USART0 RX Complete
+#define  URX1_VECTOR    3    // USART1 RX Complete
+#define  ENC_VECTOR     4    // AES Encryption/Decryption Complete
+#define  ST_VECTOR      5    // Sleep Timer Compare
+#define  P2INT_VECTOR   6    // Port 2 Inputs
+#define  UTX0_VECTOR    7    // USART0 TX Complete
+#define  DMA_VECTOR     8    // DMA Transfer Complete
+#define  T1_VECTOR      9    // Timer 1 (16-bit) Capture/Compare/Overflow
+#define  T2_VECTOR      10   // Timer 2 (MAC Timer) Overflow
+#define  T3_VECTOR      11   // Timer 3 (8-bit) Capture/Compare/Overflow
+#define  T4_VECTOR      12   // Timer 4 (8-bit) Capture/Compare/Overflow
+#define  P0INT_VECTOR   13   // Port 0 Inputs
+#define  UTX1_VECTOR    14   // USART1 TX Complete
+#define  P1INT_VECTOR   15   // Port 1 Inputs
+#define  RF_VECTOR      16   // RF General Interrupts
+#define  WDT_VECTOR     17   // Watchdog Overflow in Timer Mode
 
 static __idata __at (0x00) unsigned char R0;
 static __idata __at (0x01) unsigned char R1;

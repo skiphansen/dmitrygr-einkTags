@@ -51,6 +51,12 @@ uint8_t __xdata gRxBuf[130];
 int gRxMsgLen;
 const char gBuildType[] = xstr(BUILD_TYPE);
 
+#define UART1_RX_RING_LEN  16
+volatile uint8_t __xdata gUart1RxBuf[UART1_RX_RING_LEN];
+volatile uint8_t __xdata gUart1RxWr;
+volatile uint8_t __xdata gUart1RxRd;
+
+
 void HandleMsg(void);
 void RxMode(void);
 void TxMode(void);
@@ -72,17 +78,21 @@ void main(void)
       LOG("failed to init eeprom\n");
    }
    u1setUartMode();
+   IEN0 = IEN0_URX1IE;
+
    irqsOn();
 
    while(true) {
       uint8_t Byte;
-      if(U1CSR & 0x04) {
-         Byte = U1DBUF;
+      while(gUart1RxWr != gUart1RxRd) {
+         Byte = gUart1RxBuf[gUart1RxRd++];
+         if(gUart1RxRd == UART1_RX_RING_LEN) {
+            gUart1RxRd = 0;
+         }
          gRxMsgLen = SerialFrameIO_ParseByte(Byte);
          if(gRxMsgLen > 0) {
          // Message avaliable
             HandleMsg();
-            LOG("Back from HandleMsg\n");
          }
       }
    }
@@ -200,7 +210,6 @@ void HandleMsg()
 
             case RFST_STX:
                TxMode();
-               LOG("Back from TxMode\n");
                break;
 
             default:
@@ -264,6 +273,10 @@ void HandleMsg()
 
 #endif
       case CMD_RESET:
+         if(MARCSTATE != MARC_STATE_IDLE) {
+         // The watchdog won't timeout while transmitting !!!
+            IdleMode(); 
+         }
          wdtDeviceReset();
          break;
 #if 0
@@ -303,14 +316,13 @@ void RxMode()
 void TxMode()
 {
    if(gRfStatus != RFST_STX) {
-      LOG("Set STX RFIM %d\n",RFIM);
+      LOG("Set STX\n");
       MCSM1 &= 0xf0;
       MCSM1 |= 0x0a;
 
       gRfStatus = RFST_STX;
       RFST = RFST_STX;
       while(MARCSTATE != MARC_STATE_TX);
-      LOG("returning\n");
    }
 }
 
@@ -402,5 +414,15 @@ void startRX()
 
     RFIM |= RFIF_IRQ_DONE;
 #endif
+}
+
+
+void rx1_isr(void) __interrupt URX1_VECTOR 
+{
+   gUart1RxBuf[gUart1RxWr++] = U1DBUF;
+   if(gUart1RxWr == UART1_RX_RING_LEN) {
+   // wrap
+      gUart1RxWr = 0;
+   }
 }
 

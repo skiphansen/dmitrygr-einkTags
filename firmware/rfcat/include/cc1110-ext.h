@@ -55,6 +55,13 @@
  */
 
 // IEN0 (0xA8) - Interrupt Enable 0 Register - bit accessible SFR register
+#define IEN0_EA            0x80
+#define IEN0_STIE          0x20
+#define IEN0_ENCIE         0x10
+#define IEN0_URX1IE        0x08
+#define IEN0_URX0IE        0x04
+#define IEN0_ADCIE         0x02
+#define IEN0_RFTXRXID      0x01
 
 // IEN1 (0xB8) - Interrupt Enable 1 Register - bit accessible SFR register
 
