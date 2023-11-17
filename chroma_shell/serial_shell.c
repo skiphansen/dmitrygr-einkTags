@@ -1025,6 +1025,10 @@ bool SendSerialData(uint8_t *Buf,int Len)
    int BytesSent = write(gSerialFd,Buf,Len);
    if(BytesSent == Len) {
       Ret = true;
+      if(g.Verbose & VERBOSE_DUMP_RAW_TX) {
+         LOG("Sent %d raw bytes:\n");
+         DumpHex(Buf,Len);
+      }
    }
    else if(BytesSent == -1) {
       ELOG("Error: write failed, %s\n",strerror(errno));
@@ -1048,6 +1052,14 @@ int RecvSerialData(uint8_t *Buf,int BufLen)
                 strerror(errno),errno);
       }
    }
+   else if(Ret == 0) {
+      ELOG("read returned %d\n",Ret);
+   }
+   else if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
+      LOG("Read %d raw bytes\n");
+      DumpHex(Buf,Ret);
+   }
+
    return Ret;
 }
 
