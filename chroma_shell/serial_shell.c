@@ -578,12 +578,12 @@ int SendAsyncMsg(uint8_t *Msg,int MsgLen)
 
 
    gTxMsgLen = 0;
-   if(g.Verbose & VERBOSE_DUMP_RAW_TX) {
+   if(g.Verbose & VERBOSE_DUMP_RAW_MSGS) {
       if(g.Verbose & VERBOSE_TIMESTAMPS) {
          PrintTime(true);
       }
-      LOG("Writing %d bytes:\n",gTxMsgLen);
-      DumpHex(gTxBuf,gTxMsgLen);
+      LOG("Sending %d bytes:\n",MsgLen);
+      DumpHex(Msg,MsgLen);
    }
 
    SerialFrameIO_SendMsg(Msg,MsgLen);
@@ -1006,6 +1006,16 @@ AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout)
    } while(true);
 
    return pMsg;
+}
+
+AsyncResp *SendCmd(uint8_t *Cmd,int MsgLen,int Timeout)
+{
+   AsyncMsg *pResp = NULL;
+
+   if(SendAsyncMsg(Cmd,MsgLen) == 0) {
+      pResp = Wait4Response(Cmd[0],Timeout);
+   }
+   return (AsyncResp *) pResp;
 }
 
 bool SendSerialData(uint8_t *Buf,int Len)

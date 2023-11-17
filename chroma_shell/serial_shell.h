@@ -16,11 +16,29 @@
 
 extern struct linenoiseState gLs;
 
+#define CMD_RESP     0x80  
+
+// Generic wrapper for both commands and responses
 typedef struct AsyncMsg_TAG {
    struct AsyncMsg_TAG *Link; // NB: must be first
    int MsgLen;
    uint8_t  Msg[];   // Actually variable length
 } AsyncMsg;
+
+typedef struct {
+   AsyncMsg *Link;   // NB: must be first
+   int MsgLen;
+   uint8_t  RespCmd; // Command | CMD_RESP
+   uint8_t  Err;     // 0 or error code
+   uint8_t  Msg[];   // variable length data
+} AsyncResp;
+
+typedef struct {
+   AsyncMsg *Link;   // NB: must be first
+   int MsgLen;
+   uint8_t  RespCmd; // Command | CMD_RESP
+   uint8_t  Msg[];   // variable length data
+} AsyncCmd;
 
 extern AsyncMsg *gMsgQueueHead;
 extern AsyncMsg *gMsgQueueTail;
@@ -28,5 +46,6 @@ extern AsyncMsg *gMsgQueueTail;
 int SendAsyncMsg(uint8_t *Msg,int MsgLen);
 void PrintResponse(const char *fmt, ...);
 AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout);
+AsyncResp *SendCmd(uint8_t *Msg,int MsgLen,int Timeout);
 
 #endif // _SHELL_H

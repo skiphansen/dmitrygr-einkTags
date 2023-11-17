@@ -44,12 +44,13 @@
 #define CMD_BOARD_TYPE     0x0c
 #define CMD_SET_RF_REGS    0x0d
 #define CMD_GET_RF_REGS    0x0e
-#define CMD_LAST           CMD_BOARD_TYPE
+#define CMD_SET_RF_MODE    0x0f
+#define CMD_LAST           CMD_SET_RF_MODE
 
 #define CMD_STRINGS \
    "NOP", "PEEK", "POKE","POKE_REG","STATUS","RFMODE","RESET","EEPROM_RD" ,\
    "EEPROM_WR","EEPROM_LEN","COMM_BUF_LEN","BOARD_TYPE","SET_RF_REGS",\
-   "GET_RF_REGS"
+   "GET_RF_REGS","SET_RF_MODE"
 
 typedef enum {
    CMD_ERR_NONE,

@@ -24,22 +24,34 @@
 #include "logging.h"
 #include "proxy_msgs.h"
 #include "linenoise.h"
+#include "cc1110-ext.h"
 
+#define DEFAULT_TO   100
 
 int BoardTypeCmd(char *CmdLine);
+int CwCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
 int ResetCmd(char *CmdLine);
 int EEPROM_ReadCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
+int SetRegCmd(char *CmdLine);
+int EEPROM_Internal(int Adr,int Len,FILE *fp);
+
+// Eventual CC1101 API functions.  
+// Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
+int setSidle(void);
+int SetTx(float mhz);
 
 struct COMMAND_TABLE commandtable[] = {
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
+   { "cw",  "Turn on 915.0 Mhz carrier",NULL,0,CwCmd},
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
    { "backup_eeprom",  "Write EEPROM data to a file","eerd <path>",0,EEPROM_BackupCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
+   { "set_reg", "set chip register device",NULL,0,SetRegCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
    { "?", NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { "help",NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
@@ -106,7 +118,96 @@ const struct {
    {"VCO_VC_DAC",0xdf3d}
 };
 
-int EEPROM_Internal(int Adr,int Len,FILE *fp);
+typedef struct {
+   uint16_t Adr;
+   uint8_t  Value;
+} RfSetting;
+
+// Address Config = No address check 
+// Base Frequency = 915.000000 
+// CRC Enable = false 
+// Carrier Frequency = 915.000000 
+// Channel Number = 0 
+// Channel Spacing = 199.951172 
+// Data Rate = 1.19948 
+// Deviation = 5.157471 
+// Device Address = 0 
+// Manchester Enable = false 
+// Modulated = true 
+// Modulation Format = GFSK 
+// PA Ramping = false 
+// Packet Length = 255 
+// Packet Length Mode = Reserved 
+// Preamble Count = 4 
+// RX Filter BW = 58.035714 
+// Sync Word Qualifier Mode = No preamble/sync 
+// TX Power = 10 
+// Whitening = false 
+// Rf settings for CC1110
+RfSetting g915CW[] = {
+   {0xdf04,0x22},  // PKTCTRL0: Packet Automation Control 
+   {0xdf07,0x06},  // FSCTRL1: Frequency Synthesizer Control 
+   {0xdf09,0x23},  // FREQ2: Frequency Control Word, High Byte 
+   {0xdf0a,0x31},  // FREQ1: Frequency Control Word, Middle Byte 
+   {0xdf0b,0x3B},  // FREQ0: Frequency Control Word, Low Byte 
+   {0xdf0c,0xF5},  // MDMCFG4: Modem configuration 
+   {0xdf0d,0x83},  // MDMCFG3: Modem Configuration 
+   {0xdf0e,0x10},  // MDMCFG2: Modem Configuration 
+   {0xdf11,0x15},  // DEVIATN: Modem Deviation Setting 
+   {0xdf14,0x18},  // MCSM0: Main Radio Control State Machine Configuration 
+   {0xdf15,0x17},  // FOCCFG: Frequency Offset Compensation Configuration 
+   {0xdf1c,0xE9},  // FSCAL3: Frequency Synthesizer Calibration 
+   {0xdf1d,0x2A},  // FSCAL2: Frequency Synthesizer Calibration 
+   {0xdf1e,0x00},  // FSCAL1: Frequency Synthesizer Calibration 
+   {0xdf1f,0x1F},  // FSCAL0: Frequency Synthesizer Calibration 
+   {0xdf24,0x31},  // TEST1: Various Test Settings 
+   {0xdf25,0x09},  // TEST0: Various Test Settings 
+   {0xdf2e,0xC0},  // PA_TABLE0: PA Power Setting 0 
+   {0}  // end of table
+};
+
+// Address Config = No address check 
+// Base Frequency = 865.999634 
+// CRC Enable = false 
+// Carrier Frequency = 865.999634 
+// Channel Number = 0 
+// Channel Spacing = 199.951172 
+// Data Rate = 1.19948 
+// Deviation = 5.157471 
+// Device Address = 0 
+// Manchester Enable = false 
+// Modulated = true 
+// Modulation Format = GFSK 
+// PA Ramping = false 
+// Packet Length = 255 
+// Packet Length Mode = Reserved 
+// Preamble Count = 4 
+// RX Filter BW = 58.035714 
+// Sync Word Qualifier Mode = No preamble/sync 
+// TX Power = 10 
+// Whitening = false 
+// Rf settings for CC1110
+RfSetting g866CW[] = {
+   {0xdf04,0x22},  // PKTCTRL0: Packet Automation Control 
+   {0xdf07,0x06},  // FSCTRL1: Frequency Synthesizer Control 
+   {0xdf09,0x21},  // FREQ2: Frequency Control Word, High Byte 
+   {0xdf0a,0x4E},  // FREQ1: Frequency Control Word, Middle Byte 
+   {0xdf0b,0xC4},  // FREQ0: Frequency Control Word, Low Byte 
+   {0xdf0c,0xF5},  // MDMCFG4: Modem configuration 
+   {0xdf0d,0x83},  // MDMCFG3: Modem Configuration 
+   {0xdf0e,0x10},  // MDMCFG2: Modem Configuration 
+   {0xdf11,0x15},  // DEVIATN: Modem Deviation Setting 
+   {0xdf14,0x18},  // MCSM0: Main Radio Control State Machine Configuration 
+   {0xdf15,0x17},  // FOCCFG: Frequency Offset Compensation Configuration 
+   {0xdf1c,0xE9},  // FSCAL3: Frequency Synthesizer Calibration 
+   {0xdf1d,0x2A},  // FSCAL2: Frequency Synthesizer Calibration 
+   {0xdf1e,0x00},  // FSCAL1: Frequency Synthesizer Calibration 
+   {0xdf1f,0x1F},  // FSCAL0: Frequency Synthesizer Calibration 
+   {0xdf24,0x31},  // TEST1: Various Test Settings 
+   {0xdf25,0x09},  // TEST0: Various Test Settings 
+   {0xdf2e,0xC2},  // PA_TABLE0: PA Power Setting 0 
+   {0}  // end of table
+};
 
 const char *Cmd2Str(uint8_t Cmd)
 {
@@ -331,6 +432,11 @@ int DumpRfRegsCmd(char *CmdLine)
    return Ret;
 }
 
+int SetRegCmd(char *CmdLine)
+{
+   return 0;
+}
+
 
 int PingCmd(char *CmdLine)
 {
@@ -380,6 +486,34 @@ int BoardTypeCmd(char *CmdLine)
    return Ret;
 }
 
+int CwCmd(char *CmdLine)
+{
+   uint8_t Cmd[512];
+   int Ret = RESULT_OK;
+   int MsgLen = 0;
+   AsyncResp *pMsg;
+
+   do {
+      if(setSidle()) {
+         break;
+      }
+
+      Cmd[MsgLen++] = CMD_SET_RF_REGS;
+      for(int i = 0; g915CW[i].Adr != 0; i++) {
+         Cmd[MsgLen++] = (uint8_t) (g915CW[i].Adr & 0xff);  // LSB only
+         Cmd[MsgLen++] = g915CW[i].Value;
+      }
+
+      if((pMsg = SendCmd(Cmd,MsgLen,DEFAULT_TO)) != NULL) {
+         free(pMsg);
+      }
+      if(SetTx(0.0)) {
+         break;
+      }
+   } while(false);
+   return Ret;
+}
+
 
 void HandleResp(uint8_t *Msg,int MsgLen)
 {
@@ -417,6 +551,45 @@ void HandleResp(uint8_t *Msg,int MsgLen)
       }
    }
 }
+
+int SetRfState(uint8_t DesiredState)
+{
+   AsyncResp *pMsg;
+   uint8_t Cmd[] = {CMD_SET_RF_MODE,DesiredState};
+   int Ret = 0;   // Assume the best
+
+   if((pMsg = SendCmd(Cmd,sizeof(Cmd),DEFAULT_TO)) != NULL) {
+      free(pMsg);
+   }
+   else {
+      Ret = 1;
+   }
+
+   return Ret;
+}
+
+// set state to idle
+int setSidle()
+{
+   return SetRfState(RFST_SIDLE);
+}
+
+int SetTx(float mhz)
+{
+   int Ret = 0;   // Assume the best
+
+   if(mhz == 0.0) {
+   // just set the state
+      Ret = SetRfState(RFST_STX);
+   }
+   else {
+      ELOG("mhz 1= 0.0 not supported\n");
+      Ret = 1;
+   }
+
+   return Ret;
+}
+
 
 #if 0
 void DumpSetting()

@@ -39,7 +39,6 @@ extern struct COMMAND_TABLE commandtable[];
 #define RESULT_TIMEOUT     5
 #define RESULT_BAD_LEN     5
 
-#define CMD_RESP     0x80  
 
 void Usage(void);
 int NopCmd(char *CmdLine);
