@@ -47,5 +47,6 @@ debug:
 	@echo "BUILD=$(BUILD)"
 	@echo "BUILD_DIR=$(BUILD_DIR)"
 	@echo "SOURCES=$(SOURCES)"
+	@echo "TARGETS=$(TARGETS)"
 
 

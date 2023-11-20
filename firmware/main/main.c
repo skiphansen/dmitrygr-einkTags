@@ -38,7 +38,6 @@ int8_t __xdata mCurTemperature;
 
 
 
-
 struct EepromContentsInfo {
    uint32_t latestCompleteImgAddr, latestInprogressImgAddr, latestCompleteImgSize;
    uint64_t latestCompleteImgVer, latestInprogressImgVer;
@@ -181,6 +180,75 @@ static void prvFillTagState(struct TagState __xdata *state)
    state->batteryMv = adcSampleBattery();
 }
 
+#if defined(RANGE_TEST_RX) || defined(RANGE_TEST_TX)
+// Send association request packets once a second forever for range testing
+static void RangeTest()
+{
+   struct {
+      uint8_t pktType;
+      struct TagInfo ti;
+      uint16_t PingCount;
+   } __xdata packet = {0, };
+#ifdef RANGE_TEST_TX
+   uint16_t PingCount = 0;
+#endif
+   int8_t ret;
+   
+   packet.pktType = PKT_ASSOC_REQ;
+   packet.ti.protoVer = PROTO_VER_CURRENT;
+   prvFillTagState(&packet.ti.state);
+   packet.ti.screenPixWidth = SCREEN_WIDTH;
+   packet.ti.screenPixHeight = SCREEN_HEIGHT;
+   packet.ti.screenMmWidth = SCREEN_WIDTH_MM;
+   packet.ti.screenMmHeight = SCREEN_HEIGHT_MM;
+   packet.ti.compressionsSupported = PROTO_COMPR_TYPE_BITPACK;
+   packet.ti.maxWaitMsec = COMMS_MAX_RADIO_WAIT_MSEC;
+   packet.ti.screenType = SCREEN_TYPE;
+
+   //RX on 
+   radioRxEnable(true,true);
+
+// use the middle channel for range testing
+   radioSetChannel(RADIO_FIRST_CHANNEL + 12);
+// Full blast!
+   radioSetTxPower(10);
+
+   while(true) {
+#ifdef RANGE_TEST_TX
+      pr("Tx %d\n",PingCount++);
+      packet.PingCount = PingCount;
+      commsTx(&mCi, true, &packet, sizeof(packet));
+      mTimerWaitStart = timerGet();
+   // Wait a second between transmissions
+      while(timerGet() - mTimerWaitStart < TIMER_TICKS_PER_SECOND) 
+#endif
+      {
+         ret = commsRx(&mCi, mRxBuf, mSettings.masterMac);
+         if (ret == COMMS_RX_ERR_NO_PACKETS)
+            continue;
+
+         pr("RX pkt: 0x%02x + %d\n", mRxBuf[0], ret);
+         if (ret == COMMS_RX_ERR_MIC_FAIL) {
+            pr("RX: invalid MIC\n");
+         }
+         else if (ret <= 0) {
+            pr("WTF else ret = %x\n", (int16_t)(int8_t)ret);   //nothing
+         }
+         else if (ret < sizeof(uint8_t) + sizeof(packet)) {
+            pr("RX: %d < %d\n", ret, sizeof(uint8_t) + sizeof(packet));
+         }
+
+         pr("#%d RSSI %d\n", packet.pktType,commsGetLastPacketRSSI());
+#ifdef RANGE_TEST_RX
+      // echo it back to the transmitter
+         commsTx(&mCi, true, &packet, sizeof(packet));
+#endif
+      }
+   }
+}
+
+#else
+
 static uint32_t uiNotPaired(void)
 {
    char __code signalIcon[] = {CHAR_SIGNAL_PT1, CHAR_SIGNAL_PT2, 0};
@@ -280,6 +348,7 @@ static uint32_t uiNotPaired(void)
    
    return 0;   //never
 }
+#endif
 
 static struct PendingInfo __xdata* prvSendCheckin(void)
 {
@@ -863,6 +932,9 @@ void main(void)
       //init the "random" number generation unit
       rndSeed(mSelfMac[0] ^ (uint8_t)timerGetLowBits(), mSelfMac[1] ^ (uint8_t)mSettings.hdr.revision);
    
+#if defined(RANGE_TEST_RX) || defined(RANGE_TEST_TX)
+      RangeTest();
+#else
       if (mSettings.isPaired) {
          
          radioSetChannel(RADIO_FIRST_CHANNEL + mSettings.channel);
@@ -887,6 +959,7 @@ void main(void)
       mSettings.lastRxedRSSI = commsGetLastPacketRSSI();
       
       settingsWrite(&mSettings);
+#endif
       
       //vary sleep a little to avoid repeated collisions. Only down because 8-bit math is hard...
       sleepDuration = mathPrvMul32x8(sleepDuration, (rndGen8() & 31) + 224) >> 8;
@@ -904,3 +977,4 @@ void main(void)
    }
    while(1);
 }
+

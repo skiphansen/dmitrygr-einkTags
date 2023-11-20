@@ -215,6 +215,7 @@
 			Name="Other Files"
 			Filters="">
 			<F N="../RfStudio/dmitrygr.prs"/>
+			<F N="/cc1xxx/docs/notes.txt"/>
 			<F N="../README.md"/>
 			<F N="../firmware/board/chroma29r/README.md"/>
 			<F N="../sdcc/README.md"/>
