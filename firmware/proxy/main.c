@@ -149,6 +149,8 @@ void HandleMsg()
          uCast1.Bytes[2] = gRxBuf[5];
          eepromRead(uCast1.Adr32,(void __xdata *) &gRxBuf[2],uCast0.IntValue);
          u1setUartMode();
+      // purge the receiver of any data received in SPI mode
+         gUart1RxRd = gUart1RxWr;
          MsgLen += uCast0.IntValue;
          break;
 
