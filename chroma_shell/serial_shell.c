@@ -72,7 +72,6 @@ static struct COMMAND_TABLE *FindCmd(char *CmdLine,int bSilent);
 void ParseCmd(char *CmdLine);
 int MatchCmd(char *CmdLine, char *Command);
 char *SkipSpaces(char *In);
-char *Skip2Space(char *In);
 char *NextToken(char *In);
 void HandleCmd(uint8_t *Msg,int MsgLen);
 int ParseSerialData(uint8_t *Buf,int Len);

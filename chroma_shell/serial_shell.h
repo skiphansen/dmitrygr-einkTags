@@ -47,5 +47,6 @@ int SendAsyncMsg(uint8_t *Msg,int MsgLen);
 void PrintResponse(const char *fmt, ...);
 AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout);
 AsyncResp *SendCmd(uint8_t *Msg,int MsgLen,int Timeout);
+char *Skip2Space(char *In);
 
 #endif // _SHELL_H
