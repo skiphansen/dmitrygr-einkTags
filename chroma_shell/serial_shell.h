@@ -15,6 +15,8 @@
 #define _SHELL_H
 
 extern struct linenoiseState gLs;
+extern char *gDevicePath;
+
 
 #define CMD_RESP     0x80  
 

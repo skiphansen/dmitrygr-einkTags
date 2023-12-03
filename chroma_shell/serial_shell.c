@@ -37,14 +37,14 @@
 
 #define PROMPT    "chroma>"
 #define MAX_STR   255
-#define OPTION_STRING   "c:dD:qv:"
-#define HISTORY_FILENAME   "chroma_history"
+#define OPTION_STRING      "b:c:dD:qv:"
 
 #define FWVER_MAX_LEN         8
 
 AsyncMsg *gMsgQueueHead;
 AsyncMsg *gMsgQueueTail;
 int gSerialFd = -1;
+int gSerialBaudrate = DEFAULT_BAUDRATE;
 
 static struct COMMAND_TABLE *pCurrentCmd;
 bool gDebug;
@@ -58,6 +58,8 @@ typedef enum {
    STDIN_AVAIL,
    MSG_READY
 } GetMessageStatus;
+
+char *gDevicePath = NULL;
 
 typedef int (*ConsoleCB)(const char *Line);
 typedef int (*SerialDataCB)();
@@ -139,17 +141,22 @@ uint8_t RxBuf[MAX_ASYNC_MSG_LEN];
 int main(int argc, char* argv[])
 {
    int Ret = 0;
-   char *DevicePath = NULL;
    int Option;
    int bExit = false;
    char *ImmediateCommand = NULL;
 
 
 // Set default device on Linux
-   DevicePath = strdup("/dev/ttyUSB0");  // Set default path
+   gDevicePath = strdup(DEFAULT_DEVICE);  // Set default path
 
    while((Option = getopt(argc,argv,OPTION_STRING)) != -1) {
       switch(Option) {
+         case 'b':
+            if(sscanf(optarg,"%d",&gSerialBaudrate) != 1) {
+               Ret = EINVAL;
+            }
+            break;
+
          case 'c':
             if(ImmediateCommand != NULL) {
                free(ImmediateCommand);
@@ -162,10 +169,10 @@ int main(int argc, char* argv[])
             break;
 
          case 'D':
-            if(DevicePath != NULL) {
-               free(DevicePath);
+            if(gDevicePath != NULL) {
+               free(gDevicePath);
             }
-            DevicePath = strdup(optarg);
+            gDevicePath = strdup(optarg);
             break;
 
          case 'q':
@@ -192,17 +199,17 @@ int main(int argc, char* argv[])
       }
    }
 
-   if(Ret != 0 || DevicePath == NULL ) {
+   if(Ret != 0 || gDevicePath == NULL ) {
       Usage();
       bExit = true;
    }
 
    if(Ret == 0 && !bExit) do {
-      if(DevicePath == NULL) {
+      if(gDevicePath == NULL) {
          printf("Error: device path not specified (-D <device path>)\n");
          break;
       }
-      if(!OpenSerialPort(DevicePath,115200)) {
+      if(!OpenSerialPort(gDevicePath,gSerialBaudrate)) {
          break;
       }
       SerialFrameIO_Init(RxBuf,sizeof(RxBuf)-1);
@@ -216,8 +223,8 @@ int main(int argc, char* argv[])
       }
    } while(false);
 
-   if(DevicePath != NULL) {
-      free(DevicePath);
+   if(gDevicePath != NULL) {
+      free(gDevicePath);
    }
 
    if(ImmediateCommand != NULL) {

@@ -760,12 +760,12 @@ int DumpSettingsCmd(char *CmdLine)
 
 void Usage()
 {
-   PRINTF("Usage: fw_update -D <path> [options]\n");
+   PRINTF("Usage: chroma_cmd [options]\n");
    PRINTF("  options:\n");
-   PRINTF("\t-c<command to run>\tRun specified command and exit\n");
-   PRINTF("\t-d\tDebug mode (run in foreground)\n");
-   PRINTF("\t-D<path>\tSet path to async device (for example /etc/ttyUSB0)\n");
-   PRINTF("\t-i\tInteractive (command line mode)\n");
+   PRINTF("\t-b<baud rate>\tSet serial port baudrate (default %d)\n",DEFAULT_BAUDRATE);
+   PRINTF("\t-c<command>\tRun specified command and exit\n");
+   PRINTF("\t-d\t\tDebug mode\n");
+   PRINTF("\t-D<path>\tSet path to async device (default %s)\n",gDevicePath);
    PRINTF("\t-q\t\tquient\n");
    PRINTF("\t-v?\t\tList available verbose display levels\n");
    PRINTF("\t-v<bitmap>\tSet desired display levels (Hex bit map)\n");

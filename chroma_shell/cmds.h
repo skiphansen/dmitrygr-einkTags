@@ -14,6 +14,10 @@
 #ifndef _CMDS_H_
 #define _CMDS_H_
 
+#define DEFAULT_BAUDRATE   1000000
+#define DEFAULT_DEVICE     "/dev/ttyUSB0"
+#define HISTORY_FILENAME   "chroma_history"
+
 struct COMMAND_TABLE {
    char *CmdString;
    char *HelpString;

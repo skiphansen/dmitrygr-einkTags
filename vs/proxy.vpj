@@ -193,6 +193,7 @@
 			Name="Other Files"
 			Filters="">
 			<F N="../chroma_shell/.gitignore"/>
+			<F N="/cc1xxx/docs/notes.txt"/>
 		</Folder>
 	</Files>
 </Project>
