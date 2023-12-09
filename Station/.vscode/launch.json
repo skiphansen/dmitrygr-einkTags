@@ -1,0 +1,16 @@
+{
+    "configurations": [
+    {
+        "cwd": "${workspaceRoot}",
+        "executable": "build/Station.elf",
+        "name": "Debug Microcontroller",
+        "request": "launch",
+        "type": "cortex-debug",
+        "showDevDebugOutput": false,
+        "servertype": "jlink",
+        "device": "nrf52",
+        "armToolchainPath": "/home/skip/gcc-arm-none-eabi-9-2020-q2-update/bin",
+        "svdFile": "/home/skip/nrf/uart_example/nrf52840.svd"
+    }
+    ]
+}

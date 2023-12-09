@@ -16,12 +16,14 @@
 
 //maybe add cache of known tags and their last known info, export as RO file on another LUN
 
+#define SERIAL_LOGGING  1
 
 
 static uint32_t mRootKey[4];
 static bool mHaveSubGhzRadio;
 
 
+#ifndef SERIAL_LOGGING
 void prPutchar(char chr)
 {
 	volatile uint32_t *word = (volatile uint32_t*)0x2003fffc;
@@ -39,6 +41,68 @@ void prPutchar(char chr)
 	}
 	*word = 0x80000000 | (uint8_t)chr;
 }
+
+#else // SERIAL_LOGGING
+
+
+void prPutchar(char chr)
+{
+   static bool bFirstCharSent;
+
+   if(bFirstCharSent) {
+      while(NRF_UART0->EVENTS_TXDRDY == 0);
+      NRF_UART0->EVENTS_TXDRDY = 0;
+   }
+   NRF_UART0->TXD = chr;
+   bFirstCharSent = true;
+}
+
+
+#define UART_OUTPUT_PIN    10
+#define UART_OUTPUT_PORT   0
+#define UART_INPUT_PIN     9
+#define UART_INPUT_PORT    0
+#define UART_OUTPUT_PINS   NRF_P0
+#define UART_INPUT_PINS    NRF_P0
+
+void UartInit()
+{
+
+   UART_OUTPUT_PINS->PIN_CNF[UART_OUTPUT_PIN] = 
+           (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) 
+         | (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos) 
+         | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) 
+         | (GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos) 
+         | (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos);
+
+   UART_INPUT_PINS->PIN_CNF[UART_INPUT_PIN] = 
+           (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos) 
+         | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) 
+         | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) 
+         | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) 
+         | (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos);
+
+   NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Disabled << UART_ENABLE_ENABLE_Pos;
+
+// Configure the UART with no flow control, one parity bit and 115200 baud rate
+   NRF_UART0->CONFIG = (UART_CONFIG_HWFC_Disabled   << UART_CONFIG_HWFC_Pos) |
+                        (UART_CONFIG_PARITY_Excluded << UART_CONFIG_PARITY_Pos); 
+
+   NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud115200 << UART_BAUDRATE_BAUDRATE_Pos;
+
+   // Select TX and RX pins
+   NRF_UART0->PSEL.TXD = (UART_OUTPUT_PIN << UART_PSEL_TXD_PIN_Pos) |
+                         (UART_OUTPUT_PORT << UART_PSEL_TXD_PORT_Pos);
+   NRF_UART0->PSEL.RXD = (UART_INPUT_PIN << UART_PSEL_RXD_PIN_Pos) |
+                         (UART_INPUT_PORT << UART_PSEL_RXD_PORT_Pos);
+   NRF_UART0->PSEL.CTS = (UART_PSEL_CTS_CONNECT_Disconnected << UART_PSEL_CTS_CONNECT_Pos);
+   NRF_UART0->PSEL.RTS = (UART_PSEL_RTS_CONNECT_Disconnected << UART_PSEL_RTS_CONNECT_Pos);
+
+   // Enable the UART (starts using the TX/RX pins)
+   NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Enabled << UART_ENABLE_ENABLE_Pos;
+   NRF_UART0->TASKS_STARTTX = 1;
+}
+#endif   // SERIAL_LOGGING
 
 static void prvRandomBytes(void *dstP, uint32_t num)
 {
@@ -304,6 +368,10 @@ int main(void)
 	uint8_t myMac[8];
 	uint32_t ivStart;
 	
+#ifdef SERIAL_LOGGING
+   UartInit();
+#endif
+   	
 	pr("in entry\n");
 	
 	hwInit();

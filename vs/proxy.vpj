@@ -193,7 +193,9 @@
 			Name="Other Files"
 			Filters="">
 			<F N="../chroma_shell/.gitignore"/>
+			<F N="../Chroma.md"/>
 			<F N="/cc1xxx/docs/notes.txt"/>
+			<F N="../README.md"/>
 		</Folder>
 	</Files>
 </Project>

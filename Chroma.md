@@ -84,3 +84,32 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 | 35| P1_4 | NC ?
 | 36| P1_3 | EPD DO/SCK | display pin 13|
 
+
+Port 0 bits
+P0_0 | output | EPD BS1 | display pin 8|
+P0_1 | EPD nCS | display pin 12|
+P0_2 | EPD nReset | display pin 10|
+P0_3 | output | SPI EEPROM CLK|
+P0_4 | output | SPI EEPROM MOSI|
+P0_5 | output | SPI EEPROM MISO|
+P0_6 | output | EPD nEnable|
+P0_7 | output | EPD D/nC | display pin 11|
+
+Port 1 bits
+
+P1_0 | TP6/TP16 ||
+P1_1 | EPD BUSY | display pin 9|
+P1_2 | output | Port 1.2 |NC ?|
+P1_3 | output | EPD DO/SCK | display pin 13|
+P1_4 | NC ?
+P1_5 | output | EPD D1/SDIN | display pin 14 |
+P1_6 | output | /USART1 TXD | TP7/TP17 |
+P1_7 | input | /USART1 RXD | TP9/TP19 |
+
+Port 2 bits
+P2_0 | output | EEPROM nCS ||
+P2_1/DBG_DAT | TP3/TP13| Programmer interface |
+P2_2/DBG_CLK | TP5/TP15 | Programmer interface|
+P2_3/XOSC32_Q1 | 32.768 kHz crystal |
+P2_4/XOSC32_Q2 | 32.768 kHz crystal |
+

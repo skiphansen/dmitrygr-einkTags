@@ -56,6 +56,25 @@ volatile uint8_t __xdata gUart1RxBuf[UART1_RX_RING_LEN];
 volatile uint8_t __xdata gUart1RxWr;
 volatile uint8_t __xdata gUart1RxRd;
 
+// BUFFER size must match RF_MAX_RX_BLOCK defined in rflib/chipcon_nic.py
+#define BUFFER_SIZE 512
+#define BUFFER_AMOUNT 2
+/* Rx buffers */
+volatile __xdata u8 rfRxCurrentBuffer;
+volatile __xdata u8 rfrxbuf[BUFFER_AMOUNT][BUFFER_SIZE];
+volatile __xdata u16 rfRxCounter[BUFFER_AMOUNT];
+volatile __xdata u8 rfRxProcessed[BUFFER_AMOUNT];
+volatile __xdata u8 rfRxInfMode = 0;
+volatile __xdata u16 rfRxTotalRXLen = 0;
+volatile __xdata u16 rfRxLargeLen = 0;
+
+#define RFDMA
+
+#ifdef RFDMA
+
+volatile __xdata DmaDescr gRfDma;
+#endif
+
 
 void HandleMsg(void);
 void RxMode(void);
@@ -383,24 +402,24 @@ void startRX()
 
 #ifdef RFDMA
     {
-        rfDMA.srcAddrH = ((u16)&X_RFD)>>8;
-        rfDMA.srcAddrL = ((u16)&X_RFD)&0xff;
-        rfDMA.destAddrH = ((u16)&rfrxbuf[rfRxCurrentBuffer])>>8;
-        rfDMA.destAddrL = ((u16)&rfrxbuf[rfRxCurrentBuffer])&0xff;
-        rfDMA.lenH = 0;
-        rfDMA.vlen = 0;
-        rfDMA.lenL = 12;
-        rfDMA.trig = 19;
-        rfDMA.tMode = 0;
-        rfDMA.wordSize = 0;
-        rfDMA.priority = 1;
-        rfDMA.m8 = 0;
-        rfDMA.irqMask = 0;
-        rfDMA.srcInc = 0;
-        rfDMA.destInc = 1;
+        gRfDma.srcAddrH = ((u16)&X_RFD)>>8;
+        gRfDma.srcAddrL = ((u16)&X_RFD)&0xff;
+        gRfDma.destAddrH = ((u16)&rfrxbuf[rfRxCurrentBuffer])>>8;
+        gRfDma.destAddrL = ((u16)&rfrxbuf[rfRxCurrentBuffer])&0xff;
+        gRfDma.lenH = 0;
+        gRfDma.vlen = 0;
+        gRfDma.lenL = 12;
+        gRfDma.trig = 19;
+        gRfDma.tMode = 0;
+        gRfDma.wordSize = 0;
+        gRfDma.priority = 1;
+        gRfDma.m8 = 0;
+        gRfDma.irqMask = 0;
+        gRfDma.srcInc = 0;
+        gRfDma.destInc = 1;
 
-        DMA0CFGH = ((u16)(&rfDMA))>>8;
-        DMA0CFGL = ((u16)(&rfDMA))&0xff;
+        DMA0CFGH = ((u16)(&gRfDma))>>8;
+        DMA0CFGL = ((u16)(&gRfDma))&0xff;
         
         DMAIRQ &= ~DMAARM0;
         DMAARM |= (0x80 | DMAARM0);

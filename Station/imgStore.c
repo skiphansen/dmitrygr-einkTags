@@ -362,7 +362,7 @@ static bool imgStoreGetFileInfo(const char *desiredName, uint64_t *revP, uint32_
 
 bool imgStoreGetUpdateInfo(uint16_t hwType, uint64_t *revP, uint32_t *lenP, uint32_t *handleP)
 {
-   char desiredName[11];
+   char desiredName[12];
    uint32_t handle;
    
    if (!handleP)
@@ -422,7 +422,7 @@ bool imgStoreGetUpdateInfo(uint16_t hwType, uint64_t *revP, uint32_t *lenP, uint
 
 bool imgStoreGetImgInfo(const uint8_t *mac, uint64_t *revP, uint32_t *lenP, uint32_t *handleP)
 {
-   char desiredName[11];
+   char desiredName[12];
    
    snprintf(desiredName, sizeof(desiredName), "%02X%02X%02X  IMG", mac[2], mac[1], mac[0]);
    
