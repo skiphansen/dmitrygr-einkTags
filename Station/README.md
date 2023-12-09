@@ -5,7 +5,7 @@ for both flashing and debugging.  Unfortunately the project's kickstarter
 was unsuccessful and I couldn't find a Cortexprog available for purchase 
 anywhere.  That's too bad as the CortexProg looks like a very worthwhile tool!
 
-To get around the unavability of a CortexProg I added support for a debug 
+To get around the unavailability of a CortexProg I added support for a debug 
 serial port and flashing using a [Segger J-Link debugger](https://www.segger.com/products/debug-probes/j-link/).
 
 ## Building
@@ -119,4 +119,5 @@ These are the connections of the generic CC1101 module I sourced from ebay.
 Do **NOT** assume the pinout of **your** module matches this one, **CHECK** it before wiring.
 
 <img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/ebay_cc1101_pinout.png" width=50%><br>
+(Click picture to enlarge)
 
