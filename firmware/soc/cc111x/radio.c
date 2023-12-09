@@ -437,16 +437,3 @@ void radioRxFlush(void)
    if (!wasFree)
       radioPrvRxStartListenIfNeeded();
 }
-
-#if 0
-void DumpRfConfig()
-{
-   volatile uint8_t __xdata *radioRegs = (volatile uint8_t __xdata *)0xdf00;
-   uint8_t i;
-
-   pr("Radio configuration:\n");
-   for (i = 0; i < sizeof(mRadioCfg); i++) {
-      pr("0x%x = 0x%x\n",i,radioRegs[i]);
-   }
-}
-#endif
