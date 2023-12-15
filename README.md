@@ -27,14 +27,19 @@ I am only interested in the subgig tags based on the TI CC1110 since that's
 what I have and the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) 
 project has the 2.4 ghz zbs based tags well in hand.
 
+See [Chroma.md](Chroma.md) for more information on the Chroma series of tags.
+
+See [Station.md](Station.md) for information on building a base station / 
+access port.
 
 ## Status
 
 | Target | Status |  
 |-|-|  
+|Station | Works! |
 |chroma74r | Works! |
+|chroma74y | Builds and probably works.<br>I don't have one for testing |
 |chroma29r  | Works? (see below) |
-|chroma74y | Builds, but untested |
 |EPOP50  | Builds, but untested |
 |EPOP900  | Builds, but untested  |
 |zbs29v025  |Builds, but untested |
@@ -43,9 +48,6 @@ project has the 2.4 ghz zbs based tags well in hand.
 ## Chroma74r Status
 
 <img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma74_first_contact.png" width=50%>
-
-The Chroma74r target works at least as far as putting an image on the screen. I haven't built a station
-yet so I don't know if it's fully functional or not.
 
 ## Chroma29r Status
 
@@ -56,11 +58,6 @@ as expected.
 Dimitry says that the problem is probably that my tag has a different 
 display type than the ones he has.  If you have a Chroma29r you might give
 it a try and let me know if it works for you.
-
-See [Chroma.md](Chroma.md) for more information on the Chroma series of tags.
-
-See [Station.md](Station.md) for information on building a base station / 
-access port.
 
 ## License
 
