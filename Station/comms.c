@@ -283,10 +283,11 @@ int32_t commsRx(uint32_t radiosMask, uint8_t *radioIdxP, void *data, uint8_t *fr
    
    ret -= (start - mCommsBuf);      //subtract size of non-encrypted header from length
    
-   *(uint32_t*)nonce = *(uint32_t*)(start + ret - sizeof(uint32_t));
+// NB: start + ret - sizeof(uint32_t) might not be word aligned
+   memcpy(nonce,start + ret - sizeof(uint32_t),sizeof(uint32_t));
+// NB: srcAddr might not be word aligned
    if (fcs->srcAddrType == ADDR_MODE_LONG)
-      macCopy(nonce + sizeof(uint32_t), srcAddr);
-   
+      memcpy(nonce + sizeof(uint32_t), srcAddr,8);
    //try with a per-device key
    commsExtKeyForMac(key, srcAddr);
    verified = aesCcmDec(data, start, ret - sizeof(uint32_t) /* nonce */ - AES_CCM_MIC_SIZE, mCommsBuf, start - mCommsBuf, key, nonce);
@@ -302,7 +303,8 @@ int32_t commsRx(uint32_t radiosMask, uint8_t *radioIdxP, void *data, uint8_t *fr
    
    if (fromMac) {
       if (fcs->srcAddrType == ADDR_MODE_LONG)
-         macCopy(fromMac, srcAddr);
+// NB: srcAddr might not be word aligned
+         memcpy(fromMac, srcAddr,8);
       else
          memset(fromMac, 0, 8);
    }

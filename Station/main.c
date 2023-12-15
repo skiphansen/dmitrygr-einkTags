@@ -123,20 +123,36 @@ static void prvRandomBytes(void *dstP, uint32_t num)
 	NRF_RNG->TASKS_STOP = 1;
 }
 
-static void hwPrvVerifyRegout(void)
+static void hwPrvVerifyUICR(void)
 {
-	if (((NRF_UICR->REGOUT0 & UICR_REGOUT0_VOUT_Msk) >> UICR_REGOUT0_VOUT_Pos) != UICR_REGOUT0_VOUT_3V3)
-	{
-		NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen;
-		while (NRF_NVMC->READY == NVMC_READY_READY_Busy);
-		NRF_UICR->REGOUT0 = (NRF_UICR->REGOUT0 & ~UICR_REGOUT0_VOUT_Msk) | (UICR_REGOUT0_VOUT_3V3 << UICR_REGOUT0_VOUT_Pos);
-		NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren;
-		while (NRF_NVMC->READY == NVMC_READY_READY_Busy);
-	
-		pr("setting vregout");
-	
-		NVIC_SystemReset();
-	}
+   bool bReboot = false;
+
+   if (((NRF_UICR->REGOUT0 & UICR_REGOUT0_VOUT_Msk) >> UICR_REGOUT0_VOUT_Pos) != UICR_REGOUT0_VOUT_3V3)
+   {
+      pr("setting vregout");
+      bReboot = true;
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy);
+      NRF_UICR->REGOUT0 = (NRF_UICR->REGOUT0 & ~UICR_REGOUT0_VOUT_Msk) | (UICR_REGOUT0_VOUT_3V3 << UICR_REGOUT0_VOUT_Pos);
+   }
+
+   if((NRF_UICR->APPROTECT & UICR_APPROTECT_PALL_Msk) != UICR_APPROTECT_PALL_Disabled << UICR_APPROTECT_PALL_Pos) {
+      pr("clearing AP protect\n");
+      if(!bReboot) {
+      // Write enable CONFIG
+         bReboot = true;
+         NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
+         while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+         NRF_UICR->APPROTECT = UICR_APPROTECT_PALL_Disabled;
+      }
+   }
+
+   if(bReboot) {
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos;
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+      NVIC_SystemReset();
+   }
 }
 
 static void hwInit(void)
@@ -144,8 +160,8 @@ static void hwInit(void)
 	//none of the errata in there affect us, so let's save on the code size and skip this nonsense
 	SystemInit();
 	
-	//verify regulator is at 3.3v, if not, set it and reset
-	hwPrvVerifyRegout();
+// verify regulator is at 3.3v && AP is not protected, if not, fix it and reset
+   hwPrvVerifyUICR();
 
 	//init and switch to HF crystal
 	NRF_CLOCK->TASKS_HFCLKSTART = 1;
@@ -202,18 +218,22 @@ static void cryptoInit(uint8_t *myMac)
 
 void commsExtKeyForMac(uint32_t *key, const uint8_t *mac)
 {
-	key[2] = key[0] = *(const uint32_t*)(mac + 0);
-	key[3] = key[1] = *(const uint32_t*)(mac + 4);
+// NB: mac might not be word aligned
+   memcpy(key,mac,sizeof(uint32_t));
+   key[2] = key[0];
+   memcpy(&key[1],mac+4,sizeof(uint32_t));
+   key[3] = key[1];
 	
 	aesEnc(mRootKey, key, key);
 }
 
 static void prvProcessAssocReq(uint8_t radioIdx, const uint8_t *fromMac, int_fast8_t rssi, uint_fast8_t lqi, const struct TagInfo* info)
 {
+   struct AssocInfo ai;
 	struct {
 		uint8_t pktTyp;
-		struct AssocInfo ai;
-	} __attribute__((packed)) ai = {};
+      uint8_t Temp[sizeof(ai)];
+   } __attribute__((packed)) aiPkt = {};
 	bool ok;
 	
 	pr("TAG requesting association (LQi %u, RSSI %d):\n", lqi, rssi);
@@ -260,19 +280,23 @@ static void prvProcessAssocReq(uint8_t radioIdx, const uint8_t *fromMac, int_fas
 	}
 
 	pr("ACCEPTING tag...\n");
-	ai.pktTyp = PKT_ASSOC_RESP;
-	ai.ai.checkinDelay = 3600000;		//check in once an hour
-	ai.ai.retryDelay = 1000;			//retry in a second for failures
-	ai.ai.failedCheckinsTillBlank = 4;
-	ai.ai.failedCheckinsTillDissoc = 16;
-	commsExtKeyForMac(ai.ai.newKey, fromMac);
+   aiPkt.pktTyp = PKT_ASSOC_RESP;
+   ai.checkinDelay = 3600000;    //check in once an hour
+   ai.retryDelay = 1000;         //retry in a second for failures
+   ai.failedCheckinsTillBlank = 4;
+   ai.failedCheckinsTillDissoc = 16;
+   commsExtKeyForMac(ai.newKey, fromMac);
 	
 //	ai.ai.failedCheckinsTillBlank = 2;		//XXX: 
 //	ai.ai.failedCheckinsTillDissoc = 3;		//XXX: 
 //	ai.ai.checkinDelay = 10000;				//XXX: check in once every 10 seconds
 	
-	pr(" provisioning key %08x %08x %08x %08x\n", (unsigned)ai.ai.newKey[0], (unsigned)ai.ai.newKey[1], (unsigned)ai.ai.newKey[2], (unsigned)ai.ai.newKey[3]);
-	ok = commsTx(radioIdx, fromMac, &ai, sizeof(ai), true, true, true);
+   pr(" provisioning key %08x %08x %08x %08x\n", 
+      (unsigned)ai.newKey[0], (unsigned)ai.newKey[1], 
+      (unsigned)ai.newKey[2], (unsigned)ai.newKey[3]);
+   memcpy(aiPkt.Temp,&ai,sizeof(aiPkt.Temp));
+   pr(" sizeof(aiPkt) %d\n",sizeof(aiPkt));
+   ok = commsTx(radioIdx, fromMac, &aiPkt, sizeof(aiPkt), true, true, true);
 	pr(" done: %s\n", ok ? "OK" : "NO ACK RXed");
 }
 
