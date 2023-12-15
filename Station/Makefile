@@ -1,6 +1,8 @@
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 OBJCOPY	= arm-none-eabi-objcopy
+OBJDUMP	= arm-none-eabi-objdump
+
 LKR		= nrf52.lkr
 LTO		= -flto
 COMMON = -g -ggdb3 -mthumb -march=armv7e-m  -fomit-frame-pointer -I. $(LTO)
@@ -9,8 +11,10 @@ COMMON += -fsection-anchors -fconserve-stack -Wno-error=unused-function
 
 CCFLAGS	= $(COMMON) -ffunction-sections -fdata-sections -DNRF52840_XXAA -MD
 CCFLAGS += -DCONFIG_NFCT_PINS_AS_GPIOS
+CCFLAGS += -DCONFIG_GPIO_AS_PINRESET
 
 LDFLAGS	= $(COMMON) -Wl,--gc-sections -Wl,-T $(LKR)
+LDFLAGS	+= -Wl,-M -Wl,-Map=$(BUILD_DIR)/$(APP).map
 
 ifeq ($(DEBUG),y)
 CCFLAGS	+= -O0
@@ -20,7 +24,7 @@ endif
 
 BUILD_DIR = build
 
-.PHONEY: all test flash clean reset
+.PHONEY: all test flash clean reset listing
 
 APP = Station
 
@@ -36,7 +40,7 @@ test: $(APP).bin
 	sudo CortexProg write $(APP).bin trace 0x2003fffc
 
 flash: $(APP).hex
-	nrfjprog -f nrf52 --recover
+	#nrfjprog -f nrf52 --recover
 	nrfjprog -f nrf52 --program $(BUILD_DIR)/$(APP).bin --sectorerase
 	nrfjprog -f nrf52 -r
 
@@ -60,6 +64,9 @@ $(BUILD_DIR)/%.o : %.c
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+listing:
+	$(OBJDUMP) -t -S -d $(BUILD_DIR)/$(APP).elf > $(BUILD_DIR)/$(APP).lst
 
 debug:
 	echo "OBJS= $(OBJS)"
