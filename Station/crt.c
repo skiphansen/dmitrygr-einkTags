@@ -1,7 +1,7 @@
 #include "nrf52840.h"
 
 #define WEAK __attribute__ ((weak))
-#define ALIAS(f) __attribute__ ((weak, alias (#f)))
+#define ALIAS(f) __attribute__((noreturn,weak, alias (#f)))
 
 
 

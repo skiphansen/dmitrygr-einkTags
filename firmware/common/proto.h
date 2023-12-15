@@ -99,7 +99,13 @@ struct AssocInfo {
 	uint16_t failedCheckinsTillDissoc;		//how many fails till we dissociate
 	uint32_t newKey[4];
 	uint8_t rfu[8];							//shall be zero for now
-} __packed;
+}
+// sh: Only add __packed when needed.  This was causing warning on arm compiles
+// and the above structure is already packed correctly for 32 bit machines.
+#if defined(UINTPTR_MAX) && UINTPTR_MAX != 0xffffffff
+__packed
+#endif
+;
 
 #define CHECKIN_TEMP_OFFSET					0x7f
 
