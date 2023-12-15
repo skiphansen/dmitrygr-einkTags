@@ -104,12 +104,12 @@ rx is on
 |-|-|-|-|
 0.15 | CS | chip select | nRF52840 -> CC1101 |
 0.17 | GDO0 | read FIFO ready| CC1101 -> nRF52840 |
-0.20 | GDO1 | write FIFO ready| CC1101 -> nRF52840 |
+0.20 | GDO2 | write FIFO ready| CC1101 -> nRF52840 |
 0.22 | MISO aka SO | SPI data from CC1101 | CC1101 -> nRF52840 |
 0.24 | SCK  | SPI clock | nRF52840 -> CC1101 |
 1.00 | MOSI aka SI | SPI data to CC1101 | nRF52840 -> CC1101 |
-0.09 | TXD | Yellow on a FTDI cable | nRF52840 -> PC |
-0.10 | RXD | Orange on a FTDI cable | PC -> nRF52840 (not needed) |
+0.09 | RXD | Orange on a FTDI cable | PC -> nRF52840 (not needed) |
+0.10 | TXD | Yellow on a FTDI cable | nRF52840 -> PC |
 Ground | | Black on a FTDI cable||
 
 ## Example CC1101 module connections
