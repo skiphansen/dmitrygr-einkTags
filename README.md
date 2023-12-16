@@ -47,7 +47,7 @@ access port.
 
 ## Chroma74r Status
 
-<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma74_first_contact.png" width=50%>
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/two_cats.png" width=50%>
 
 ## Chroma29r Status
 
