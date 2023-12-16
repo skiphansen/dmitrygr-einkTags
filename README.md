@@ -1,4 +1,8 @@
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/two_cats.png" width=50%>
+
 # Dmitry Grinberg's eInk price tag project
+
+[https://github.com/skiphansen/dmitrygr-einkTags](https://github.com/skiphansen/dmitrygr-einkTags)
 
 This code was taken from einkTags_0001.zip and einkTags_0002_8051.zip downloaded from 
 [dmitry.gr](https://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags).
@@ -44,10 +48,6 @@ access port.
 |EPOP900  | Builds, but untested  |
 |zbs29v025  |Builds, but untested |
 |zbs29v026|Builds, but untested |
-
-## Chroma74r Status
-
-<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/two_cats.png" width=50%>
 
 ## Chroma29r Status
 
