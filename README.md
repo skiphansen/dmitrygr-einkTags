@@ -1,4 +1,4 @@
-<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/two_cats.png" width=50%>
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/two_cats.png">
 
 # Dmitry Grinberg's eInk price tag project
 
