@@ -639,7 +639,7 @@ bool tiRadioInit(void)
    uint8_t paTab[] = {0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0};
 
 // Set the frequency offset for MY board, yours will probably be different !
-   regsCfg[REG_FOCCFG] = 0x26;   
+   regsCfg[REG_FSCTRL0] = 0x26;
 	
 	tiRadioPrvIfInit();
 	

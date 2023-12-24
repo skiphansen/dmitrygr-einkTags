@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE settingcategories SYSTEM "../../settingcategories.dtd"[]>
+<Categories>
+  <Category>
+    <Name>Generic 868MHz</Name>
+    <Description>Generic settings for the 868MHz band</Description>
+    <Setting>ts_esp-idf-cc1101</Setting>
+    <Setting>ts_setting1</Setting>
+    <Setting>ts_setting2</Setting>
+    <Setting>ts_setting3</Setting>
+    <Setting>ts_setting4</Setting>
+    <Setting>ts_setting5</Setting>
+    <Setting>ts_setting6</Setting>
+    <Setting>ts_setting7</Setting>
+    <Setting>ts_setting8</Setting>
+    <Setting>ts_setting9</Setting>
+    <Setting>ts_setting10</Setting>
+    <Setting>ts_setting11</Setting>
+    <Setting>ts_setting12</Setting>
+    <Setting>ts_setting13</Setting>
+    <Setting>ts_setting14</Setting>
+    <Setting>ts_setting15</Setting>
+    <Setting>ts_setting16</Setting>
+    <Setting>ts_setting17</Setting>
+    <Setting>ts_setting18</Setting>
+  </Category>
+  <Category>
+    <Name>CC1101-CC1190 868MHz</Name>
+    <Description>Settings for the CC1101-CC1190 868MHz EM</Description>
+    <Setting>ts_1190_868_setting1</Setting>
+    <Setting>ts_1190_868_setting2</Setting>
+    <Setting>ts_1190_868_setting3</Setting>
+    <Setting>ts_1190_868_setting4</Setting>
+  </Category>
+  <Category>
+    <Name>CC1101-CC1190 915MHz</Name>
+    <Description>Settings for the CC1101-CC1190 915MHz EM</Description>
+    <Setting>ts_1190_915_setting1</Setting>
+    <Setting>ts_1190_915_settinga</Setting>
+    <Setting>ts_1190_915_setting2</Setting>
+    <Setting>ts_1190_915_settingb</Setting>
+    <Setting>ts_1190_915_setting3</Setting>
+    <Setting>ts_1190_915_setting4</Setting>
+    <Setting>ts_1190_915_settingc</Setting>
+    <Setting>ts_1190_915_setting5</Setting>
+  </Category>
+  <Category>
+    <Name>CC1101-RF3858</Name>
+    <Description>Settings for the CC1101-RF3858EM</Description>
+    <Setting>ts_rf3858_setting1</Setting>
+    <Setting>ts_rf3858_setting2</Setting>
+    <Setting>ts_rf3858_setting3</Setting>
+    <Setting>ts_rf3858_setting4</Setting>
+    <Setting>ts_rf3858_setting5</Setting>
+    <Setting>ts_rf3858_setting6</Setting>
+    <Setting>ts_rf3858_setting7</Setting>
+    <Setting>ts_rf3858_setting8</Setting>
+    <Setting>ts_rf3858_setting9</Setting>
+    <Setting>ts_rf3858_setting10</Setting>
+    <Setting>ts_rf3858_setting11</Setting>
+    <Setting>ts_rf3858_setting12</Setting>
+    <Setting>ts_rf3858_setting13</Setting>
+    <Setting>ts_rf3858_setting14</Setting>
+    <Setting>ts_rf3858_setting15</Setting>
+    <Setting>ts_rf3858_setting16</Setting>
+    <Setting>ts_rf3858_setting17</Setting>
+    <Setting>ts_rf3858_setting18</Setting>
+  </Category>
+</Categories>
