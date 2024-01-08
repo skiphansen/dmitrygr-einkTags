@@ -17,6 +17,8 @@
 void SerialFrameIO_Init(uint8_t *RxBuf,int RxBufSize);
 int SerialFrameIO_ParseByte(uint8_t RxByte);
 void SerialFrameIO_SendMsg(uint8_t *Msg,int MsgLen);
+void SerialFrameIO_SendCmd(uint8_t Cmd,uint8_t *Data,int DataLen);
+void SerialFrameIO_SendResp(uint8_t Cmd,uint8_t Err,uint8_t *Data,int DataLen);
 
 // Provide provided by user, sends or queues a byte to be sent on serial line
 void SerialFrameIO_SendByte(uint8_t Byte);

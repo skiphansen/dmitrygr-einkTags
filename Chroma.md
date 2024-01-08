@@ -45,7 +45,18 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 
 
 
-## CC1110 pin connectons
+## CC1110F32 Memory map
+
+32k program FLASH + 4k SRAM
+
+0xff00-0xffff   256 bytes fast access RAM
+0xf000-0xfeff   4k - 256 bytes Slow access SRAM
+0xdf80-0xdfff   Hardware SFR registers
+0xdf00-0xdf7f   Hardware Radio & I2S registers
+0x0000-0x7fff   Flash
+
+
+## CC1110F pin connections
 | Pin | Pin name | usage | Notes |
 | - | - | -|-|
 | 1| P1_2 Port 1.2 |NC ?|

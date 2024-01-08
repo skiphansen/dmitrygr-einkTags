@@ -1,4 +1,4 @@
-## Differences between CC1101 and CC111x
+## Differences between the CC1101 and the CC111x
 
 The CC1101 has 3 physical general purpose pins GDO0, GDO1, and GDO2 whereas
 the CC111x can optionally output the same signals as the CC1101 on the

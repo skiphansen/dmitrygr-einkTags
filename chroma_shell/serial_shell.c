@@ -96,9 +96,6 @@ void TabCompletion(const char *buf, linenoiseCompletions *lc);
 void RunOneCommand(char *Command);
 char *GetHistoryPath();
 
-// POSIX defines and prototypes
-void Sleep(int Milliseconds);
-
 #define VERBOSE_V1               0x01
 #define VERBOSE_DUMP_RAW_TX      0x08
 #define VERBOSE_DUMP_RAW_RX      0x10
@@ -447,20 +444,6 @@ char *NextToken(char *In)
    return SkipSpaces(Skip2Space(In));
 }
 
-
-
-void HandleCmd(uint8_t *Msg,int MsgLen)
-{
-   uint8_t Cmd = Msg[0] & ~CMD_RESP;
-
-   // Command
-   switch(Cmd) {
-      default:
-         ELOG("Unexpected command received 0x%x\n",Cmd);
-         break;
-   }
-}
-
 // Returns:
 //    < 0 - error
 //    = 0 - timeout
@@ -767,7 +750,16 @@ void RunOneCommand(char *Command)
 
 void Sleep(int Milliseconds)
 {
-   usleep(Milliseconds * 1000);
+   unsigned long TotalUs = Milliseconds * 1000L;
+   unsigned int Secs = TotalUs / 1000000L;
+   useconds_t us = TotalUs % 1000000L;
+
+   if(Secs > 0) {
+      sleep(Secs);
+   }
+   if(us > 0) {
+      usleep(us);
+   }
 }
 
 char *GetHistoryPath()
@@ -985,9 +977,10 @@ AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout)
       SetTimeout(Timeout,&Timer);
       if(WaitEvent(Timeout,NULL,ProcessSerialData) <= 0) {
       // Error or timeout
-         printf("%s#%d\n",__FUNCTION__,__LINE__);
          if(IsTimedOut(&Timer)) {
-            LOG("Timeout waiting for %s response\n",Cmd2Str(Cmd));
+            if(Cmd != 0) {
+               LOG("Timeout waiting for %s response\n",Cmd2Str(Cmd));
+            }
          }
          else {
             LOG("Some error occurred\n");

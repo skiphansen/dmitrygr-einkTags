@@ -150,20 +150,62 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
    return Ret;
 }
 
+// MsgLen is total bytes to send including Type, Data and *pData
+static void SendInternal(uint8_t Type,uint8_t Data,uint8_t *pData,int MsgLen)
+{
+   if(MsgLen-- > 0) {
+      uint16_t Crc = 0xffff;
+
+      SerialFrameIO_SendByte(SPECIAL);
+      SerialFrameIO_SendByte(FLAG);
+      EscapedSend(Type);
+      UpdateCRC(Type,&Crc);
+      if(MsgLen > 0) {
+         MsgLen--;
+         EscapedSend(Data);
+         UpdateCRC(Data,&Crc);
+      }
+      while(MsgLen-- > 0) {
+         EscapedSend(*pData);
+         UpdateCRC(*pData++,&Crc);
+      }
+      EscapedSend((uint8_t) (Crc & 0xff));
+      EscapedSend((uint8_t) ((Crc >> 8) & 0xff));
+      SerialFrameIO_SendByte(SPECIAL);
+      SerialFrameIO_SendByte(FLAG);
+   }
+}
+
+// MsgLen is total bytes to send
 void SerialFrameIO_SendMsg(uint8_t *Msg,int MsgLen)
 {
-   uint16_t Crc = 0xffff;
-   int i;
+   uint8_t Type;
+   uint8_t Data = 0;
 
-   SerialFrameIO_SendByte(SPECIAL);
-   SerialFrameIO_SendByte(FLAG);
-   for(i = 0; i < MsgLen; i++) {
-      EscapedSend(Msg[i]);
-      UpdateCRC(Msg[i],&Crc);
+   if(MsgLen > 0) {
+      Type = Msg[0];
+      if(MsgLen >= 2) {
+         Data = Msg[1];
+      }
+      SendInternal(Type,Data,&Msg[2],MsgLen);
    }
-   EscapedSend((uint8_t) (Crc & 0xff));
-   EscapedSend((uint8_t) ((Crc >> 8) & 0xff));
-   SerialFrameIO_SendByte(SPECIAL);
-   SerialFrameIO_SendByte(FLAG);
 }
+
+// DataLen is total bytes of payload to send
+void SerialFrameIO_SendCmd(uint8_t Cmd,uint8_t *Data,int DataLen)
+{
+   uint8_t FirstByte = 0;
+
+   if(DataLen > 1) {
+      FirstByte = Data[0];
+   }
+   SendInternal(Cmd,FirstByte,&Data[1],DataLen+1);
+}
+
+// DataLen is total bytes of payload to send
+void SerialFrameIO_SendResp(uint8_t Cmd,uint8_t Err,uint8_t *Data,int DataLen)
+{
+   SendInternal(Cmd,Err,Data,DataLen+2);
+}
+
 

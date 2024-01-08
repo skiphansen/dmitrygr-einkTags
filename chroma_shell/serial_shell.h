@@ -50,5 +50,6 @@ void PrintResponse(const char *fmt, ...);
 AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout);
 AsyncResp *SendCmd(uint8_t *Msg,int MsgLen,int Timeout);
 char *Skip2Space(char *In);
+void Sleep(int Milliseconds);
 
 #endif // _SHELL_H
