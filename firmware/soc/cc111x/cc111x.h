@@ -55,6 +55,13 @@ __sbit __at (0xa4) P2_4;
 __sbit __at (0xa5) P2_5;
 __sbit __at (0xa6) P2_6;
 __sbit __at (0xa7) P2_7;
+__sbit __at (0xa8) RFTXRXIE;  // RF TX/RX FIFO interrupt enable
+__sbit __at (0xa9) ADCIE;     // ADC Interrupt Enable
+__sbit __at (0xaa) URX0IE;    // USART0 RX Interrupt Enable
+__sbit __at (0xab) URX1IE;    // USART1 RX Interrupt Enable
+__sbit __at (0xac) ENCIE;     // AES Encryption/Decryption Interrupt Enable
+__sbit __at (0xad) STIE;      // Sleep Timer Interrupt Enable
+__sbit __at (0xaf) EA;        // Global Interrupt Enable
 
 __sbit __at (0xAF) IEN_EA;
 
@@ -71,14 +78,19 @@ __sfr __at (0x8D) P1IEN;
 __sfr __at (0x8F) P0INP;
 __sfr __at (0x90) P1;
 __sfr __at (0x91) RFIM;
-__sfr __at (0x93) XPAGE;		//really called MPAGE
-__sfr __at (0x93) _XPAGE;		//really called MPAGE
+__sfr __at (0x93) XPAGE;      //really called MPAGE
+__sfr __at (0x93) _XPAGE;     //really called MPAGE
 __sfr __at (0x95) ENDIAN;
 __sfr __at (0x98) S0CON;
 __sfr __at (0x9A) IEN2;
+
+// S1CON (0x9B) - CPU Interrupt Flag 3
 __sfr __at (0x9B) S1CON;
+#define S1CON_RFIF_1                      0x02
+#define S1CON_RFIF_0                      0x01
+
 __sfr __at (0x9C) T2CT;
-__sfr __at (0x9D) T2PR;			//used by radio for storage
+__sfr __at (0x9D) T2PR;       //used by radio for storage
 __sfr __at (0x9E) TCTL;
 __sfr __at (0xA0) P2;
 __sfr __at (0xA1) WORIRQ;
@@ -125,15 +137,32 @@ __sfr __at (0xCF) T3CC1;
 __sfr __at (0xD1) DMAIRQ;
 __sfr16 __at (0xD3D2) DMA1CFG;
 __sfr16 __at (0xD5D4) DMA0CFG;
+
+// DMAARM (0xD6) - DMA Channel Arm
 __sfr __at (0xD6) DMAARM;
+#define DMAARM_ABORT                      0x80
+#define DMAARM4                           0x10
+#define DMAARM3                           0x08
+#define DMAARM2                           0x04
+#define DMAARM1                           0x02
+#define DMAARM0                           0x01
+
 __sfr __at (0xD7) DMAREQ;
 __sfr __at (0xD8) TIMIF;
 __sfr __at (0xD9) RFD;
-__sfr16 __at (0xDBDA) T1CC0;	//used by timer for storage
+__sfr16 __at (0xDBDA) T1CC0;  //used by timer for storage
 __sfr16 __at (0xDDDC) T1CC1;
 __sfr16 __at (0xDFDE) T1CC2;
 
+// RFST (0xE1) - RF Strobe Commands
 __sfr __at (0xE1) RFST;
+#define RFST_SFSTXON                      0x00
+#define RFST_SCAL                         0x01
+#define RFST_SRX                          0x02
+#define RFST_STX                          0x03
+#define RFST_SIDLE                        0x04
+#define RFST_SNOP                         0x05
+
 __sfr __at (0xE2) T1CNTL;
 __sfr __at (0xE3) T1CNTH;
 __sfr __at (0xE4) T1CTL;
@@ -141,13 +170,24 @@ __sfr __at (0xE5) T1CCTL0;
 __sfr __at (0xE6) T1CCTL1;
 __sfr __at (0xE7) T1CCTL2;
 __sfr __at (0xE8) IRCON2;
+
+// RFIF (0xE9) - RF Interrupt Flags
 __sfr __at (0xE9) RFIF;
+#define RFIF_IRQ_TXUNF                    0x80
+#define RFIF_IRQ_RXOVF                    0x40
+#define RFIF_IRQ_TIMEOUT                  0x20
+#define RFIF_IRQ_DONE                     0x10
+#define RFIF_IRQ_CS                       0x08
+#define RFIF_IRQ_PQT                      0x04
+#define RFIF_IRQ_CCA                      0x02
+#define RFIF_IRQ_SFD                      0x01
+
 __sfr __at (0xEA) T4CNT;
 __sfr __at (0xEB) T4CTL;
 __sfr __at (0xEC) T4CCTL0;
-__sfr __at (0xED) T4CC0;		//used by radio for storage
+__sfr __at (0xED) T4CC0;      //used by radio for storage
 __sfr __at (0xEE) T4CCTL1;
-__sfr __at (0xEF) T4CC1;		//used by radio for storage
+__sfr __at (0xEF) T4CC1;      //used by radio for storage
 
 __sfr __at (0xF1) PERCFG;
 __sfr __at (0xF2) ADCCFG;
@@ -216,26 +256,51 @@ static __xdata __at (0xdf37) unsigned char VERSION;
 static __xdata __at (0xdf38) unsigned char FREQEST;
 static __xdata __at (0xdf39) unsigned char LQI;
 static __xdata __at (0xdf3a) unsigned char RSSI;
+
+// 0xDF3B: MARCSTATE - Main Radio Control State Machine State
 static __xdata __at (0xdf3b) unsigned char MARCSTATE;
+#define MARC_STATE_SLEEP                  0x00
+#define MARC_STATE_IDLE                   0x01
+#define MARC_STATE_VCOON_MC               0x03
+#define MARC_STATE_REGON_MC               0x04
+#define MARC_STATE_MANCAL                 0x05
+#define MARC_STATE_VCOON                  0x06
+#define MARC_STATE_REGON                  0x07
+#define MARC_STATE_STARTCAL               0x08
+#define MARC_STATE_BWBOOST                0x09
+#define MARC_STATE_FS_LOCK                0x0A
+#define MARC_STATE_IFADCON                0x0B
+#define MARC_STATE_ENDCAL                 0x0C
+#define MARC_STATE_RX                     0x0D
+#define MARC_STATE_RX_END                 0x0E
+#define MARC_STATE_RX_RST                 0x0F
+#define MARC_STATE_TXRX_SWITCH            0x10
+#define MARC_STATE_RX_OVERFLOW            0x11
+#define MARC_STATE_FSTXON                 0x12
+#define MARC_STATE_TX                     0x13
+#define MARC_STATE_TX_END                 0x14
+#define MARC_STATE_RXTX_SWITCH            0x15
+#define MARC_STATE_TX_UNDERFLOW           0x16
+
 static __xdata __at (0xdf3c) unsigned char PKTSTATUS;
 static __xdata __at (0xdf3d) unsigned char VCO_VC_DAC;
 
 
 struct DmaDescr {
-	//SDCC allocates bitfields lo-to-hi
-	uint8_t srcAddrHi, srcAddrLo;
-	uint8_t dstAddrHi, dstAddrLo;
-	uint8_t lenHi		: 5;
-	uint8_t vlen		: 3;
-	uint8_t lenLo;
-	uint8_t trig		: 5;
-	uint8_t tmode		: 2;
-	uint8_t wordSize	: 1;
-	uint8_t priority	: 2;
-	uint8_t m8			: 1;
-	uint8_t irqmask		: 1;
-	uint8_t dstinc		: 2;
-	uint8_t srcinc		: 2;
+   //SDCC allocates bitfields lo-to-hi
+   uint8_t srcAddrHi, srcAddrLo;
+   uint8_t dstAddrHi, dstAddrLo;
+   uint8_t lenHi     : 5;
+   uint8_t vlen      : 3;
+   uint8_t lenLo;
+   uint8_t trig      : 5;
+   uint8_t tmode     : 2;
+   uint8_t wordSize  : 1;
+   uint8_t priority  : 2;
+   uint8_t m8        : 1;
+   uint8_t irqmask      : 1;
+   uint8_t dstinc    : 2;
+   uint8_t srcinc    : 2;
 };
 
 #endif

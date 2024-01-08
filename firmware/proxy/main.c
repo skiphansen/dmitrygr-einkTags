@@ -1,16 +1,14 @@
-/*
- *  Copyright (C) 2023  Skip Hansen
- * 
- *  This program is free software; you can redistribute it and/or modify it
- *  under the terms and conditions of the GNU General Public License,
- *  version 2, as published by the Free Software Foundation.
- *
- *  This program is distributed in the hope it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- *  more details.
- *
- */
+/* 
+  This code was derived code downloaded from  https://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags
+ 
+  Dimitry didn't include a LICENSE file or copyright headers in the source
+  code but the web page containing the ZIP file I downloaded says:
+ 
+  "The license is simple: This code/data/waveforms are free for use in hobby
+  and other non-commercial products."
+
+   For commercial use, contact him (licensing@dmitry.gr)
+*/ 
 
 #define __packed
 #include <stdbool.h>
@@ -26,8 +24,8 @@
 #include "cpu.h"
 #include "wdt.h"
 #include "SerialFraming.h"
-#include "cc1110-ext.h"
 #include "proxy_msgs.h"
+#include "radio.h"
 
 #define xstr(s) str(s)
 #define str(s) #s
@@ -47,14 +45,20 @@ typedef union {
 } CastUnion;
 
 volatile __xdata uint8_t gRfStatus;
-uint8_t __xdata gRxBuf[130];
+
+#define MAX_FRAME_IO_LEN      130
+uint8_t __xdata gRxBuf[MAX_FRAME_IO_LEN];
+uint8_t __xdata gTxBuf[MAX_FRAME_IO_LEN*2];
 int gRxMsgLen;
+int gTxMsgLen;
+
 const char gBuildType[] = xstr(BUILD_TYPE);
 
-#define UART1_RX_RING_LEN  16
+#define UART1_RX_RING_LEN  64
 volatile uint8_t __xdata gUart1RxBuf[UART1_RX_RING_LEN];
 volatile uint8_t __xdata gUart1RxWr;
 volatile uint8_t __xdata gUart1RxRd;
+volatile __bit gRxOn;
 
 
 void HandleMsg(void);
@@ -62,6 +66,7 @@ void RxMode(void);
 void TxMode(void);
 void IdleMode(void);
 void startRX(void);
+void TryRx(void);
 
 void main(void)
 {
@@ -73,15 +78,18 @@ void main(void)
    u1setUartMode();
    LOG("proxy_%s v0.01, compiled " __DATE__ " " __TIME__ "\n",gBuildType);
    u1setEepromMode();
-   if (!eepromInit()) {
+   if(!eepromInit()) {
       u1setUartMode();
       LOG("failed to init eeprom\n");
    }
    u1setUartMode();
-   IEN0 = IEN0_URX1IE;
+   URX1IE = 1;
+   // RFTXRXIE = 1;
 
    irqsOn();
+   radioInit();
 
+// Forever loop
    while(true) {
       uint8_t Byte;
       while(gUart1RxWr != gUart1RxRd) {
@@ -94,6 +102,9 @@ void main(void)
          // Message avaliable
             HandleMsg();
          }
+      }
+      if(gRfStatus == RFST_SRX) {
+         TryRx();
       }
    }
 }
@@ -149,7 +160,7 @@ void HandleMsg()
          uCast1.Bytes[2] = gRxBuf[5];
          eepromRead(uCast1.Adr32,(void __xdata *) &gRxBuf[2],uCast0.IntValue);
          u1setUartMode();
-      // purge the receiver of any data received in SPI mode
+         // purge the receiver of any data received in SPI mode
          gUart1RxRd = gUart1RxWr;
          MsgLen += uCast0.IntValue;
          break;
@@ -228,7 +239,7 @@ void HandleMsg()
       case CMD_POKE:
          loop =  *ptr++;
          loop += *ptr++ << 8;
-         ep5.dptr = (__xdata u8*) loop;
+         ep5.dptr = (__xdata uint8_t*) loop;
 
          loop = ep5.OUTlen - 2;
 
@@ -237,14 +248,14 @@ void HandleMsg()
          }
 
          //if (ep5.OUTbytesleft == 0)
-         txdata(ep5.OUTapp, ep5.OUTcmd, 2, (__xdata u8*)&(ep5.OUTbytesleft));
+         txdata(ep5.OUTapp, ep5.OUTcmd, 2, (__xdata uint8_t*)&(ep5.OUTbytesleft));
          break;
 
       case CMD_POKE_REG:
          if(!(ep5.flags & EP_OUTBUF_CONTINUED)) {
             loop =  *ptr++;
             loop += *ptr++ << 8;
-            ep5.dptr = (__xdata u8*) loop;
+            ep5.dptr = (__xdata uint8_t*) loop;
          }
          // FIXME: do we want to DMA here?
 
@@ -260,23 +271,23 @@ void HandleMsg()
             *ep5.dptr++ = *ptr++;
          }
 
-         txdata(ep5.OUTapp, ep5.OUTcmd, 2, (__xdata u8*)&(ep5.OUTbytesleft));
+         txdata(ep5.OUTapp, ep5.OUTcmd, 2, (__xdata uint8_t*)&(ep5.OUTbytesleft));
 
          break;
 
       case CMD_STATUS:
-         txdata(ep5.OUTapp, ep5.OUTcmd, 13, (__xdata u8*)"UNIMPLEMENTED");
+         txdata(ep5.OUTapp, ep5.OUTcmd, 13, (__xdata uint8_t*)"UNIMPLEMENTED");
          // unimplemented
          break;
 
       case CMD_GET_CLOCK:
-         txdata(ep5.OUTapp, ep5.OUTcmd, 4, (__xdata u8*)clock);
+         txdata(ep5.OUTapp, ep5.OUTcmd, 4, (__xdata uint8_t*)clock);
          break;
 
 #endif
       case CMD_RESET:
          if(MARCSTATE != MARC_STATE_IDLE) {
-         // The watchdog won't timeout while transmitting !!!
+            // The watchdog won't timeout while transmitting !!!
             IdleMode(); 
          }
          wdtDeviceReset();
@@ -297,7 +308,7 @@ void HandleMsg()
    }
 
    if(MsgLen != 0) {
-   // Send reply in gRxBuf
+      // Send reply in gRxBuf
       SerialFrameIO_SendMsg(gRxBuf,MsgLen);
    }
 }
@@ -305,10 +316,7 @@ void HandleMsg()
 void RxMode()
 {
    if(gRfStatus != RFST_SRX) {
-      LOG("Set SRX\n");
-      MCSM1 &= 0xf0;
-      MCSM1 |= 0x0f;
-      gRfStatus = RFST_SRX;
+      LOG("startRX\n");
       startRX();
    }
 }
@@ -338,10 +346,8 @@ void IdleMode()
       RFST = RFST_SIDLE; 
       while(MARCSTATE != MARC_STATE_IDLE);
 
-#ifdef RFDMA
       DMAARM |= (0x80 | DMAARM0);                 // ABORT anything on DMA 0
       DMAIRQ &= ~1;
-#endif
 
       S1CON &= ~(S1CON_RFIF_0|S1CON_RFIF_1);  // clear RFIF interrupts
       RFIF &= ~RFIF_IRQ_DONE;
@@ -353,78 +359,32 @@ void IdleMode()
 // prepare for RF RX
 void startRX()
 {
-#if 0
-    /* If DMA transfer, disable rxtx interrupt */
-#ifdef RFDMA
-    RFTXRXIE = 0;
-#else
-    RFTXRXIE = 1;
-#endif
-
-    /* Clear rx buffer */
-    memset(rfrxbuf,0,BUFFER_SIZE);
-
-    /* Set both byte counters to zero */
-    rfRxCounter[FIRST_BUFFER] = 0;
-    rfRxCounter[SECOND_BUFFER] = 0;
-
-    /*
-    * Process flags, set first flag to false in order to let the ISR write bytes into the buffer,
-    *  The second buffer should flag processed on initialize because it is empty.
-    */
-    rfRxProcessed[FIRST_BUFFER] = RX_UNPROCESSED;
-    rfRxProcessed[SECOND_BUFFER] = RX_PROCESSED;
-
-    /* Set first buffer as current buffer */
-    rfRxCurrentBuffer = 0;
-
-    S1CON &= ~(S1CON_RFIF_0|S1CON_RFIF_1);
-    RFIF &= ~RFIF_IRQ_DONE;
-
-#ifdef RFDMA
-    {
-        rfDMA.srcAddrH = ((u16)&X_RFD)>>8;
-        rfDMA.srcAddrL = ((u16)&X_RFD)&0xff;
-        rfDMA.destAddrH = ((u16)&rfrxbuf[rfRxCurrentBuffer])>>8;
-        rfDMA.destAddrL = ((u16)&rfrxbuf[rfRxCurrentBuffer])&0xff;
-        rfDMA.lenH = 0;
-        rfDMA.vlen = 0;
-        rfDMA.lenL = 12;
-        rfDMA.trig = 19;
-        rfDMA.tMode = 0;
-        rfDMA.wordSize = 0;
-        rfDMA.priority = 1;
-        rfDMA.m8 = 0;
-        rfDMA.irqMask = 0;
-        rfDMA.srcInc = 0;
-        rfDMA.destInc = 1;
-
-        DMA0CFGH = ((u16)(&rfDMA))>>8;
-        DMA0CFGL = ((u16)(&rfDMA))&0xff;
-        
-        DMAIRQ &= ~DMAARM0;
-        DMAARM |= (0x80 | DMAARM0);
-        NOP(); NOP(); NOP(); NOP();
-        NOP(); NOP(); NOP(); NOP();
-        DMAARM = DMAARM0;
-        NOP(); NOP(); NOP(); NOP();
-        NOP(); NOP(); NOP(); NOP();
-    }
-#endif
-
-    RFRX;
-
-    RFIM |= RFIF_IRQ_DONE;
-#endif
+   if(gRfStatus != RFST_SRX) {
+      gRfStatus = RFST_SRX;
+      radioRxEnable(true,false);
+   }
 }
 
-
-void rx1_isr(void) __interrupt URX1_VECTOR 
+void rx1_isr(void) __interrupt (URX1_VECTOR)
 {
    gUart1RxBuf[gUart1RxWr++] = U1DBUF;
    if(gUart1RxWr == UART1_RX_RING_LEN) {
    // wrap
       gUart1RxWr = 0;
+   }
+}
+
+void TryRx()
+{
+   uint8_t __xdata * __xdata Buf;
+   int8_t Len;
+   uint8_t __xdata Lqi = 0;
+   int8_t __xdata RSSI = 0;
+
+   if((Len = radioRxDequeuePktGet(&Buf,&Lqi,&RSSI)) > 0) {
+   // Send it
+      SerialFrameIO_SendResp(CMD_RX_DATA,RSSI,Buf,Len);
+      radioRxDequeuedPktRelease();
    }
 }
 

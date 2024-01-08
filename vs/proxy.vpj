@@ -183,6 +183,9 @@
 				N="../firmware/make/common.mk"
 				Type="Makefile"/>
 			<F
+				N="../firmware/soc/cc111x/make.mk"
+				Type="Makefile"/>
+			<F
 				N="../firmware/proxy/Makefile"
 				Type="Makefile"/>
 			<F
@@ -198,4 +201,7 @@
 			<F N="../README.md"/>
 		</Folder>
 	</Files>
+	<Macro>
+		<ExecMacro CmdLine="set_save_option + E" />
+	</Macro>
 </Project>

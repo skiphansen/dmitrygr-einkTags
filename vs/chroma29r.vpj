@@ -221,4 +221,7 @@
 			<F N="../sdcc/README.md"/>
 		</Folder>
 	</Files>
+	<Macro>
+		<ExecMacro CmdLine="set_save_option - E"/>
+	</Macro>
 </Project>

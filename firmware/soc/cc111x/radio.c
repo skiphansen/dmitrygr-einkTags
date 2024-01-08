@@ -296,7 +296,7 @@ void DMA_ISR(void) __interrupt (8)
       
       DMAIRQ &= (uint8_t)~(1 << 0);
       len = buf[0];
-         
+#ifndef  PROMISCUOUS_RX
       //verify length was proper, crc is a match 
       if (len <= RADIO_MAX_PACKET_LEN && len >= sizeof(struct MacHeaderGenericAddr) && (buf[(uint8_t)(len + 2)] & 0x80) &&
          !hdr->fcs.secure && !hdr->fcs.rfu1 && !hdr->fcs.rfu2 && !hdr->fcs.frameVer) {
@@ -338,6 +338,15 @@ void DMA_ISR(void) __interrupt (8)
             mRxBufNextW = 0;
          mRxBufNumFree--;
       }
+#else
+      //verify length was proper, crc is a match 
+      if(len <= RADIO_MAX_PACKET_LEN && (buf[(uint8_t)(len + 2)] & 0x80)) {
+         if (++mRxBufNextW == RX_BUFFER_NUM) {
+            mRxBufNextW = 0;
+         }
+         mRxBufNumFree--;
+      }
+#endif
 
       radioPrvRxStartListenIfNeeded();
    }
