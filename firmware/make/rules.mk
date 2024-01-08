@@ -16,7 +16,6 @@ $(BUILD_DIR)/main.elf: $(OBJS)
 	objcopy $^ $(BUILD_DIR)/$(IMAGE_NAME).bin -I ihex -O binary
 	cp $(BUILD_DIR)/$(IMAGE_NAME).bin $(PREBUILT_DIR)
 
-
 $(BUILD_DIR):
 	if [ ! -e $(BUILD_DIR) ]; then mkdir -p $(BUILD_DIR); fi
 
@@ -24,6 +23,7 @@ $(PREBUILT_DIR):
 	if [ ! -e $(PREBUILT_DIR) ]; then mkdir -p $(PREBUILT_DIR); fi
 
 .PHONY: all clean veryclean flash reset
+
 
 all: $(BUILD_DIR) $(PREBUILT_DIR) $(TARGETS)
 
@@ -34,8 +34,8 @@ veryclean:
 	rm -rf $(BUILDS_DIR)
 	rm -rf $(PREBUILT_DIR)
 
-flash:	$(PREBUILT_DIR)/$(IMAGE_NAME).bin
-	cc-tool -e -w $^
+flash:	$(BUILD_DIR)/$(IMAGE_NAME).bin $(OBJS)
+	cc-tool -e -w $<
 
 reset:	
 	cc-tool --reset
