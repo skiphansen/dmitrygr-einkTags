@@ -46,7 +46,6 @@ extern struct COMMAND_TABLE commandtable[];
 
 void Usage(void);
 int NopCmd(char *CmdLine);
-int SN2MACCmd(char *CmdLine);
 void HandleResp(uint8_t *Msg,int MsgLen);
 const char *Rcode2Str(uint8_t Rcode);
 const char *Cmd2Str(uint8_t Cmd);

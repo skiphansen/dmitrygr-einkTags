@@ -8,15 +8,16 @@ This code was taken from einkTags_0001.zip and einkTags_0002_8051.zip downloaded
 [dmitry.gr](https://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags).
 
 The tag code is from inkTags_0002_8051.zip, everything else is from inkTags_0001_8051.zip.
-These two code bases are slightly incompatible with each other, but I'm working on
-reconciling them.
+These two code bases were slightly incompatible with each other, but I've reconciled them.
 
 The code has been modified to get it to compile and work with my debugger.
 I've also been adding documentation as I learn.
 
+The station and tag code has been sucessfully tested with a Chroma 74 tag.
+
 ## My Goal
 
-My eventually goals are:
+My eventual goals are:
 1. Port the subgig code to the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) project.
 2. Add support for the Chroma 42 and Chroma 60 tags which I recently bought on ebay.
 

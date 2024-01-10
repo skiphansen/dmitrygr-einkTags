@@ -42,7 +42,7 @@ if [ $? -ne 0 ]; then
   echo "sdcc make install failed see ${CWD}/build.log for details"
   exit 1
 fi
-echo "Cleaning up ..."
-cd ../../..
-rm -rf build
+#echo "Cleaning up ..."
+#cd ../../..
+#rm -rf build
 

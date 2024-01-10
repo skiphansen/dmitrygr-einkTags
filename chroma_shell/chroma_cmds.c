@@ -96,6 +96,8 @@ int EEPROM_ReadCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
+int SN2MACCmd(char *CmdLine);
+int TxCmd(char *CmdLine);
 int DumpSettingsCmd(char *CmdLine);
 int EEPROM_Internal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
 
@@ -116,6 +118,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "rx", "Enter RF receive mode",NULL,0,RxCmd},
    { "set_reg", "set chip register device",NULL,0,SetRegCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
+   { "tx", "Send text",NULL,0,TxCmd},
    { "?", NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { "help",NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { NULL}  // end of table
@@ -659,6 +662,23 @@ int SN2MACCmd(char *CmdLine)
       LOG_RAW("SN must be two characters followed by 8 digits followed by a chracter\n");
       LOG_RAW("For example \"JM10339094B\"\n");
       Ret = RESULT_OK;
+   }
+
+   return Ret;
+}
+
+int TxCmd(char *CmdLine)
+{
+   int Ret = RESULT_OK; // Assume the best
+   uint8_t Cmd[80] = {CMD_TX_DATA};
+   int MsgLen = strlen(CmdLine);
+
+   if(MsgLen == 0 || MsgLen > sizeof(Cmd) - 1) {
+      Ret = RESULT_USAGE;
+   }
+   else {
+      memcpy(&Cmd[1],CmdLine,MsgLen);
+      SendAsyncMsg(Cmd,MsgLen+1);
    }
 
    return Ret;

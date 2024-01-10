@@ -4,6 +4,5 @@
 
 void wdtDeviceReset(void)
 {
-	WDCTL = 0x0b;	//WDT: enable, fast, reset
-	while(1);
+   WDCTL = 0x0b;  //WDT: enable, fast, reset
 }

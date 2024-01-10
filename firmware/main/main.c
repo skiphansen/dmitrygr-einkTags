@@ -974,6 +974,7 @@ void main(void)
       
       //we may wake up here, but we prefer a reset so we cause one
       wdtDeviceReset();
+      while(true);
    }
    while(1);
 }

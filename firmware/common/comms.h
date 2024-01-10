@@ -21,7 +21,11 @@ struct CommsInfo {
 
 #define COMMS_MAX_PACKET_SZ				(127 /* max phy len */ - 21 /* max mac frame with panID compression */ - 2 /* FCS len */ - AES_CCM_MIC_SIZE - COMMS_IV_SIZE)
 
+#ifndef  PROXY_BUILD
 bool commsTx(struct CommsInfo __xdata *info, bool bcast, const void __xdata *packet, uint8_t len);
+#else
+bool commsTx(const void __xdata *packet, uint8_t len);
+#endif
 int8_t commsRx(struct CommsInfo __xdata *info, void __xdata *data, uint8_t __xdata *fromMac);	//returns length or COMMS_RX_ERR_*
 
 #pragma callee_saves commsGetLastPacketLQI

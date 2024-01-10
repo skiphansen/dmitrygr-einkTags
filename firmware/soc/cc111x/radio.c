@@ -228,13 +228,20 @@ static void radioPrvSetupRxDma(uint8_t __xdata* buf)
 }
 
 #pragma callee_saves radioPrvSetupTxDma
-static void radioPrvSetupTxDma(const uint8_t __xdata* buf)
+static void radioPrvSetupTxDma(const uint8_t __xdata* buf
+#ifdef  PROXY_BUILD
+                               ,const uint8_t Len
+#endif
+)
 {
    uint16_t addr = (uint16_t)buf;
    
    radioPrvDmaAbort();
    mRadioTxDmaCfg.srcAddrHi = addr >> 8;
    mRadioTxDmaCfg.srcAddrLo = addr & 0xff;
+#ifdef  PROXY_BUILD
+   mRadioTxDmaCfg.lenLo = Len;
+#endif
    radioPrvSetDmaCfgAndArm((uint16_t)(volatile void __xdata*)mRadioTxDmaCfg);
 }
 
@@ -264,13 +271,21 @@ static void radioRxStopIfRunning(void)
    IRCON &= (uint8_t)~(1 << 0);     //clear global dma irq flag
 }
 
-void radioTx(const void __xdata *packet)  //len included please
+void radioTx(const void __xdata *packet
+#ifdef  PROXY_BUILD
+             ,uint8_t len
+#endif
+)
 {
    const uint8_t __xdata *src = (const uint8_t __xdata*)packet;
    
    radioRxStopIfRunning();
    
-   radioPrvSetupTxDma(packet);
+   radioPrvSetupTxDma(packet
+#ifdef  PROXY_BUILD
+                      ,len
+#endif
+   );
    RFIF = 0;
    
    RFST = 3;   //TX
@@ -296,7 +311,7 @@ void DMA_ISR(void) __interrupt (8)
       
       DMAIRQ &= (uint8_t)~(1 << 0);
       len = buf[0];
-#ifndef  PROMISCUOUS_RX
+#ifndef  PROXY_BUILD
       //verify length was proper, crc is a match 
       if (len <= RADIO_MAX_PACKET_LEN && len >= sizeof(struct MacHeaderGenericAddr) && (buf[(uint8_t)(len + 2)] & 0x80) &&
          !hdr->fcs.secure && !hdr->fcs.rfu1 && !hdr->fcs.rfu2 && !hdr->fcs.frameVer) {

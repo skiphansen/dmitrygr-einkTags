@@ -56,6 +56,7 @@ int8_t commsGetLastPacketRSSI(void)
 	return mLastRSSI;
 }
 
+#ifndef  PROXY_BUILD
 bool commsTx(struct CommsInfo __xdata *info, bool bcast, const void __xdata *packetP, uint8_t len)
 {
 	const uint8_t __xdata *packet = (const uint8_t __xdata*)packetP;
@@ -123,6 +124,17 @@ bool commsTx(struct CommsInfo __xdata *info, bool bcast, const void __xdata *pac
 	
 	return true;
 }
+#else
+bool commsTx(const void __xdata *packet, uint8_t len)
+{
+	if (len > COMMS_MAX_PACKET_SZ)
+		return false;
+	
+	radioTx(packet,len);
+	
+	return true;
+}
+#endif
 
 int8_t commsRx(struct CommsInfo __xdata *info, void __xdata *data, uint8_t __xdata *fromMacP)
 {

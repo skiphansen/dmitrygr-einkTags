@@ -301,6 +301,14 @@ void HandleMsg()
          break;
 #endif
 
+      case CMD_TX_DATA:
+         gRxBuf[0] = gRxMsgLen-1;      // Number bytes to transmit
+         gRxBuf[1] = uCast0.Bytes[0];  // restore first byte of data
+         radioTx(gRxBuf,gRxMsgLen);
+         gRxBuf[0] = CMD_TX_DATA | CMD_RESP;
+         gRxBuf[1] = CMD_ERR_NONE;
+         break;
+
       default:
          LOG("Unknown command 0x%x ignored\n",gRxBuf[0]);
          gRxBuf[1] = CMD_ERR_INVALID_ARG;
