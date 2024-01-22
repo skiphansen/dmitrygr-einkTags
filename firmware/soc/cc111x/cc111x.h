@@ -303,4 +303,13 @@ struct DmaDescr {
    uint8_t srcinc    : 2;
 };
 
+#define UCSR_ACTIVE     0x01  // USART transmit/receive active status 0:idle 1:busy
+#define UCSR_TX_BYTE    0x02  // Transmit byte status 0:Byte not transmitted 1:Last byte transmitted
+#define UCSR_RX_BYTE    0x04  // Receive byte status 0:No byte received 1:Received byte ready
+#define UCSR_ERR        0x08  // UART parity error status 0:No error 1:parity error
+#define UCSR_FE         0x10  // UART framing error status 0:No error 1:incorrect stop bit level
+#define UCSR_SLAVE      0x20  // SPI master or slave mode select 0:master 1:slave
+#define UCSR_RE         0x40  // UART receiver enable 0:disabled 1:enabled
+#define UCSR_MODE       0x80  // USART mode select 0:SPI 1:UART
+
 #endif

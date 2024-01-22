@@ -67,6 +67,7 @@ void TxMode(void);
 void IdleMode(void);
 void startRX(void);
 void TryRx(void);
+int EpdCmd(uint8_t Flags);
 
 void main(void)
 {
@@ -152,6 +153,8 @@ void HandleMsg()
          break;
 
       case CMD_EEPROM_RD:
+      // uCast1 = Adr
+      // uCast0 = Len
          if(uCast0.IntValue > sizeof(gRxBuf) - 2) {
             gRxBuf[1] = CMD_ERR_BUF_OVFL;
             break;
@@ -163,6 +166,22 @@ void HandleMsg()
          // purge the receiver of any data received in SPI mode
          gUart1RxRd = gUart1RxWr;
          MsgLen += uCast0.IntValue;
+         break;
+
+      case CMD_EEPROM_WR:
+      // uCast0 = Adr
+         uCast0.Bytes[2] = gRxBuf[3];
+#if 0
+         LOG("write %d @ 0x%lx 0x%x 0x%x 0x%x\n",gRxMsgLen-4,uCast0.Adr32,
+             gRxBuf[4],gRxBuf[5],gRxBuf[6]);
+#endif
+         u1setEepromMode();
+         if(!eepromWrite(uCast0.Adr32,(void __xdata *) &gRxBuf[4],gRxMsgLen-4)) {
+            gRxBuf[1] = CMD_ERR_FAILED;
+         }
+         u1setUartMode();
+      // purge the receiver of any data received in SPI mode
+         gUart1RxRd = gUart1RxWr;
          break;
 
       case CMD_EEPROM_LEN:
@@ -287,7 +306,7 @@ void HandleMsg()
 #endif
       case CMD_RESET:
          if(MARCSTATE != MARC_STATE_IDLE) {
-            // The watchdog won't timeout while transmitting !!!
+         // The watchdog won't timeout while transmitting !!!
             IdleMode(); 
          }
          wdtDeviceReset();
@@ -307,6 +326,24 @@ void HandleMsg()
          radioTx(gRxBuf,gRxMsgLen);
          gRxBuf[0] = CMD_TX_DATA | CMD_RESP;
          gRxBuf[1] = CMD_ERR_NONE;
+         break;
+
+      case CMD_EPD:
+         MsgLen = EpdCmd(uCast0.Bytes[0]);
+         break;
+
+      case CMD_EPD_BUSY:
+         if(!(P1 & (1 << 0))) {
+            gRxBuf[1] = CMD_ERR_BUSY;
+         }
+         break;
+
+      case CMD_EEPROM_ERASE:
+         u1setEepromMode();
+         if(!eepromErase(0,32)) {
+            gRxBuf[1] = CMD_ERR_FAILED;
+         }
+         u1setUartMode();
          break;
 
       default:
@@ -394,5 +431,80 @@ void TryRx()
       SerialFrameIO_SendResp(CMD_RX_DATA,RSSI,Buf,Len);
       radioRxDequeuedPktRelease();
    }
+}
+
+int EpdCmd(uint8_t Flags)
+{
+   uint8_t __xdata *pData = (uint8_t __xdata*) &gRxBuf[2];
+   int Ret = 2;
+   int MsgLen = 2;
+
+   if(Flags & EPD_FLG_CMD) {
+   // Clear cmd/data bit
+      P0 &= (uint8_t)~(1 << 7);
+   }
+   else {
+   // Set cmd/data bit
+      P0 |= (1 << 7);
+   }
+
+   if(Flags & EPD_FLG_RESET) {
+   // set reset
+      P1 &= (uint8_t)~(1 << 7);
+   }
+   else {
+   //release reset
+      P1 |= (1 << 2);
+   }
+
+   if(Flags & EPD_FLG_BS1) {
+   // set BS1
+      P0 |= (1 << 0);
+   }
+   else {
+   // clear BS1
+      P0 &= (uint8_t)~(1 << 0);
+   }
+
+   if(Flags & EPD_FLG_ENABLE) {
+   // turn off the eInk power
+      P0 |= (1 << 6);
+   }
+   else {
+   // turn on the eInk power
+      P0 &= (uint8_t)~(1 << 6);
+   }
+
+   if(gRxMsgLen > 2) {
+   // we have data
+      if(Flags & EPD_FLG_START_XFER) {
+      // set nCS low
+         P1 &= (uint8_t)~(1 << 1);
+      }
+      while(MsgLen < gRxMsgLen) {
+         while (U0CSR & 0x01);   // Wait for USART0 idle
+      // Send byte
+         U0DBUF = *pData;
+         while (!(U1CSR & UCSR_TX_BYTE));
+         if(Flags & EPD_FLG_CMD) {
+         // Set data bit for remaining bytes
+            P0 |= (1 << 7);
+         }
+         U1CSR &= (uint8_t)~UCSR_TX_BYTE;
+         while (U1CSR & UCSR_ACTIVE);
+         *pData++ = U0DBUF;
+
+         if(Flags & EPD_FLG_SEND_RD) {
+            Ret++;
+         }
+         MsgLen++;
+      }
+      if(Flags & EPD_FLG_END_XFER) {
+      // set nCS high
+         P1 |= (uint8_t)(1 << 1);
+      }
+   }
+
+   return Ret;
 }
 

@@ -20,6 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 #include "serial_shell.h"
 #include "cmds.h"
@@ -94,12 +95,13 @@ int ResetCmd(char *CmdLine);
 int RxCmd(char *CmdLine);
 int EEPROM_ReadCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
+int EEPROM_RestoreCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
 int SN2MACCmd(char *CmdLine);
 int TxCmd(char *CmdLine);
 int DumpSettingsCmd(char *CmdLine);
-int EEPROM_Internal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
+int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
 
 // Eventual CC1101 API functions.  
 // Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
@@ -111,7 +113,9 @@ struct COMMAND_TABLE commandtable[] = {
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "dump_settings", "Display settings in EEPROM",NULL,0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
-   { "backup_eeprom",  "Write EEPROM data to a file","eerd <path>",0,EEPROM_BackupCmd},
+//   { "eewd",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
+   { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
+   { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
@@ -393,7 +397,7 @@ int GetEEPROM_Len(void)
    return EEPROM_Len;
 }
 
-int EEPROM_Internal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
+int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
 {
    #define DUMP_BYTES_PER_LINE   16
    #define READ_CHUNK_LINES      4
@@ -490,6 +494,68 @@ int EEPROM_Internal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
    return Ret;
 }
 
+int EEPROM_WrInternal(int Adr,FILE *fp,uint8_t *WrBuf,int Len)
+{
+   int Ret = RESULT_USAGE;
+   uint8_t Cmd[128];
+   AsyncResp *pMsg;
+   int Bytes2Write;
+   int BytesWritten = 0;
+   int MsgLen = 0;
+   int LastProgress = -1;
+   int Progress = 0;
+
+   do {
+      if(WrBuf == NULL && fp == NULL) {
+         ELOG("Internal error");
+         break;
+      }
+            
+      while(BytesWritten < Len) {
+         Bytes2Write = (Len - BytesWritten);
+         if(Bytes2Write > READ_CHUNK_LEN) {
+            Bytes2Write = READ_CHUNK_LEN;
+         }
+         MsgLen = 0;
+
+         Cmd[MsgLen++] = CMD_EEPROM_WR;
+         Cmd[MsgLen++] = (uint8_t) (Adr & 0xff);
+         Cmd[MsgLen++] = (uint8_t) ((Adr >> 8) & 0xff);
+         Cmd[MsgLen++] = (uint8_t) ((Adr >> 16) & 0xff);
+         if(fp != NULL) {
+         // reading data from file
+            if(fread(&Cmd[MsgLen],Bytes2Write,1,fp) != 1) {
+               printf("fwrite failed\n");
+               break;
+            }
+         }
+         else {
+         // Copy data read to buffer
+            memcpy(&Cmd[MsgLen],WrBuf,Bytes2Write);
+         }
+         MsgLen += Bytes2Write;
+         if((pMsg = SendCmd(Cmd,MsgLen,2000)) == NULL) {
+            break;
+         }
+
+         Adr += Bytes2Write;
+         BytesWritten += Bytes2Write;
+         WrBuf += Bytes2Write;
+         Progress = (100 * BytesWritten) / Len;
+         if(LastProgress != Progress) {
+            LastProgress = Progress;
+            printf("\r%d%% complete",LastProgress);
+            fflush(stdout);
+         }
+      }
+      printf("\n");
+      free(pMsg);
+      Ret = RESULT_OK;
+   } while(false);
+
+   return Ret;
+}
+
 int EEPROM_ReadCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
@@ -510,7 +576,7 @@ int EEPROM_ReadCmd(char *CmdLine)
          break;
       }
 
-      Ret = EEPROM_Internal(Adr,NULL,NULL,Len);
+      Ret = EEPROM_RdInternal(Adr,NULL,NULL,Len);
    } while(false);
 
    return Ret;
@@ -529,7 +595,7 @@ int EEPROM_BackupCmd(char *CmdLine)
          Ret = RESULT_FAIL;
          break;
       }
-      Ret = EEPROM_Internal(0,fp,NULL,EEPROM_Len);
+      Ret = EEPROM_RdInternal(0,fp,NULL,EEPROM_Len);
    } while(false);
 
    if(fp != NULL) {
@@ -538,6 +604,53 @@ int EEPROM_BackupCmd(char *CmdLine)
 
    return Ret;
 }
+
+int EEPROM_RestoreCmd(char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int EEPROM_Len = GetEEPROM_Len();
+   FILE *fp = NULL;
+   struct stat Stat;
+   AsyncResp *pMsg;
+   uint8_t Cmd[2] = {CMD_EEPROM_ERASE};
+
+   if(*CmdLine != 0) do {
+      printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
+      if(stat(CmdLine,&Stat) != 0) {
+         LOG("stat(\"%s\") failed - %s\n",CmdLine,strerror(errno));
+         Ret = RESULT_FAIL;
+         break;
+      }
+
+      if(EEPROM_Len != Stat.st_size) {
+         LOG("Wrong file length %d, expected %d\n",Stat.st_size,EEPROM_Len);
+         Ret = RESULT_FAIL;
+         break;
+      }
+
+      if((fp = fopen(CmdLine,"r")) == NULL) {
+         LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
+         Ret = RESULT_FAIL;
+         break;
+      }
+      
+      printf("Erasing chip...");
+      pMsg = SendCmd(Cmd,1,2000);
+      printf("\n");
+      if(pMsg == NULL) {
+         break;
+      }
+      free(pMsg);
+      Ret = EEPROM_WrInternal(0,fp,NULL,EEPROM_Len);
+   } while(false);
+
+   if(fp != NULL) {
+      fclose(fp);
+   }
+
+   return Ret;
+}
+
 
 int DumpRfRegsCmd(char *CmdLine)
 {
@@ -608,7 +721,7 @@ int SN2MACCmd(char *CmdLine)
 {
    int Ret = RESULT_BAD_ARG;  // assume the worse
    int i;
-   uint8_t MacAdr[7];
+   uint8_t MacAdr[6];
 
    do {
    // Typical serial number: JM10339094B
@@ -648,12 +761,13 @@ int SN2MACCmd(char *CmdLine)
       MacAdr[3] = (CmdLine[4] - '0') << 4 | (CmdLine[5] - '0');
       MacAdr[4] = (CmdLine[6] - '0') << 4 | (CmdLine[7] - '0');
       MacAdr[5] = (CmdLine[8] - '0') << 4 | (CmdLine[9] - '0');
-      MacAdr[6] = CmdLine[10];
-      LOG_RAW("MAC address: ");
+//      MacAdr[6] = CmdLine[10];
+      LOG_RAW("Stock FW MAC address: ");
       for(i = 0; i < sizeof(MacAdr); i++) {
          LOG_RAW("%s%02X",i > 0 ? ":" : "",MacAdr[i]);
       }
       LOG_RAW("\n");
+      DumpHex(MacAdr,sizeof(MacAdr));
       Ret = RESULT_OK;
    } while(false);
 
@@ -862,13 +976,13 @@ int DumpSettingsCmd(char *CmdLine)
    int EndAdr;
    int Type;
    int Len;
-   bool end = false;
    uint8_t Data[4+256];
    int Err;
+   int SkippedSlots = 0;
 
    for(Page = 0; Page < 10; Page++) {
       Adr = Page * EEPROM_ERZ_SECTOR_SZ;
-      if((Err = EEPROM_Internal(Adr,NULL,Data,sizeof(magicNum))) != 0) {
+      if((Err = EEPROM_RdInternal(Adr,NULL,Data,sizeof(magicNum))) != 0) {
          break;
       }
 
@@ -883,7 +997,7 @@ int DumpSettingsCmd(char *CmdLine)
       Adr += 4;
       while(Err == 0 && Adr < EndAdr) {
          memset(Data,0xaa,sizeof(Data));
-         if((Err = EEPROM_Internal(Adr,NULL,Data,2)) != 0) {
+         if((Err = EEPROM_RdInternal(Adr,NULL,Data,2)) != 0) {
             break;
          }
 
@@ -898,6 +1012,7 @@ int DumpSettingsCmd(char *CmdLine)
 
          switch(Type) {
             case 0x0:
+               SkippedSlots++;
                break;
 
             case 0x9:  // ADC intercept
@@ -913,35 +1028,68 @@ int DumpSettingsCmd(char *CmdLine)
                break;
 
             case 0x01:  // MAC
-               Msg = "01 MAC";
+               Msg = "type 0x01 MAC";
                break;
 
             case 0x2a:  // MAC
-               Msg = "2A MAC";
+               Msg = "type 0x2A MAC";
                break;
 
             case 0xff:
-               Msg = "end of settings";
-               end = true;
+               LOG_RAW("End of settings @ 0x%x, %d erased slots.\n",
+                       Adr,SkippedSlots);
                break;
 
             default:
-               LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len,Adr);
+               LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Adr);
                break;
+         }
+         if(Type == 0xff) {
+            break;
          }
 
          if(Msg != NULL) {
-            LOG_RAW("Found %d byte %s @ 0x%x\n",Len,Msg,Adr);
+            LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Adr);
             Msg = NULL;
-            if(end) {
-               break;
-            }
          }
+
          if(Type != 0 && Len > 2) {
-            if((Err = EEPROM_Internal(Adr + 2,NULL,&Data[2],Len-2)) != 0) {
+            if((Err = EEPROM_RdInternal(Adr + 2,NULL,&Data[2],Len-2)) != 0) {
                break;
             }
-            DumpHex(Data,Len);
+            switch(Type) {
+               case 0x01:  {
+               // MAC
+                  char MacString[11];
+                  int i;
+                  char Byte;
+
+                  MacString[0] = Data[2];
+                  MacString[1] = Data[3];
+                  for(i = 0; i < 8; i++) {
+                     Byte = Data[4 + (i/2)];
+                     MacString[2 + i] = '0';
+                     if(i & 1) {
+                     // lower nibble
+                        MacString[2 + i] += Byte & 0xf;
+                     }
+                     else {
+                     // upper nibble
+                        MacString[2 + i] += (Byte >> 4) & 0xf;
+                     }
+                  }
+                  MacString[10] = 0;
+                  LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
+                  LOG_RAW("MAC: ");
+                  DumpHex(&Data[2],Len-2);
+                  break;
+               }
+
+               default:
+                  DumpHex(&Data[2],Len-2);
+                  break;
+            }
+            LOG_RAW("\n");
          }
          Adr += Len;
       }

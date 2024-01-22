@@ -256,9 +256,13 @@
 			Name="Other Files"
 			Filters="">
 			<F N="../chroma_shell/.gitignore"/>
+			<F N="../cc1101_vrs_cc111x.md"/>
+			<F N="../Chroma.md"/>
 			<F N="../chroma_shell/CMakeLists.txt"/>
 			<F N="/cc1xxx/docs/notes.txt"/>
+			<F N="../README.md"/>
 			<F N="../firmware/board/chroma29r/README.md"/>
+			<F N="../Station.md"/>
 		</Folder>
 	</Files>
 </Project>

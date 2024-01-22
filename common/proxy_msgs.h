@@ -47,12 +47,16 @@
 #define CMD_SET_RF_MODE    0x0f
 #define CMD_RX_DATA        0x10
 #define CMD_TX_DATA        0x11
-#define CMD_LAST           CMD_TX_DATA
+#define CMD_EPD            0x12
+#define CMD_EPD_BUSY       0x13
+#define CMD_EEPROM_ERASE   0x14
+#define CMD_LAST           CMD_EEPROM_ERASE
 
 #define CMD_STRINGS \
    "NOP", "PEEK", "POKE","POKE_REG","STATUS","RFMODE","RESET","EEPROM_RD" ,\
    "EEPROM_WR","EEPROM_LEN","COMM_BUF_LEN","BOARD_TYPE","SET_RF_REGS",\
-   "GET_RF_REGS","SET_RF_MODE","RX_DATA","TX_DATA"
+   "GET_RF_REGS","SET_RF_MODE","RX_DATA","TX_DATA","EPD","EPD_BUSY",\
+   "EEPROM_ERASE"
 
 typedef enum {
    CMD_ERR_NONE,
@@ -61,11 +65,35 @@ typedef enum {
    CMD_ERR_CRC_ERR,
    CMD_ERR_INTERNAL,
    CMD_ERR_BUF_OVFL,
+   CMD_ERR_TIMEOUT,
+   CMD_ERR_BUSY,
+   CMD_ERR_FAILED,
    CMD_ERR_LAST
 } Rcodes;
 
 #define CMD_ERR_STRINGS \
-   "OK","UNKNOWN_CMD", "INVALID_ARG","CRC_ERR","INTERNAL","ERR_BUF_OVFL"
+   "OK","UNKNOWN_CMD", "INVALID_ARG","CRC_ERR","INTERNAL","ERR_BUF_OVFL",\
+   "TIMEOUT","BUSY","_FAILED"
+
+// CMD_EPD argument
+#define EPD_FLG_SEND_RD       0x01  // Send data read
+#define EPD_FLG_CMD           0x02  // Clear Cmd/Data bit (i.e. byte is command)
+#define EPD_FLG_RESET         0x04  // Set reset bit
+#define EPD_FLG_BS1           0x08  // Set reset BS1 bit
+#define EPD_FLG_ENABLE        0x10  // Set enable BS1 bit
+#define EPD_FLG_START_XFER    0x20  // Activate nCS before sending data
+#define EPD_FLG_END_XFER      0x40  // Deactivate nCS after sending data
+
+#define EPD_FLG_DEFAULT       ( EPD_FLG_CMD \
+                              | EPD_FLG_BS1 \
+                              | EPD_FLG_ENABLE \
+                              | EPD_FLG_START_XFER \
+                              | EPD_FLG_END_XFER)
+
+#define EEPROM_ERASE_SECTOR   0
+#define EEPROM_ERASE_BLOCK    1
+#define EEPROM_ERASE_CHIP     2
+
 
 #endif   // _PROXY_MSGS_H_
 
