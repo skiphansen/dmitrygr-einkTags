@@ -59,24 +59,24 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 ## CC1110F pin connections
 | Pin | Pin name | usage | Notes |
 | - | - | -|-|
-| 1| P1_2 Port 1.2 |NC ?|
+| 1| P1.2 | epd RESET | display pin 10
 | 2| DVDD ||
-| 3| P1_1 | EPD BUSY | display pin 9|
-| 4| P1_0 | TP6/TP16 ||
-| 5| P0_0 | EPD BS1 | display pin 8|
-| 6| P0_1 | EPD nCS | display pin 12|
-| 7| P0_2 | EPD nReset |display pin 10|
-| 8| P0_3 | SPI EEPROM CLK|
-| 9| P0_4 | SPI EEPROM MOSI|
+| 3| P1.1 | EPD nCS | display pin 12|
+| 4| P1.0 | EPD BUSY | display pin 9|
+| 5| P0.0 | EPD BS1 | display pin 8|
+| 6| P0.1 | TP6/TP16 ||
+| 7| P0.2 | EPD nReset |display pin 10|
+| 8| P0.3 | SPI EEPROM CLK|
+| 9| P0.4 | SPI EEPROM MOSI|
 | 10| DVDD
-| 11| P0_5 | SPI EEPROM MISO|
-| 12| P0_6 | EPD nEnable|
-| 13| P0_7 | EPD D/nC | display pin 11|
-| 14| P2_0 | EEPROM nCS ||
-| 15| P2_1/DBG_DAT | TP3/TP13| Programmer interface |
-| 16| P2_2/DBG_CLK | TP5/TP15 | Programmer interface|
-| 17| P2_3/XOSC32_Q1 | 32.768 kHz crystal |
-| 18| P2_4/XOSC32_Q2 | 32.768 kHz crystal |
+| 11| P0.5 | SPI EEPROM MISO|
+| 12| P0.6 | EPD nEnable|
+| 13| P0.7 | EPD D/nC | display pin 11|
+| 14| P2.0 | EEPROM nCS ||
+| 15| P2.1/DBG_DAT | TP3/TP13| Programmer interface |
+| 16| P2.2/DBG_CLK | TP5/TP15 | Programmer interface|
+| 17| P2.3/XOSC32_Q1 | 32.768 kHz crystal |
+| 18| P2.4/XOSC32_Q2 | 32.768 kHz crystal |
 | 19| AVDD 
 | 20| XOSC_Q2 | Crystal oscillator pin 2 |
 | 21| XOSC_Q1 | Crystal oscillator pin 1, or external clock input |
@@ -90,44 +90,44 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 | 29| AVDD_DREG |Power (Digital) 2.0 V - 3.6 V digital power supply for digital core voltage regulator |
 | 30| DCOUPL | Power decoupling 1.8 V digital power supply decoupling |
 | 31| RESET_N | TP2/TP12 |
-| 32| P1_7/USART1 RXD | TP9/TP19 |
-| 33| P1_6/USART1 TXD | TP7/TP17 |
-| 34| P1_5 | EPD D1/SDIN | display pin 14 |
-| 35| P1_4 | NC ?
-| 36| P1_3 | EPD DO/SCK | display pin 13|
+| 32| P1.7/USART1 RXD | TP9/TP19 |
+| 33| P1.6/USART1 TXD | TP7/TP17 |
+| 34| P1.5 | EPD D1/SDIN | display pin 14 |
+| 35| P1.4 | NC ?
+| 36| P1.3 | EPD DO/SCK | display pin 13|
 
 
 ## Port 0 bits
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
-|P0_0 | output | EPD BS1 | display pin 8|
-|P0_1 | EPD nCS | display pin 12|
-|P0_2 | EPD nReset | display pin 10|
-|P0_3 | output | SPI EEPROM CLK|
-|P0_4 | output | SPI EEPROM MOSI|
-|P0_5 | output | SPI EEPROM MISO|
-|P0_6 | output | EPD nEnable|
-|P0_7 | output | EPD D/nC | display pin 11|
+|P0.0 | output | EPD BS1 | display pin 8|
+|P0.1 | TP6/TP16 ||
+|P0.2 | EPD nReset | display pin 10|
+|P0.3 | output | SPI EEPROM CLK|
+|P0.4 | output | SPI EEPROM MOSI|
+|P0.5 | output | SPI EEPROM MISO|
+|P0.6 | output | EPD nEnable|
+|P0.7 | output | EPD D/nC | display pin 11|
 
 ## Port 1 bits
 
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
-|P1_0 | TP6/TP16 ||
-|P1_1 | EPD BUSY | display pin 9|
-|P1_2 | output | Port 1.2 |NC ?|
-|P1_3 | output | EPD DO/SCK | display pin 13|
-|P1_4 | NC ?
-|P1_5 | output | EPD D1/SDIN | display pin 14 |
-|P1_6 | output | /USART1 TXD | TP7/TP17 |
-|P1_7 | input | /USART1 RXD | TP9/TP19 |
+|P1.0 | EPD BUSY | display pin 9|
+|P1.1 | EPD nCS | display pin 12|
+|P1.2 | output | | epd RESET | display pin 10
+|P1.3 | output | EPD DO/SCK | display pin 13|
+|P1.4 | NC ?
+|P1.5 | output | EPD D1/SDIN | display pin 14 |
+|P1.6 | output | /USART1 TXD | TP7/TP17 |
+|P1.7 | input | /USART1 RXD | TP9/TP19 |
 
 ## Port 2 bits
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
-|P2_0 | output | EEPROM nCS ||
-|P2_1/DBG_DAT | TP3/TP13| Programmer interface |
-|P2_2/DBG_CLK | TP5/TP15 | Programmer interface|
-|P2_3/XOSC32_Q1 | 32.768 kHz crystal |
-|P2_4/XOSC32_Q2 | 32.768 kHz crystal |
+|P2.0 | output | EEPROM nCS ||
+|P2.1/DBG_DAT | TP3/TP13| Programmer interface |
+|P2.2/DBG_CLK | TP5/TP15 | Programmer interface|
+|P2.3/XOSC32_Q1 | 32.768 kHz crystal |
+|P2.4/XOSC32_Q2 | 32.768 kHz crystal |
 
