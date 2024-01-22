@@ -2,13 +2,12 @@
 
 Resolution 296 x 128 BWR or BWY.
 
-EPD controller either [UC8151](https://www.orientdisplay.com/wp-content/uploads/2022/09/UC8151C.pdf) or [UC8154](https://v4.cecdn.yun300.cn/100001_1909185148/UC8154.pdf) depending on version.
+Known EPD controllers are either similar to the [UC8151](https://www.orientdisplay.com/wp-content/uploads/2022/09/UC8151C.pdf) or the [UC8154](https://v4.cecdn.yun300.cn/100001_1909185148/UC8154.pdf) depending on version.
 												
-SPI flash chip is a [MX25V1006E](https://www.macronix.com/Lists/Datasheet/Attachments/8649/MX25V1006E,%202.5V,%201Mb,%20v1.5.pdf) (128k bytes)
+The SPI flash chip is the 128k byte [MX25V1006E](https://www.macronix.com/Lists/Datasheet/Attachments/8649/MX25V1006E,%202.5V,%201Mb,%20v1.5.pdf).
 
-The chip is organized as 32 4k sectors or 2 65k blocks.
-
-Sectors, blocks, or the entire chip cand be erased at a time.
+The flash is organized as 32 4k sectors or 2 65k blocks. Sectors, blocks, or 
+the entire chip cand be erased at a time.
 
 ## Building the Firmware
 
@@ -49,7 +48,7 @@ skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 
 I hot glued a 5 pin SIP header to my board for connections to a programmer. 
 
-The pinout matches a cable I already had for another project,
+The pinout was chosen to match a cable I already had from another project.
 
 | SIP Pin | Test point | Signal | CC debugger pin | Wire color|
 |-|-|-|-|-|
@@ -60,11 +59,31 @@ The pinout matches a cable I already had for another project,
 |5|TP2  | Reset_n | 7 |Orange|
 
 
+## History
+
+The were several versions of the the Chroma29 which are/were manufactured,
+unfortunately they are not all compatible.  The version of the Chroma29
+that Dmitry developed his code for apparently used a different EPD panel
+and hench EPD controller that the Chroma29s I bought on ebay.  I do not
+have any detailed information on the version Dmitry had.
+
+In the batch of Chroma29s I bought I have identified two different versions
+so far.
+
+| Rev | EPD Panel | Controller | Notes |
+| - | - | - | - |
+| unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
+| edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
+| edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
+
 ## Connections For Debug Serial Port Using FTDI Cable
+
+Connecting a serial port to the Chroma is very handy for development 
+but it is not needed if you just want to flash custom firmware.
 
 I hot glued a 3 pin SIP header to my board for connections to a programmer. 
 
-The pinout was chosen to matche a cable I already had for another project.
+The pinout was chosen to match a cable I already had from another project.
 
 | SIP Pin | Test point | Signal | FTDI |
 |-|-|-|-|
