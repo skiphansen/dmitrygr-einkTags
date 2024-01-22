@@ -29,6 +29,36 @@ cp /home/skip/dmitrygr-einkTags/firmware/builds/chroma29r/main.bin /home/skip/dm
 skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 ````
 
+## Chroma 29 Connections For Flashing And Debugging
+
+I hot glued a two SIP headers to my board for connections to a programmer
+and a serial port.  The pinouts were chosen to match cables I already had from 
+another project.
+
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma29_connections.png" width=50%>
+
+## CC Debugger Connections
+
+| SIP Pin | Test point | Signal | CC debugger pin | Wire color|
+|-|-|-|-|-|
+|1|TP8 | J3, GND |  1 | Black |
+|2|TP5 | DC | 3 | Brown |
+|3|TP4| J2, +VBAT | 2 <br>(and 9 to power <br>board from debugger) |Red|
+|4|TP3 | DD | 4 |Yellow|
+|5|TP2  | Reset_n | 7 |Orange|
+
+## Debug Serial port Connections
+
+Connecting a serial port to the Chroma is very handy for development 
+but it is not needed if you just want to flash custom firmware.
+
+| SIP Pin | Test point | Signal | FTDI |
+|-|-|-|-|
+|1|J3  | GND | Black |
+|2|TP7 | Serial out | Yellow |
+|3|TP9 | Serial in | Orange |
+
+
 ## Chroma 29 Test Points
 
 | Test point | Signal | 
@@ -43,21 +73,6 @@ skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 |TP9 | P1_7 (Serial in) |
 |TP10| J1.23 PREVGL ?|
 |TP11 | J1.21 PREVGH ? |
-
-## Connections to a CC Debugger
-
-I hot glued a 5 pin SIP header to my board for connections to a programmer. 
-
-The pinout was chosen to match a cable I already had from another project.
-
-| SIP Pin | Test point | Signal | CC debugger pin | Wire color|
-|-|-|-|-|-|
-|1|TP8 | J3, GND |  1 | Black |
-|2|TP5 | DC | 3 | Brown |
-|3|TP4| J2, +VBAT | 2 <br>(and 9 to power <br>board from debugger) |Red|
-|4|TP3 | DD | 4 |Yellow|
-|5|TP2  | Reset_n | 7 |Orange|
-
 
 ## History
 
@@ -76,22 +91,6 @@ so far.
 | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
 | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
 
-## Connections For Debug Serial Port Using FTDI Cable
-
-Connecting a serial port to the Chroma is very handy for development 
-but it is not needed if you just want to flash custom firmware.
-
-I hot glued a 3 pin SIP header to my board for connections to a programmer. 
-
-The pinout was chosen to match a cable I already had from another project.
-
-| SIP Pin | Test point | Signal | FTDI |
-|-|-|-|-|
-|1| J3  | GND | Black |
-|2|TP7 | Serial out | Yellow |
-|3|TP9 | Serial in | Orange |
-
-<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma29_connections.png" width=50%>
 
 ## Logic Analyzer Connections for EPD Reverse Engineering
 
