@@ -34,6 +34,8 @@ project has the 2.4 ghz zbs based tags well in hand.
 
 See [Chroma.md](Chroma.md) for more information on the Chroma series of tags.
 
+See [Chroma29.md](Chroma29.md) for more information on the Chroma 29 tag.
+
 See [Station.md](Station.md) for information on building a base station / 
 access port.
 

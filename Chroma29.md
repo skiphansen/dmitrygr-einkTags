@@ -1,8 +1,16 @@
 # Chroma 29 Info
 
-EEPROM is a MX25V1006E (128k bytes)
+Resolution 296 x 128 BWR or BWY.
 
-## Building firmware
+EPD controller either [UC8151](https://www.orientdisplay.com/wp-content/uploads/2022/09/UC8151C.pdf) or [UC8154](https://v4.cecdn.yun300.cn/100001_1909185148/UC8154.pdf) depending on version.
+												
+SPI flash chip is a [MX25V1006E](https://www.macronix.com/Lists/Datasheet/Attachments/8649/MX25V1006E,%202.5V,%201Mb,%20v1.5.pdf) (128k bytes)
+
+The chip is organized as 32 4k sectors or 2 65k blocks.
+
+Sectors, blocks, or the entire chip cand be erased at a time.
+
+## Building the Firmware
 
 1. Ensure SDCC version 4.0.7 is in the path by running '. ../sdcc/setup_sdcc.sh'
 2. run "make BUILD=chroma29r"
@@ -22,7 +30,7 @@ cp /home/skip/dmitrygr-einkTags/firmware/builds/chroma29r/main.bin /home/skip/dm
 skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 ````
 
-## Chroma 29 Test points
+## Chroma 29 Test Points
 
 | Test point | Signal | 
 |-|-|
@@ -37,24 +45,26 @@ skip@Dell-7040:~/dmitrygr-einkTags/firmware/main$
 |TP10| J1.23 PREVGL ?|
 |TP11 | J1.21 PREVGH ? |
 
-## CC Debugger connections
+## Connections to a CC Debugger
 
 I hot glued a 5 pin SIP header to my board for connections to a programmer. 
+
 The pinout matches a cable I already had for another project,
 
-| SIP Pin | Test point | Signal | CC debugger pin |
-|-|-|-|-|
-|1|TP8 | J3, GND |  1 |
-|2|TP5 | DC | 3 |
-|3|TP4| J2, +VBAT | 2 (and 9 to power board from debugger) |
-|4|TP3 | DD | 4 |
-|5|TP2  | Reset_n | 7 |
+| SIP Pin | Test point | Signal | CC debugger pin | Wire color|
+|-|-|-|-|-|
+|1|TP8 | J3, GND |  1 | Black |
+|2|TP5 | DC | 3 | Brown |
+|3|TP4| J2, +VBAT | 2 <br>(and 9 to power <br>board from debugger) |Red|
+|4|TP3 | DD | 4 |Yellow|
+|5|TP2  | Reset_n | 7 |Orange|
 
 
-## Debug serial port connections with FTDI cable
+## Connections For Debug Serial Port Using FTDI Cable
 
 I hot glued a 3 pin SIP header to my board for connections to a programmer. 
-The pinout matches a cable I already had for another project,
+
+The pinout was chosen to matche a cable I already had for another project.
 
 | SIP Pin | Test point | Signal | FTDI |
 |-|-|-|-|
@@ -63,4 +73,17 @@ The pinout matches a cable I already had for another project,
 |3|TP9 | Serial in | Orange |
 
 <img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma29_connections.png" width=50%>
+
+## Logic Analyzer Connections for EPD Reverse Engineering
+
+| Signal | EPD pin | CC1110 pin | Logic Analyzer pin |
+| -|-| -| - |
+| GND | 18 |  - | 1 |
+| MOSI | 14 | 34  | 2 |
+| CLK | 13 | 36  | 3 |
+| nReset |10 | 1  | 4 |
+| nCS | 12 | 3  | 5|
+| Busy | 9 | 4  | 6|
+| D/nC | 11 | 13  | 7|
+| nEnable | x | 12 | 8|
 
