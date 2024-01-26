@@ -9,7 +9,7 @@ Three color, either black, white, and red (BWR) or black, white, and yellow (BWY
 | Chroma 16 | 1.08 x 1.08 in | 152 x 152 |? | N |
 | Chroma 21 | 1.9 x 1.00  in | 212 x 104 |? | N |
 | Chroma 27 | 2.4 x 1.20  in | 296 x 152 |? | N |
-| [Chroma29](docs/Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
+| [Chroma29](Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
 | Chroma 37 | 3.2 x 1.85  in | 416 x 240 |? | N |
 | Chroma 42 | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
 | Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N |
