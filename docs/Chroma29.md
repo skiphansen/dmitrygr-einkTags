@@ -1,9 +1,20 @@
-# Chroma 29 Info
+## Chroma29 Status
+
+The chroma29 target runs but no image is displayed on the screen on two
+of the tags that I have tried.  
+
+The debug output shows the code running as expected.
+
+Dimitry says that the problem is probably that my tag has a different 
+display type than the ones he has.  If you have a Chroma29r you might give
+it a try and let me know if it works for you.
+
+# General Chroma 29 Info
 
 Resolution 296 x 128 BWR or BWY.
 
 Known EPD controllers are either similar to the [UC8151](https://www.orientdisplay.com/wp-content/uploads/2022/09/UC8151C.pdf) or the [UC8154](https://v4.cecdn.yun300.cn/100001_1909185148/UC8154.pdf) depending on version.
-												
+                                                                                                
 The SPI flash chip is the 128k byte [MX25V1006E](https://www.macronix.com/Lists/Datasheet/Attachments/8649/MX25V1006E,%202.5V,%201Mb,%20v1.5.pdf).
 
 The flash is organized as 32 4k sectors or 2 65k blocks. Sectors, blocks, or 
@@ -62,7 +73,7 @@ but it is not needed if you just want to flash custom firmware.
 ## Chroma 29 Test Points
 
 | Test point | Signal | 
-|-|-|
+|:-:|-|
 | TP2  | Reset_n |
 |TP3 | DD |
 |TP4| J2, +VBAT | 
@@ -77,19 +88,19 @@ but it is not needed if you just want to flash custom firmware.
 ## History
 
 The were several versions of the the Chroma29 which are/were manufactured,
-unfortunately they are not all compatible.  The version of the Chroma29
-that Dmitry developed his code for apparently used a different EPD panel
-and hench EPD controller that the Chroma29s I bought on ebay.  I do not
-have any detailed information on the version Dmitry had.
+unfortunately they are not all compatible.  
 
-In the batch of Chroma29s I bought I have identified two different versions
-so far.
+I do not have any detailed information on the board version that Dmitry
+based his firmware on.  Apparently it used a different EPD panel than mine
+and it does not work on my tags.
 
-| Rev | EPD Panel | Controller | Notes |
-| - | - | - | - |
-| unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
-| edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
-| edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
+I have identified two different versions in the batch of Chroma29s I have.
+
+| SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
+| :-: | - | - | - | - |
+| ? | unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
+| "B" | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
+| "B" | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
 
 
 ## Logic Analyzer Connections for EPD Reverse Engineering
@@ -104,4 +115,21 @@ so far.
 | Busy | 9 | 4  | 6|
 | D/nC | 11 | 13  | 7|
 | nEnable | x | 12 | 8|
+
+## UC8154 LUTs
+
+The following tables were captured from the EPD SPI bus while sending an 
+image using [atc1441's Custom PriceTag Access Point](https://github.com/atc1441/E-Paper_Pricetags/tree/main/Custom_PriceTag_AccesPoint) to
+a tag running stock firmware.
+
+|Table|Values|
+|:-:|-|
+|Vcom1 LUT<br>(Cmd 0x20)|0x01 0x01 0x01 0x03 0x04 0x09 0x06 0x06<br>0x0A 0x04 0x04 0x19 0x03 0x04 0x09 |
+|White LUT<br><Cmd 0x21)|0x01 0x01 0x01 0x03 0x84 0x09 0x86 0x46<br>0x0A 0x84 0x44 0x19 0x03 0x44 0x09 |
+|Black LUT<br>(Cmd 0x22)|0x01 0x01 0x01 0x43 0x04 0x09 0x86 0x46<br>0x0A 0x84 0x44 0x19 0x83 0x04 0x09 |
+|Gray1 LUT<br>(Cmd 0x23)||
+|Gray2 LUT<br>(Cmd 0x24)||
+|Vcom2 LUT<br>(Cmd 0x25)|0x0A 0x0A 0x01 0x02 0x14 0x0D 0x14 0x14<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00|
+|Red0 LUT<br>(Cmd 0x26)|0x4A 0x4A 0x01 0x82 0x54 0x0D 0x54 0x54<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00 |
+|Red1 LUT<br>(Cmd 0x27)|0x0A 0x0A 0x01 0x02 0x14 0x0D 0x14 0x14<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00|
 

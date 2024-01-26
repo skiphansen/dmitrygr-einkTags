@@ -13,13 +13,17 @@ These two code bases were slightly incompatible with each other, but I've reconc
 The code has been modified to get it to compile and work with my debugger.
 I've also been adding documentation as I learn.
 
-The station and tag code has been sucessfully tested with a Chroma 74 tag.
+The [station](docs/Station.md) and tag code has been been sucessfully tested with a Chroma 74 tag.
+
+I am only interested in the subgig [Chroma](docs/Chroma.md) series of tags since
+that's what I have and the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) 
+project has the 2.4 ghz zbs based tags well in hand.
 
 ## My Goal
 
 My eventual goals are:
 1. Port the subgig code to the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) project.
-2. Add support for the Chroma 42 and Chroma 60 tags which I recently bought on ebay.
+2. Add support for the Chroma 42 and Chroma 60 tags which I also have.
 
 The reason I've interested in ePaper displays is that I have several applications
 that I'd like to use them for:
@@ -32,13 +36,6 @@ I am only interested in the subgig tags based on the TI CC1110 since that's
 what I have and the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) 
 project has the 2.4 ghz zbs based tags well in hand.
 
-See [Chroma.md](docs/Chroma.md) for more information on the Chroma series of tags.
-
-See [Station.md](docs/Station.md) for information on building a base station / 
-access port.
-
-See [Chroma29.md](docs/Chroma29.md) for more information on the Chroma 29 tag.
-
 ## Status
 
 | Target | Status |  
@@ -46,21 +43,11 @@ See [Chroma29.md](docs/Chroma29.md) for more information on the Chroma 29 tag.
 |Station | Works! |
 |chroma74r | Works! |
 |chroma74y | Builds and probably works.<br>I don't have one for testing |
-|chroma29r  | Works? (see below) |
+|chroma29r | See ([Chroma29.md](docs/Chroma29.md) for details) |
 |EPOP50  | Builds, but untested |
 |EPOP900  | Builds, but untested  |
 |zbs29v025  |Builds, but untested |
 |zbs29v026|Builds, but untested |
-
-## Chroma29r Status
-
-The chroma29r target runs but no image is displayed on the screen on two
-of the tags that I have tried.  The debug output shows the code running
-as expected.
-
-Dimitry says that the problem is probably that my tag has a different 
-display type than the ones he has.  If you have a Chroma29r you might give
-it a try and let me know if it works for you.
 
 ## License
 

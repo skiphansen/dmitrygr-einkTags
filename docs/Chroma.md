@@ -9,7 +9,7 @@ Three color, either black, white, and red (BWR) or black, white, and yellow (BWY
 | Chroma 16 | 1.08 x 1.08 in | 152 x 152 |? | N |
 | Chroma 21 | 1.9 x 1.00  in | 212 x 104 |? | N |
 | Chroma 27 | 2.4 x 1.20  in | 296 x 152 |? | N |
-| Chroma 29 | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
+| [Chroma29](docs/Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
 | Chroma 37 | 3.2 x 1.85  in | 416 x 240 |? | N |
 | Chroma 42 | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
 | Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N |
@@ -43,6 +43,10 @@ Channel 24
 
 Packets are variable length, CRC16 will be provided by the radio, as will whitening. 
 
+## USART usage
+
+USART0 EPD SPI interface.
+USART1 shared dynamically between SPI flash (EEPROM) and debug serial port.
 
 
 ## CC1110F32 Memory map
@@ -57,15 +61,21 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 
 
 ## CC1110F pin connections
+
+The CC1110F pin connections are assumed to be common amoung all Chroma Tags,
+but only Chroma74 and Chroma29 have verified.  
+
+Note: there are some variations between different board revisions.
+
 | Pin | Pin name | usage | Notes |
 | - | - | -|-|
-| 1| P1.2 | epd RESET | display pin 10
+| 1| P1.2 | EPD RESET | display pin 10
 | 2| DVDD ||
 | 3| P1.1 | EPD nCS | display pin 12|
 | 4| P1.0 | EPD BUSY | display pin 9|
 | 5| P0.0 | EPD BS1 | display pin 8|
 | 6| P0.1 | TP6/TP16 ||
-| 7| P0.2 | EPD nReset |display pin 10|
+| 7| P0.2 | N/C ? | |
 | 8| P0.3 | SPI EEPROM CLK|
 | 9| P0.4 | SPI EEPROM MOSI|
 | 10| DVDD
@@ -102,10 +112,10 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 | -| -| -| -|
 |P0.0 | output | EPD BS1 | display pin 8|
 |P0.1 | TP6/TP16 ||
-|P0.2 | EPD nReset | display pin 10|
+|P0.2 | N/C ? | |
 |P0.3 | output | SPI EEPROM CLK|
 |P0.4 | output | SPI EEPROM MOSI|
-|P0.5 | output | SPI EEPROM MISO|
+|P0.5 | input | SPI EEPROM MISO|
 |P0.6 | output | EPD nEnable|
 |P0.7 | output | EPD D/nC | display pin 11|
 
@@ -115,9 +125,9 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 | -| -| -| -|
 |P1.0 | EPD BUSY | display pin 9|
 |P1.1 | EPD nCS | display pin 12|
-|P1.2 | output | | epd RESET | display pin 10
+|P1.2 | output | | EPD nRESET | display pin 10|
 |P1.3 | output | EPD DO/SCK | display pin 13|
-|P1.4 | NC ?
+|P1.4 | NC ?||
 |P1.5 | output | EPD D1/SDIN | display pin 14 |
 |P1.6 | output | /USART1 TXD | TP7/TP17 |
 |P1.7 | input | /USART1 RXD | TP9/TP19 |
