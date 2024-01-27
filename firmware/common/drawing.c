@@ -396,7 +396,7 @@ void drawFullscreenMsg(const char *str)
    
    pr("MESSAGE '%s'\n", str);
    
-#if 0
+#if 1
    
    #ifdef DATAMATRIX
       if (!datamatrixInit())

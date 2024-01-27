@@ -297,45 +297,6 @@ static void screenPrvSendLut(uint8_t cmd, const uint8_t __code *ptr, uint8_t len
 	einkDeselect();
 }
 
-#pragma callee_saves screenPrvSetStage1Luts
-static void screenPrvSetStage1Luts(void)
-{
-	screenPrvSendLut(0x20, mLutStage1_Vcom, sizeof(mLutStage1_Vcom), 60);
-	//i do not know why, but these need to be sen tin this order!!!
-	screenPrvSendLut(0x22, mLutStage1_10, sizeof(mLutStage1_10), 60);
-	screenPrvSendLut(0x23, mLutStage1_01, sizeof(mLutStage1_01), 36);
-	screenPrvSendLut(0x24, mLutStage1_00, sizeof(mLutStage1_00), 36);
-}
-
-#pragma callee_saves screenPrvSetStage2Luts
-static void screenPrvSetStage2Luts(void)
-{
-	screenPrvSendLut(0x20, mLutStage2_Vcom, sizeof(mLutStage2_Vcom), 60);
-	//i do not know why, but these need to be sen tin this order!!!
-	screenPrvSendLut(0x22, mLutStage2_10, sizeof(mLutStage2_10), 60);
-	screenPrvSendLut(0x23, mLutStage2_01, sizeof(mLutStage2_01), 36);
-	screenPrvSendLut(0x24, mLutStage2_00, sizeof(mLutStage2_00), 36);
-}
-
-#pragma callee_saves screenPrvSetStage3Luts
-static void screenPrvSetStage3Luts(void)
-{
-	screenPrvSendLut(0x20, mLutStage3_Vcom, sizeof(mLutStage3_Vcom), 60);
-	//i do not know why, but these need to be sen tin this order!!!
-	screenPrvSendLut(0x22, mLutStage3_10, sizeof(mLutStage3_10), 60);
-	screenPrvSendLut(0x23, mLutStage3_01, sizeof(mLutStage3_01), 36);
-	screenPrvSendLut(0x24, mLutStage3_00, sizeof(mLutStage3_00), 36);
-}
-
-#pragma callee_saves screenPrvSetStage4Luts
-static void screenPrvSetStage4Luts(void)
-{
-	screenPrvSendLut(0x20, mLutStage4_Vcom, sizeof(mLutStage4_Vcom), 60);
-	//i do not know why, but these need to be sen tin this order!!!
-	screenPrvSendLut(0x22, mLutStage4_10, sizeof(mLutStage4_10), 60);
-	screenPrvSendLut(0x23, mLutStage4_01, sizeof(mLutStage4_01), 36);
-	screenPrvSendLut(0x24, mLutStage4_00, sizeof(mLutStage4_00), 36);
-}
 
 #pragma callee_saves screenPrvSetPartialLuts
 static void screenPrvSetPartialLuts(void)
@@ -382,6 +343,7 @@ static void screenInitIfNeeded(__bit forPartial)
 	if (mInited)
 		return;
 	
+   pr("Init screen\n");
 	mInited = true;
 	mPartial = forPartial;
 	
@@ -408,76 +370,116 @@ static void screenInitIfNeeded(__bit forPartial)
 	//turn on the eInk power (keep in reset for now)
 	P0 &= (uint8_t)~(1 << 6);
 	timerDelay(TIMER_TICKS_PER_SECOND * 10 / 1000);	//wait 10ms
+   pr("busy %d\n",P1 & (1 << 0));
 	
 	//release reset
 	P1 |= 1 << 2;
 	timerDelay(TIMER_TICKS_PER_SECOND * 10 / 1000);	//wait 10ms
-	
-	//wait for not busy
-	while (!(P1 & (1 << 0)));
-	
+// UC8154 variant
+// values from logic analyzer capture of stock firmware
 	einkSelect();
-	screenPrvSendCommand(0x03);
+	screenPrvSendCommand(0x01);
+	screenPrvSendData(0x07);
+	screenPrvSendData(0x00);
+	screenPrvSendData(0x09);
 	screenPrvSendData(0x00);
 	einkDeselect();
 	
 	einkSelect();
 	screenPrvSendCommand(0x06);
-	screenPrvSendData(0x17);
-	screenPrvSendData(0x17);
-	screenPrvSendData(0x1e);
+	screenPrvSendData(0x07);
+	screenPrvSendData(0x07);
+	screenPrvSendData(0x0f);
+	einkDeselect();
+	
+	einkSelect();
+	screenPrvSendCommand(0x04);
+//wait for not busy
+	while (!(P1 & (1 << 0)));
+	einkDeselect();
+	
+//	screenPrvConfigVoltages(false);
+	
+	einkSelect();
+	screenPrvSendCommand(0x00);
+	screenPrvSendData(0x93);
+
+   screenPrvSendCommand(0x61);
+	screenPrvSendData(0x80);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x28);
 	einkDeselect();
 	
 	einkSelect();
 	screenPrvSendCommand(0x30);
-	screenPrvSendData(0x21);
-	einkDeselect();
-	
-	screenPrvConfigVoltages(false);
-	
-	einkSelect();
-	screenPrvSendCommand(0x00);
-	screenPrvSendData(0xaf);
-	screenPrvSendData(0x89);
-	einkDeselect();
-	
-	einkSelect();
-	screenPrvSendCommand(0x41);
-	screenPrvSendData(0x00);
-	einkDeselect();
-	
-	einkSelect();
+	screenPrvSendData(0x29);
+
 	screenPrvSendCommand(0x50);
-	screenPrvSendData(0xd7);
-	einkDeselect();
+	screenPrvSendData(0x17);
 	
-	einkSelect();
+	screenPrvSendCommand(0x82);
+	screenPrvSendData(0x08);
+
 	screenPrvSendCommand(0x60);
 	screenPrvSendData(0x22);
 	einkDeselect();
 	
 	einkSelect();
-	screenPrvSendCommand(0x82);
-	screenPrvSendData(0x12);
+	screenPrvSendCommand(0x20);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x03);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x09);
+	screenPrvSendData(0x06);
+	screenPrvSendData(0x06);
+	screenPrvSendData(0x0a);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x19);
+	screenPrvSendData(0x03);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x09);
 	einkDeselect();
-	
+   	
+	screenPrvSendCommand(0x21);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x03);
+	screenPrvSendData(0x84);
+	screenPrvSendData(0x09);
+	screenPrvSendData(0x86);
+	screenPrvSendData(0x46);
+	screenPrvSendData(0x0a);
+	screenPrvSendData(0x84);
+	screenPrvSendData(0x44);
+	screenPrvSendData(0x19);
+	screenPrvSendData(0x03);
+	screenPrvSendData(0x44);
+	screenPrvSendData(0x09);
+	einkDeselect();
+      	
 	einkSelect();
-	screenPrvSendCommand(0x2a);
-	screenPrvSendData(0x80);
-	screenPrvSendData(0x00);
+	screenPrvSendCommand(0x22);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x01);
+	screenPrvSendData(0x43);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x09);
+	screenPrvSendData(0x86);
+	screenPrvSendData(0x46);
+	screenPrvSendData(0x0a);
+	screenPrvSendData(0x84);
+	screenPrvSendData(0x44);
+	screenPrvSendData(0x19);
+	screenPrvSendData(0x83);
+	screenPrvSendData(0x04);
+	screenPrvSendData(0x09);
 	einkDeselect();
-	
-	if (forPartial)
-		screenPrvSetPartialLuts();
-	else
-		screenPrvSetStage1Luts();
-	
-	einkSelect();
-	screenPrvSendCommand(0x61);
-	screenPrvSendData(SCREEN_WIDTH & 0xff);
-	screenPrvSendData(SCREEN_HEIGHT >> 8);
-	screenPrvSendData(SCREEN_HEIGHT & 0xff);
-	einkDeselect();
+   pr("screenInitIfNeeded returning\n");
 }
 
 void screenShutdown(void)
@@ -486,12 +488,14 @@ void screenShutdown(void)
 		return;
 	
 	einkSelect();
-	screenPrvSendCommand(0x02);
-	einkDeselect();
-	
-	einkSelect();
-	screenPrvSendCommand(0x07);
-	screenPrvSendData(0xa5);
+	screenPrvSendCommand(0x82);
+	screenPrvSendData(0x00);
+
+	screenPrvSendCommand(0x01);
+	screenPrvSendData(0x02);
+	screenPrvSendData(0x00);
+	screenPrvSendData(0x00);
+	screenPrvSendData(0x00);
 	einkDeselect();
 	
 	P0 |= (1 << 6);

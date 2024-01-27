@@ -41,7 +41,7 @@ extern struct COMMAND_TABLE commandtable[];
 #define RESULT_NO_SUPPORT  3
 #define RESULT_BAD_ARG     4
 #define RESULT_TIMEOUT     5
-#define RESULT_BAD_LEN     5
+#define RESULT_BAD_LEN     6
 
 
 void Usage(void);

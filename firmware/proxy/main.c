@@ -68,6 +68,7 @@ void IdleMode(void);
 void startRX(void);
 void TryRx(void);
 int EpdCmd(uint8_t Flags);
+static void ScreenInit(void);
 
 void main(void)
 {
@@ -84,6 +85,8 @@ void main(void)
       LOG("failed to init eeprom\n");
    }
    u1setUartMode();
+   ScreenInit();
+
    URX1IE = 1;
    // RFTXRXIE = 1;
 
@@ -332,9 +335,45 @@ void HandleMsg()
          MsgLen = EpdCmd(uCast0.Bytes[0]);
          break;
 
-      case CMD_EPD_BUSY:
-         if(!(P1 & (1 << 0))) {
-            gRxBuf[1] = CMD_ERR_BUSY;
+      case CMD_PORT_RW:
+         MsgLen = 3;
+#if 0
+         LOG("P0DIR 0x%x\n",P0DIR);
+         LOG("P1DIR 0x%x\n",P1DIR);
+         LOG("P2DIR 0x%x\n",P2DIR);
+         LOG("port %d mask 0x%x value 0x%x\n",uCast0.Bytes[0],
+             uCast0.Bytes[1],gRxBuf[3]);
+#endif
+         if(uCast0.Bytes[0] == 0) {
+         // P0
+            if(uCast0.Bytes[1] != 0) {
+            // Mask != 0, we have something to send
+               uCast0.Bytes[0] = P0 & ~uCast0.Bytes[1];
+               P0 = uCast0.Bytes[0] | gRxBuf[3];
+            }
+            pResponse->Bytes[0] = P0;
+         }
+         else if(uCast0.Bytes[0] == 1) {
+         // P1
+            if(uCast0.Bytes[1] != 0) {
+            // Mask != 0, we have something to send
+               uCast0.Bytes[0] = P1 & ~uCast0.Bytes[1];
+               P1 = uCast0.Bytes[0] | gRxBuf[3];
+            }
+            pResponse->Bytes[0] = P1;
+         }
+         else if(uCast0.Bytes[0] == 2) {
+         // P2
+            if(uCast0.Bytes[1] != 0) {
+            // Mask != 0, we have something to send
+               uCast0.Bytes[0] = P2 & ~uCast0.Bytes[1];
+               P2 = uCast0.Bytes[0] | gRxBuf[3];
+            }
+            pResponse->Bytes[0] = P2;
+         }
+         else {
+            MsgLen = 2;
+            gRxBuf[1] = CMD_ERR_INVALID_ARG;
          }
          break;
 
@@ -439,59 +478,53 @@ int EpdCmd(uint8_t Flags)
    int Ret = 2;
    int MsgLen = 2;
 
+//   LOG("Got EpdCmd, gRxMsgLen %d, flags 0x%x\n",gRxMsgLen,Flags);
+
    if(Flags & EPD_FLG_CMD) {
    // Clear cmd/data bit
-      P0 &= (uint8_t)~(1 << 7);
+      SET_EPD_DAT_CMD(0);
    }
    else {
    // Set cmd/data bit
-      P0 |= (1 << 7);
+      SET_EPD_DAT_CMD(1);
    }
 
    if(Flags & EPD_FLG_RESET) {
    // set reset
-      P1 &= (uint8_t)~(1 << 7);
+      SET_EPD_nRST(1);
    }
    else {
    //release reset
-      P1 |= (1 << 2);
-   }
-
-   if(Flags & EPD_FLG_BS1) {
-   // set BS1
-      P0 |= (1 << 0);
-   }
-   else {
-   // clear BS1
-      P0 &= (uint8_t)~(1 << 0);
+      SET_EPD_nRST(0);
    }
 
    if(Flags & EPD_FLG_ENABLE) {
    // turn off the eInk power
-      P0 |= (1 << 6);
+      SET_EPD_nENABLE(1);
    }
    else {
    // turn on the eInk power
-      P0 &= (uint8_t)~(1 << 6);
+      SET_EPD_nENABLE(0);
    }
 
    if(gRxMsgLen > 2) {
    // we have data
       if(Flags & EPD_FLG_START_XFER) {
       // set nCS low
-         P1 &= (uint8_t)~(1 << 1);
+         SET_EPD_nCS(0);
+
       }
       while(MsgLen < gRxMsgLen) {
-         while (U0CSR & 0x01);   // Wait for USART0 idle
+         while(U0CSR & 0x01);   // Wait for USART0 idle
       // Send byte
-         U0DBUF = *pData;
-         while (!(U1CSR & UCSR_TX_BYTE));
-         if(Flags & EPD_FLG_CMD) {
+         if(MsgLen == 3 && (Flags & EPD_FLG_CMD)) {
          // Set data bit for remaining bytes
-            P0 |= (1 << 7);
+            SET_EPD_DAT_CMD(1);
          }
-         U1CSR &= (uint8_t)~UCSR_TX_BYTE;
-         while (U1CSR & UCSR_ACTIVE);
+         U0DBUF = *pData;
+         while (!(U0CSR & UCSR_TX_BYTE));
+         U0CSR &= (uint8_t)~UCSR_TX_BYTE;
+         while (U0CSR & UCSR_ACTIVE);
          *pData++ = U0DBUF;
 
          if(Flags & EPD_FLG_SEND_RD) {
@@ -501,10 +534,34 @@ int EpdCmd(uint8_t Flags)
       }
       if(Flags & EPD_FLG_END_XFER) {
       // set nCS high
-         P1 |= (uint8_t)(1 << 1);
+         SET_EPD_nCS(1);
       }
    }
 
    return Ret;
+}
+
+static void ScreenInit()
+{
+   //pins are gpio
+   P0SEL &= (uint8_t)~((1 << 0) | (1 << 6) | (1 << 7));
+   P1SEL = (P1SEL & (uint8_t)~((1 << 0) | (1 << 1) | (1 << 2))) | (1 << 3) | (1 << 5);
+   
+   //directions set as needed
+   P0DIR |= (1 << 0) | (1 << 6) | (1 << 7);
+   P1DIR = (P1DIR & (uint8_t)~(1 << 0)) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 5);
+   
+   //default state set (incl keeping it in reset and disabled, data mode selected)
+   P0 = (P0 & (uint8_t)~(1 << 0)) | (1 << 6) | (1 << 7);
+   P1 = (P1 & (uint8_t)~((1 << 2) | (1 << 3) | (1 << 5))) | (1 << 1);
+   
+   //configure the uart0 (alt2, spi, fast)
+   PERCFG |= (1 << 0);
+   U0BAUD = 0;       //F/8 is max for spi - 3.25 MHz
+   U0GCR = 0b00110001;  //BAUD_E = 0x11, msb first
+   U0CSR = 0b00000000;  //SPI master mode, RX off
+   
+   P2SEL &= (uint8_t)~(1 << 6);
+   SET_EPD_BS1(0);
 }
 

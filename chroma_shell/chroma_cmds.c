@@ -88,6 +88,21 @@
 #define REG_MARCSTATE   0xdf3b
 #define REG_PKTSTATUS   0xdf3c
 
+// Port 0 bits
+#define P0_EPD_BS1      0x01
+#define P0_TP6          0x02
+#define P0_EPD_nRST     0x04
+#define P0_SPI0_CLK     0x08
+#define P0_SPI0_MOSI    0x10
+#define P0_SPI0_MIOSO   0x20
+#define P0_EPD_nENABLE  0x40
+#define P0_EEPROM_nCS   0x80
+
+// Port 1 bits
+#define P1_EPD_BUSY     0x01
+#define P1_EPD_CS       0x02
+#define P1_EPD_RESET    0x04
+
 int BoardTypeCmd(char *CmdLine);
 int RadioCfgCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
@@ -101,7 +116,16 @@ int SetRegCmd(char *CmdLine);
 int SN2MACCmd(char *CmdLine);
 int TxCmd(char *CmdLine);
 int DumpSettingsCmd(char *CmdLine);
+int PortRdWrCmd(uint8_t Port,bool bWrite,char *CmdLine);
+int P0rdCmd(char *CmdLine);
+int P0wrCmd(char *CmdLine);
+int P1rdCmd(char *CmdLine);
+int P1wrCmd(char *CmdLine);
+int P2rdCmd(char *CmdLine);
+int P2wrCmd(char *CmdLine);
 int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
+int PowerUpEPD(void);
+int EpdBusyWait(int State,int Timeout);
 
 // Eventual CC1101 API functions.  
 // Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
@@ -120,6 +144,12 @@ struct COMMAND_TABLE commandtable[] = {
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
    { "rx", "Enter RF receive mode",NULL,0,RxCmd},
+   { "p0rd", "Read port 0",NULL,0,P0rdCmd},
+   { "p0wr", "Write port 0",NULL,0,P0wrCmd},
+   { "p1rd", "Read port 1",NULL,0,P1rdCmd},
+   { "p1wr", "Write port 1",NULL,0,P1wrCmd},
+   { "p2rd", "Read port 2",NULL,0,P2rdCmd},
+   { "p2wr", "Write port 2",NULL,0,P2wrCmd},
    { "set_reg", "set chip register device",NULL,0,SetRegCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
    { "tx", "Send text",NULL,0,TxCmd},
@@ -487,7 +517,7 @@ int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
       Ret = RESULT_OK;
    } while(false);
 
-   if(fp == NULL && RdBuf == NULL) {
+   if(fp != NULL) {
       printf("\n");
    }
 
@@ -1098,6 +1128,89 @@ int DumpSettingsCmd(char *CmdLine)
    return RESULT_OK;
 }
 
+int PortRdWrCmd(uint8_t Port,bool bWrite,char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int Mask = 0;
+   int Value = 0;
+   uint8_t Cmd[4];
+   AsyncResp *pMsg;
+
+   do {
+      if(bWrite) {
+         if(sscanf(CmdLine,"%x %x",&Mask,&Value) != 2
+            || Mask < 0 || Mask > 0xff
+            || Value < 0 || Value > 0xff)
+         {
+            break;
+         }
+      }
+
+      Cmd[0] = CMD_PORT_RW;
+      Cmd[1] = Port;
+      Cmd[2] = Mask;
+      Cmd[3] = Value;
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         Ret = RESULT_OK;
+         break;
+      }
+      LOG_RAW("Port%d: 0x%x\n",Port,pMsg->Msg[0]);
+      free(pMsg);
+      Ret = RESULT_OK;
+   } while(false);
+
+   return Ret;
+}
+
+int P0rdCmd(char *CmdLine)
+{
+   return PortRdWrCmd(0,false,CmdLine);
+}
+
+int P0wrCmd(char *CmdLine)
+{
+   return PortRdWrCmd(0,true,CmdLine);
+}
+
+int P1rdCmd(char *CmdLine)
+{
+   return PortRdWrCmd(1,false,CmdLine);
+}
+
+int P1wrCmd(char *CmdLine)
+{
+   return PortRdWrCmd(1,true,CmdLine);
+}
+
+int P2rdCmd(char *CmdLine)
+{
+   return PortRdWrCmd(2,false,CmdLine);
+}
+
+int P2wrCmd(char *CmdLine)
+{
+#if 0
+   return PortRdWrCmd(2,true,CmdLine);
+#else
+   uint8_t Cmd[] = {CMD_EPD,0,0,0};
+   AsyncResp *pMsg;
+
+   do {
+      if(PowerUpEPD() != 0) {
+         break;
+      }
+   // Send read Rev command
+      Cmd[1] |= EPD_FLG_START_XFER | EPD_FLG_END_XFER | EPD_FLG_SEND_RD;
+      Cmd[2] = 0x70;
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   } while(false);
+   return RESULT_OK;
+#endif
+}
+
 void HandleCmd(uint8_t *Msg,int MsgLen)
 {
    uint8_t Cmd = Msg[0] & ~CMD_RESP;
@@ -1120,15 +1233,118 @@ void HandleCmd(uint8_t *Msg,int MsgLen)
    }
 }
 
+int PowerUpEPD()
+{
+   uint8_t Cmd[256];
+   AsyncResp *pMsg;
+   int Ret = RESULT_FAIL;
+   int CmdLen;
+
+   do {
+      memset(Cmd,0,sizeof(Cmd));
+      Cmd[0] = CMD_EPD;
+   // Set reset high
+      Cmd[1] = EPD_FLG_RESET | EPD_FLG_CMD | EPD_FLG_ENABLE;
+      if((pMsg = SendCmd(Cmd,2,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   // reset low
+      Cmd[1] &= ~EPD_FLG_RESET;
+      if((pMsg = SendCmd(Cmd,2,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   // Release reset
+      Cmd[1] |= EPD_FLG_RESET;
+      if((pMsg = SendCmd(Cmd,2,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   // Wait for Busy to go low
+      if((Ret = EpdBusyWait(0,2000)) != RESULT_OK) {
+         break;
+      }
+
+      Cmd[1] |= EPD_FLG_START_XFER | EPD_FLG_END_XFER;
+      CmdLen = 2;
+      Cmd[CmdLen++] = 0x1;
+      Cmd[CmdLen++] = 0x07;
+      Cmd[CmdLen++] = 0x00;
+      Cmd[CmdLen++] = 0x09;
+      Cmd[CmdLen++] = 0x00;
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+
+      Cmd[1] &= ~EPD_FLG_END_XFER;
+      CmdLen = 2;
+      Cmd[CmdLen++] = 0x6;
+      Cmd[CmdLen++] = 0x07;
+      Cmd[CmdLen++] = 0x07;
+      Cmd[CmdLen++] = 0x0f;
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+
+      CmdLen = 2;
+      Cmd[CmdLen++] = 0x04;
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+   // Wait for Busy to go high
+      if((Ret = EpdBusyWait(1,2000)) != RESULT_OK) {
+         break;
+      }
+   } while(false);
+
+   return Ret;
+}
+
+int EpdBusyWait(int State,int Timeout)
+{
+   int Ret = RESULT_OK;
+   AsyncResp *pMsg;
+   bool bFirst = true;
+   uint8_t Cmd[4] = {CMD_PORT_RW,1,0,0};
+   uint8_t Busy;
+
+   while(true) {
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         LOG_RAW("Timeout\n");
+         Ret = RESULT_TIMEOUT;
+         break;
+      }
+      Busy = pMsg->Msg[0] & P1_EPD_BUSY;
+      free(pMsg);
+      if(Busy == State) {
+         if(!bFirst) {
+            LOG_RAW("\n");
+         }
+         break;
+      }
+
+      if(bFirst) {
+         bFirst = false;
+         LOG_RAW("Waiting for Busy to go %s...",State ? "high" : "low");
+         fflush(stdout);
+      }
+   }
+
+   return Ret;
+}
+
 void Usage()
 {
-   PRINTF("Usage: chroma_cmd [options]\n");
+   PRINTF("Usage: chroma_shell [options]\n");
    PRINTF("  options:\n");
    PRINTF("\t-b<baud rate>\tSet serial port baudrate (default %d)\n",DEFAULT_BAUDRATE);
    PRINTF("\t-c<command>\tRun specified command and exit\n");
    PRINTF("\t-d\t\tDebug mode\n");
    PRINTF("\t-D<path>\tSet path to async device (default %s)\n",gDevicePath);
-   PRINTF("\t-q\t\tquient\n");
+   PRINTF("\t-q\t\tquiet\n");
    PRINTF("\t-v?\t\tList available verbose display levels\n");
    PRINTF("\t-v<bitmap>\tSet desired display levels (Hex bit map)\n");
 }

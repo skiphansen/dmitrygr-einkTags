@@ -215,13 +215,14 @@
 			Name="Other Files"
 			Filters="">
 			<F N="../cc1101_vrs_cc111x.md"/>
-			<F N="../Chroma.md"/>
+			<F N="../docs/cc1101_vrs_cc111x.md"/>
+			<F N="../docs/Chroma.md"/>
+			<F N="../docs/Chroma29.md"/>
 			<F N="../RfStudio/dmitrygr.prs"/>
 			<F N="/cc1xxx/docs/notes.txt"/>
 			<F N="../README.md"/>
-			<F N="../firmware/board/chroma29r/README.md"/>
 			<F N="../sdcc/README.md"/>
-			<F N="../Station.md"/>
+			<F N="../docs/Station.md"/>
 		</Folder>
 	</Files>
 	<Macro>
