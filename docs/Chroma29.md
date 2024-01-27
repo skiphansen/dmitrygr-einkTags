@@ -9,6 +9,23 @@ Dimitry says that the problem is probably that my tag has a different
 display type than the ones he has.  If you have a Chroma29r you might give
 it a try and let me know if it works for you.
 
+## History
+
+The were several versions of the Chroma29 which are/were manufactured,
+unfortunately they are not all compatible.  
+
+I do not have any detailed information on the board version that Dmitry
+based his firmware on.  Apparently it used a different EPD panel than mine
+and it does not work on my tags.
+
+I have identified two different versions in the batch of Chroma29s I have.
+
+| SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
+| :-: | - | - | - | - |
+| ? | unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
+| "B" | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
+| "B" | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
+
 # General Chroma 29 Info
 
 Resolution 296 x 128 BWR or BWY.
@@ -18,7 +35,7 @@ Known EPD controllers are either similar to the [UC8151](https://www.orientdispl
 The SPI flash chip is the 128k byte [MX25V1006E](https://www.macronix.com/Lists/Datasheet/Attachments/8649/MX25V1006E,%202.5V,%201Mb,%20v1.5.pdf).
 
 The flash is organized as 32 4k sectors or 2 65k blocks. Sectors, blocks, or 
-the entire chip cand be erased at a time.
+the entire chip can be erased at a time.
 
 ## Building the Firmware
 
@@ -84,24 +101,6 @@ but it is not needed if you just want to flash custom firmware.
 |TP9 | P1_7 (Serial in) |
 |TP10| J1.23 PREVGL ?|
 |TP11 | J1.21 PREVGH ? |
-
-## History
-
-The were several versions of the the Chroma29 which are/were manufactured,
-unfortunately they are not all compatible.  
-
-I do not have any detailed information on the board version that Dmitry
-based his firmware on.  Apparently it used a different EPD panel than mine
-and it does not work on my tags.
-
-I have identified two different versions in the batch of Chroma29s I have.
-
-| SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
-| :-: | - | - | - | - |
-| ? | unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
-| "B" | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
-| "B" | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
-
 
 ## Logic Analyzer Connections for EPD Reverse Engineering
 

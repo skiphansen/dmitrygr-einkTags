@@ -32,10 +32,6 @@ that I'd like to use them for:
 1. Charting daily tide levels.
 1. Displaying the current [weather](https://github.com/G6EJD/ESP32-e-Paper-Weather-Display) and predictions.
 
-I am only interested in the subgig tags based on the TI CC1110 since that's 
-what I have and the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) 
-project has the 2.4 ghz zbs based tags well in hand.
-
 ## Status
 
 | Target | Status |  
