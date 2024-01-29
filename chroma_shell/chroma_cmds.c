@@ -371,6 +371,65 @@ RfModes gRfModes[] = {
    {NULL}   // end of table
 };
 
+// <cmd_len> <cmd> <data...>
+uint8_t Chroma29_C8154Init0[] = {
+   5,
+   0x01, // Power Setting (PWR)
+   0x07,0x00,0x09,0x00,
+
+   4, 
+   0x06, // Booster Soft Start (BTST)
+   0x07,0x07,0x0f,
+   0
+};
+
+uint8_t Chroma29_C8154Init1[] = {
+   6,
+   0x00, // Panel Setting (PSR)
+   0x93,0x61,0x80,0x01,0x28,
+
+   8,
+   0x30, // PLL control (PLL)
+   0x29,0x50,0x17,0x82,0x08,0x60,0x22,
+
+   16,
+   0x20, // VCOM1 LUT (LUTC1)
+   0x01,0x01,0x01,0x03,0x04,0x09,0x06,0x06,
+   0x0A,0x04,0x04,0x19,0x03,0x04,0x09,
+
+   16,
+   0x21, // WHITE LUT (LUTW) (R21H)
+   0x01,0x01,0x01,0x03,0x84,0x09,0x86,0x46,
+   0x0A,0x84,0x44,0x19,0x03,0x44,0x09,
+
+   16,
+   0x22, // BLACK LUT (LUTB) (R22H)
+   0x01,0x01,0x01,0x43,0x04,0x09,0x86,0x46,
+   0x0A,0x84,0x44,0x19,0x83,0x04,0x09,
+
+   16,
+   0x25, // VCOM2 LUT (LUTC2)
+   0x0A,0x0A,0x01,0x02,0x14,0x0D,0x14,0x14,
+   0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+
+   16,
+   0x26, // RED0 LUT (LUTR0)
+   0x4A,0x4A,0x01,0x82,0x54,0x0D,0x54,0x54,
+   0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+
+   16,
+   0x27, // RED0 LUT (LUTR1)
+   0x0A,0x0A,0x01,0x02,0x14,0x0D,0x14,0x14,
+   0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+
+   16,
+   0x24, // GRAY2 LUT (LUTG2)
+   0x01,0x81,0x01,0x83,0x84,0x09,0x86,0x46,
+   0x0A,0x84,0x44,0x19,0x03,0x04,0x09,
+
+   0
+};
+
 const char *Cmd2Str(uint8_t Cmd)
 {
    static char ErrMsg[80];
@@ -1199,13 +1258,16 @@ int P2wrCmd(char *CmdLine)
       if(PowerUpEPD() != 0) {
          break;
       }
+#if 0
    // Send read Rev command
-      Cmd[1] |= EPD_FLG_START_XFER | EPD_FLG_END_XFER | EPD_FLG_SEND_RD;
-      Cmd[2] = 0x70;
+
+      Cmd[1] = EPD_FLG_ENABLE | EPD_FLG_START_XFER | EPD_FLG_END_XFER | EPD_FLG_SEND_RD;
+      Cmd[2] = 0x71;
       if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
          break;
       }
       free(pMsg);
+#endif
    } while(false);
    return RESULT_OK;
 #endif
@@ -1266,36 +1328,33 @@ int PowerUpEPD()
          break;
       }
 
-      Cmd[1] |= EPD_FLG_START_XFER | EPD_FLG_END_XFER;
-      CmdLen = 2;
-      Cmd[CmdLen++] = 0x1;
-      Cmd[CmdLen++] = 0x07;
-      Cmd[CmdLen++] = 0x00;
-      Cmd[CmdLen++] = 0x09;
-      Cmd[CmdLen++] = 0x00;
+      CmdLen = 1;
+      Cmd[CmdLen++] |= EPD_FLG_START_XFER | EPD_FLG_END_XFER;
+      memcpy(&Cmd[CmdLen],Chroma29_C8154Init0,sizeof(Chroma29_C8154Init0));
+      CmdLen += sizeof(Chroma29_C8154Init0);
       if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
          break;
       }
       free(pMsg);
 
-      Cmd[1] &= ~EPD_FLG_END_XFER;
-      CmdLen = 2;
-      Cmd[CmdLen++] = 0x6;
-      Cmd[CmdLen++] = 0x07;
-      Cmd[CmdLen++] = 0x07;
-      Cmd[CmdLen++] = 0x0f;
-      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
-         break;
-      }
-      free(pMsg);
-
-      CmdLen = 2;
+      LOG("Sending command 4\n");
+      CmdLen = 1;
+      Cmd[CmdLen++] &= ~EPD_FLG_END_XFER;
+      Cmd[CmdLen++] = 1;
       Cmd[CmdLen++] = 0x04;
+      Cmd[CmdLen++] = 0;
       if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
          break;
       }
    // Wait for Busy to go high
       if((Ret = EpdBusyWait(1,2000)) != RESULT_OK) {
+         break;
+      }
+   // Drop CS
+      CmdLen = 1;
+      Cmd[CmdLen] &= ~EPD_FLG_START_XFER;
+      Cmd[CmdLen++] |= EPD_FLG_END_XFER;
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
          break;
       }
    } while(false);

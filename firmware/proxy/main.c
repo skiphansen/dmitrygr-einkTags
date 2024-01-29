@@ -67,7 +67,7 @@ void TxMode(void);
 void IdleMode(void);
 void startRX(void);
 void TryRx(void);
-int EpdCmd(uint8_t Flags);
+void EpdCmd(uint8_t Flags);
 static void ScreenInit(void);
 
 void main(void)
@@ -332,7 +332,12 @@ void HandleMsg()
          break;
 
       case CMD_EPD:
-         MsgLen = EpdCmd(uCast0.Bytes[0]);
+         if(gRxMsgLen > 1) {
+            EpdCmd(uCast0.Bytes[0]);
+         }
+         else {
+            gRxBuf[1] = CMD_ERR_INVALID_ARG;
+         }
          break;
 
       case CMD_PORT_RW:
@@ -472,22 +477,14 @@ void TryRx()
    }
 }
 
-int EpdCmd(uint8_t Flags)
+   // <CMD_EPD> <Flags> [<CommandBytes> <Command> [<Data>] ...]
+void EpdCmd(uint8_t Flags)
 {
    uint8_t __xdata *pData = (uint8_t __xdata*) &gRxBuf[2];
-   int Ret = 2;
    int MsgLen = 2;
+   uint8_t CmdBytes;
 
 //   LOG("Got EpdCmd, gRxMsgLen %d, flags 0x%x\n",gRxMsgLen,Flags);
-
-   if(Flags & EPD_FLG_CMD) {
-   // Clear cmd/data bit
-      SET_EPD_DAT_CMD(0);
-   }
-   else {
-   // Set cmd/data bit
-      SET_EPD_DAT_CMD(1);
-   }
 
    if(Flags & EPD_FLG_RESET) {
    // set reset
@@ -507,38 +504,47 @@ int EpdCmd(uint8_t Flags)
       SET_EPD_nENABLE(0);
    }
 
-   if(gRxMsgLen > 2) {
+   if(gRxMsgLen > 4) {
    // we have data
       if(Flags & EPD_FLG_START_XFER) {
       // set nCS low
          SET_EPD_nCS(0);
-
       }
       while(MsgLen < gRxMsgLen) {
-         while(U0CSR & 0x01);   // Wait for USART0 idle
-      // Send byte
-         if(MsgLen == 3 && (Flags & EPD_FLG_CMD)) {
-         // Set data bit for remaining bytes
-            SET_EPD_DAT_CMD(1);
+         CmdBytes = *pData++;
+         if(CmdBytes == 0) {
+            break;
          }
-         U0DBUF = *pData;
-         while (!(U0CSR & UCSR_TX_BYTE));
-         U0CSR &= (uint8_t)~UCSR_TX_BYTE;
-         while (U0CSR & UCSR_ACTIVE);
-         *pData++ = U0DBUF;
+         MsgLen += CmdBytes;
 
-         if(Flags & EPD_FLG_SEND_RD) {
-            Ret++;
+         while(U0CSR & 0x01);   // Wait for USART0 idle
+         if(Flags & EPD_FLG_CMD) {
+         // Clear cmd/data bit
+            SET_EPD_DAT_CMD(0);
          }
-         MsgLen++;
-      }
-      if(Flags & EPD_FLG_END_XFER) {
-      // set nCS high
-         SET_EPD_nCS(1);
+      // Send command byte
+
+         U0DBUF = *pData++;
+         CmdBytes--;
+      // Set data bit for remaining bytes
+         while (!(U0CSR & UCSR_TX_BYTE)); // Wait for last byte to be sent
+         U0CSR &= (uint8_t)~UCSR_TX_BYTE;
+
+         SET_EPD_DAT_CMD(1);
+         while(CmdBytes > 0) {
+         // Send data byte
+            U0DBUF = *pData++;
+            while (!(U0CSR & UCSR_TX_BYTE)); // Wait for last byte to be sent
+            U0CSR &= (uint8_t)~UCSR_TX_BYTE;
+            CmdBytes--;
+         }
       }
    }
 
-   return Ret;
+   if(Flags & EPD_FLG_END_XFER) {
+   // set nCS high
+      SET_EPD_nCS(1);
+   }
 }
 
 static void ScreenInit()

@@ -45,7 +45,8 @@ Packets are variable length, CRC16 will be provided by the radio, as will whiten
 
 ## USART usage
 
-USART0 EPD SPI interface.
+USART0 EPD SPI0 interface in alt. 2 mode which connects the SPI0 device to P2.
+
 USART1 shared dynamically between SPI flash (EEPROM) and debug serial port.
 
 
@@ -103,7 +104,7 @@ Note: there are some variations between different board revisions.
 | 32| P1.7/USART1 RXD | TP9/TP19 |
 | 33| P1.6/USART1 TXD | TP7/TP17 |
 | 34| P1.5 | EPD D1/SDIN | display pin 14 |
-| 35| P1.4 | NC ?
+| 35| P1.4 | See note 1 ||
 | 36| P1.3 | EPD DO/SCK | display pin 13|
 
 
@@ -140,4 +141,15 @@ Note: there are some variations between different board revisions.
 |P2.2/DBG_CLK | TP5/TP15 | Programmer interface|
 |P2.3/XOSC32_Q1 | 32.768 kHz crystal |
 |P2.4/XOSC32_Q2 | 32.768 kHz crystal |
+
+## Notes
+
+1. P1.4 is connected to R3 on issue 8 Chroma 29s with a note in the silkscreen
+which says "fit on Chroma".  The resistor was NOT populated. The other end of
+R3 goes to EPD pin 2 GDR which is N-Channel FET gate drive control.  Since P1.4
+is SPI0's MISO it is not possible to read data from the EDP on this board rev.
+
+P1.4 appears to be N/C on issue 9 Chroma 29s and the silkscreen note "fit on
+Chroma" is not present.
+
 
