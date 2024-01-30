@@ -1,24 +1,29 @@
 ## Chroma29 Status
 
-The chroma29 target runs but no image is displayed on the screen on two
-of the tags that I have tried.  
+Dimitry's original code (firmware/main) is assumed to work on the tags he
+has.  
 
-The debug output shows the code running as expected.
+However Dimitry's original code does not work on boards marked "edk286 Issue 8" 
+or "edk286 Issue Issue 9". 
 
-Dimitry says that the problem is probably that my tag has a different 
-display type than the ones he has.  If you have a Chroma29r you might give
-it a try and let me know if it works for you.
+I have succeeded in reverse engineering these tags, but since I'm primarily 
+interested in the OpenEPaperLink project I will not be adding support for
+these tags to Dimitry's original code.
+
+<img src="https://github.com/skiphansen/dmitrygr-einkTags/blob/master/assets/chroma29_working.jpg">
 
 ## History
 
 The were several versions of the Chroma29 which are/were manufactured,
 unfortunately they are not all compatible.  
 
-I do not have any detailed information on the board version that Dmitry
-based his firmware on.  Apparently it used a different EPD panel than mine
-and it does not work on my tags.
-
 I have identified two different versions in the batch of Chroma29s I have.
+
+If you have version of the Chroma29r not listed before I would be interesting
+in knowning any details you can provide.
+
+I do not have any detailed information on the board version that Dmitry
+based his firmware on.  
 
 | SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
 | :-: | - | - | - | - |
@@ -124,7 +129,7 @@ a tag running stock firmware.
 |Table|Values|
 |:-:|-|
 |Vcom1 LUT<br>(Cmd 0x20)|0x01 0x01 0x01 0x03 0x04 0x09 0x06 0x06<br>0x0A 0x04 0x04 0x19 0x03 0x04 0x09 |
-|White LUT<br><Cmd 0x21)|0x01 0x01 0x01 0x03 0x84 0x09 0x86 0x46<br>0x0A 0x84 0x44 0x19 0x03 0x44 0x09 |
+|White LUT<br>(Cmd 0x21)|0x01 0x01 0x01 0x03 0x84 0x09 0x86 0x46<br>0x0A 0x84 0x44 0x19 0x03 0x44 0x09 |
 |Black LUT<br>(Cmd 0x22)|0x01 0x01 0x01 0x43 0x04 0x09 0x86 0x46<br>0x0A 0x84 0x44 0x19 0x83 0x04 0x09 |
 |Gray1 LUT<br>(Cmd 0x23)||
 |Gray2 LUT<br>(Cmd 0x24)||

@@ -149,7 +149,7 @@ Note: there are some variations between different board revisions.
 1. P1.4 is connected to R3 on issue 8 Chroma 29s with a note in the silkscreen
 which says "fit on Chroma".  The resistor was NOT populated. The other end of
 R3 goes to EPD pin 2 GDR which is N-Channel FET gate drive control.  Since P1.4
-is SPI0's MISO it is not possible to read data from the EDP on this board rev.
+is SPI0's MISO it is not possible to read data from the EPD on this board rev.
 <br><br>
 P1.4 appears to be N/C on issue 9 Chroma 29s and the silkscreen note "fit on
 Chroma" is not present.
