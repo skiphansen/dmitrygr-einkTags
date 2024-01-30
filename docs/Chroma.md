@@ -54,11 +54,13 @@ USART1 shared dynamically between SPI flash (EEPROM) and debug serial port.
 
 32k program FLASH + 4k SRAM
 
-0xff00-0xffff   256 bytes fast access RAM
-0xf000-0xfeff   4k - 256 bytes Slow access SRAM
-0xdf80-0xdfff   Hardware SFR registers
-0xdf00-0xdf7f   Hardware Radio & I2S registers
-0x0000-0x7fff   Flash
+| Adr | Usage |
+| - | - |
+|0xff00-0xffff   |256 bytes fast access RAM|
+|0xf000-0xfeff   |4k - 256 bytes Slow access SRAM|
+|0xdf80-0xdfff   |Hardware SFR registers|
+|0xdf00-0xdf7f   |Hardware Radio & I2S registers|
+|0x0000-0x7fff   |Flash|
 
 
 ## CC1110F pin connections
@@ -81,7 +83,7 @@ Note: there are some variations between different board revisions.
 | 9| P0.4 | SPI EEPROM MOSI|
 | 10| DVDD
 | 11| P0.5 | SPI EEPROM MISO|
-| 12| P0.6 | EPD nEnable|
+| 12| P0.6 | EPD nEnable| [See note 2](#notes)
 | 13| P0.7 | EPD D/nC | display pin 11|
 | 14| P2.0 | EEPROM nCS ||
 | 15| P2.1/DBG_DAT | TP3/TP13| Programmer interface |
@@ -104,7 +106,7 @@ Note: there are some variations between different board revisions.
 | 32| P1.7/USART1 RXD | TP9/TP19 |
 | 33| P1.6/USART1 TXD | TP7/TP17 |
 | 34| P1.5 | EPD D1/SDIN | display pin 14 |
-| 35| P1.4 | See note 1 ||
+| 35| P1.4 | [See note 1](#notes) ||
 | 36| P1.3 | EPD DO/SCK | display pin 13|
 
 
@@ -117,7 +119,7 @@ Note: there are some variations between different board revisions.
 |P0.3 | output | SPI EEPROM CLK|
 |P0.4 | output | SPI EEPROM MOSI|
 |P0.5 | input | SPI EEPROM MISO|
-|P0.6 | output | EPD nEnable|
+|P0.6 | output | EPD nEnable| [See note 2](#notes)|
 |P0.7 | output | EPD D/nC | display pin 11|
 
 ## Port 1 bits
@@ -128,7 +130,7 @@ Note: there are some variations between different board revisions.
 |P1.1 | EPD nCS | display pin 12|
 |P1.2 | output | | EPD nRESET | display pin 10|
 |P1.3 | output | EPD DO/SCK | display pin 13|
-|P1.4 | See note 1||
+|P1.4 | [See note 1](#notes)||
 |P1.5 | output | EPD D1/SDIN | display pin 14 |
 |P1.6 | output | /USART1 TXD | TP7/TP17 |
 |P1.7 | input | /USART1 RXD | TP9/TP19 |
@@ -152,3 +154,4 @@ is SPI0's MISO it is not possible to read data from the EDP on this board rev.
 P1.4 appears to be N/C on issue 9 Chroma 29s and the silkscreen note "fit on
 Chroma" is not present.
 
+2. Display enable support was added on later hardware revisions.

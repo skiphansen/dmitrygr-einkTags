@@ -1306,7 +1306,7 @@ int PowerUpEPD()
       memset(Cmd,0,sizeof(Cmd));
       Cmd[0] = CMD_EPD;
    // Set reset high
-      Cmd[1] = EPD_FLG_RESET | EPD_FLG_CMD | EPD_FLG_ENABLE;
+      Cmd[1] = EPD_FLG_RESET | EPD_FLG_CMD;
       if((pMsg = SendCmd(Cmd,2,2000)) == NULL) {
          break;
       }

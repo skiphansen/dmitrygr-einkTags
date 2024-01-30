@@ -93,7 +93,6 @@ typedef enum {
 #define EPD_FLG_END_XFER      0x40  // Deactivate nCS after sending data
 
 #define EPD_FLG_DEFAULT       ( EPD_FLG_CMD \
-                              | EPD_FLG_ENABLE \
                               | EPD_FLG_START_XFER \
                               | EPD_FLG_END_XFER \
                               | EPD_FLG_RESET)
