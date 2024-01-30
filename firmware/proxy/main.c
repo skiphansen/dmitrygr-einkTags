@@ -46,8 +46,11 @@ typedef union {
 
 volatile __xdata uint8_t gRfStatus;
 
-uint8_t __xdata gRxBuf[MAX_FRAME_IO_LEN];
-uint8_t __xdata gTxBuf[MAX_RAW_BUF_LEN];
+// We need 3 extra bytes because the CRC is received into the buffer
+// before we get the end of frame.  Additionally an 0 is appended to the
+// received data for convenience & efficiency
+uint8_t __xdata gRxBuf[MAX_FRAME_IO_LEN+3];
+// uint8_t __xdata gTxBuf[MAX_RAW_BUF_LEN];
 int gRxMsgLen;
 int gTxMsgLen;
 
@@ -518,10 +521,9 @@ void EpdCmd(uint8_t Flags)
 
          while(U0CSR & 0x01);   // Wait for USART0 idle
          if(Flags & EPD_FLG_CMD) {
-         // Clear cmd/data bit
-            SET_EPD_DAT_CMD(0);
          // Send command byte
-            // LOG("Cmd: 0x%2x\n",*pData);
+            SET_EPD_DAT_CMD(0);
+         // LOG("Cmd: 0x%2x\n",*pData);
          }
          U0DBUF = *pData++;
          CmdBytes--;

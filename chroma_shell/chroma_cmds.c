@@ -1369,15 +1369,16 @@ int InitEPD()
    int Ret = RESULT_FAIL;
    int CmdLen = 0;
 
-// 128h x 296 w
-   #define V_SIZE 128
-   #define H_SIZE 296
-   uint8_t Image[V_SIZE][H_SIZE];
+// 296 h x 128w
+   #define H_SIZE 128
+   #define V_SIZE 296
+   uint8_t Image[V_SIZE][H_SIZE/4];
    int x;
    int y;
    int TotalBytes;
-   int Byte2Send;
-   int ByteSent = 0;
+   int ImageData2Send;
+   int ImageDataSent = 0;
+   uint8_t *pImage = &Image[0][0];
 
    do {
       memset(Cmd,0,sizeof(Cmd));
@@ -1400,38 +1401,40 @@ int InitEPD()
    // Send Black, White and Gray image data
    // 2 bits per pixel, 4 pixels per bytes
       memset(Image,0,sizeof(Image));
-#if  1
-      CmdLen = 1;
-      Cmd[CmdLen++] &= ~EPD_FLG_END_XFER;
+
+   // Draw cross across middle
+      for(x = 0; x < H_SIZE/4; x++) {
+         Image[V_SIZE/2][x] = 0xff;
+      }
+      for(y = 0; y < V_SIZE; y++) {
+         Image[y][H_SIZE/8] |= 0x03;
+      }
 
       TotalBytes = V_SIZE * H_SIZE / 4;
-      while(ByteSent < TotalBytes) {
-         Byte2Send = TotalBytes - ByteSent;
-         if(Byte2Send > MAX_FRAME_IO_LEN - 32) {
-            Byte2Send = MAX_FRAME_IO_LEN - 32;
+      Cmd[1] &= ~EPD_FLG_END_XFER;  // Send entire image as one transfer
+      while(ImageDataSent < TotalBytes) {
+         ImageData2Send = TotalBytes - ImageDataSent;
+      // Sending opcode + Flags + data count + image data
+         if(ImageData2Send > (MAX_FRAME_IO_LEN - 3)) {
+            ImageData2Send = MAX_FRAME_IO_LEN - 3;
          }
-         if(ByteSent == 0) {
-            Byte2Send--;   // Adjust available space for command byte
-         }
-         else {
+         if(ImageDataSent != 0) {
          // Command byte already sent, just send data
-            CmdLen = 2;
             Cmd[1] &= ~EPD_FLG_CMD;
          }
-//       LOG("ByteSent %d, Byte2Send %d\n",ByteSent,Byte2Send);
 
-         Cmd[CmdLen++] = (uint8_t) Byte2Send;
-         if(ByteSent == 0) {
-            Cmd[CmdLen++] = 0x10;
+         CmdLen = 2;
+         Cmd[CmdLen++] = (uint8_t) ImageData2Send;
+         if(ImageDataSent == 0) {
+            Cmd[CmdLen++] = 0x10;   // Send EPD command
+            ImageData2Send--;
          }
-
-         memset(&Cmd[CmdLen],0,Byte2Send);
-         CmdLen += Byte2Send;
-         Cmd[CmdLen++] = 0;   // no more data in this msg
-         ByteSent += Byte2Send;
-         if(ByteSent == TotalBytes) {
+         memcpy(&Cmd[CmdLen],pImage,ImageData2Send);
+         pImage += ImageData2Send;
+         CmdLen += ImageData2Send;
+         ImageDataSent += ImageData2Send;
+         if(ImageDataSent == TotalBytes) {
          // Last frame, end the transfer
-            Cmd[CmdLen++] = 0;
             Cmd[1] |= EPD_FLG_END_XFER;
          }
          if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
@@ -1452,16 +1455,6 @@ int InitEPD()
       }
       free(pMsg);
       EpdBusyWait(1,2000);
-#else
-   // Draw cross across middle
-      for(x = 0; x < H_SIZE; x++) {
-         Image[V_SIZE/2][x] = 3;
-      }
-      for(y = 0; y < V_SIZE; y++) {
-         Image[y][H_SIZE/2] = 3;
-      }
-#endif
-
 
    // 
    // Red 1 bit per pixel, 8 pixels per bytes
