@@ -46,15 +46,14 @@ typedef union {
 
 volatile __xdata uint8_t gRfStatus;
 
-#define MAX_FRAME_IO_LEN      130
 uint8_t __xdata gRxBuf[MAX_FRAME_IO_LEN];
-uint8_t __xdata gTxBuf[MAX_FRAME_IO_LEN*2];
+uint8_t __xdata gTxBuf[MAX_RAW_BUF_LEN];
 int gRxMsgLen;
 int gTxMsgLen;
 
 const char gBuildType[] = xstr(BUILD_TYPE);
 
-#define UART1_RX_RING_LEN  64
+#define UART1_RX_RING_LEN  MAX_RAW_BUF_LEN
 volatile uint8_t __xdata gUart1RxBuf[UART1_RX_RING_LEN];
 volatile uint8_t __xdata gUart1RxWr;
 volatile uint8_t __xdata gUart1RxRd;
@@ -484,7 +483,7 @@ void EpdCmd(uint8_t Flags)
    int MsgLen = 2;
    uint8_t CmdBytes;
 
-//   LOG("Got EpdCmd, gRxMsgLen %d, flags 0x%x\n",gRxMsgLen,Flags);
+// LOG("Got EpdCmd, gRxMsgLen %d, flags 0x%x\n",gRxMsgLen,Flags);
 
    if(Flags & EPD_FLG_RESET) {
    // set reset
@@ -504,7 +503,7 @@ void EpdCmd(uint8_t Flags)
       SET_EPD_nENABLE(0);
    }
 
-   if(gRxMsgLen > 4) {
+   if(gRxMsgLen >= 4) {
    // we have data
       if(Flags & EPD_FLG_START_XFER) {
       // set nCS low
@@ -515,15 +514,15 @@ void EpdCmd(uint8_t Flags)
          if(CmdBytes == 0) {
             break;
          }
-         MsgLen += CmdBytes;
+         MsgLen += CmdBytes + 1;
 
          while(U0CSR & 0x01);   // Wait for USART0 idle
          if(Flags & EPD_FLG_CMD) {
          // Clear cmd/data bit
             SET_EPD_DAT_CMD(0);
+         // Send command byte
+            // LOG("Cmd: 0x%2x\n",*pData);
          }
-      // Send command byte
-
          U0DBUF = *pData++;
          CmdBytes--;
       // Set data bit for remaining bytes

@@ -128,7 +128,7 @@ Note: there are some variations between different board revisions.
 |P1.1 | EPD nCS | display pin 12|
 |P1.2 | output | | EPD nRESET | display pin 10|
 |P1.3 | output | EPD DO/SCK | display pin 13|
-|P1.4 | NC ?||
+|P1.4 | See note 1||
 |P1.5 | output | EPD D1/SDIN | display pin 14 |
 |P1.6 | output | /USART1 TXD | TP7/TP17 |
 |P1.7 | input | /USART1 RXD | TP9/TP19 |
@@ -148,8 +148,7 @@ Note: there are some variations between different board revisions.
 which says "fit on Chroma".  The resistor was NOT populated. The other end of
 R3 goes to EPD pin 2 GDR which is N-Channel FET gate drive control.  Since P1.4
 is SPI0's MISO it is not possible to read data from the EDP on this board rev.
-
+<br><br>
 P1.4 appears to be N/C on issue 9 Chroma 29s and the silkscreen note "fit on
 Chroma" is not present.
-
 

@@ -25,7 +25,7 @@ I have identified two different versions in the batch of Chroma29s I have.
 | ? | unknown | similar to UC8151C || Rev used by Dmitry's original firwmare |
 | "B" | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 ||
 | "B" | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added<br>|
-| ? | [edk296 Issue 1](https://user-images.githubusercontent.com/1102694/112720670-0b763400-8f00-11eb-93ba-e635734bff6d.jpg)<br>2018 ||WFD0290BF33|
+| ? | [edk296 Issue 1](https://user-images.githubusercontent.com/1102694/112720670-0b763400-8f00-11eb-93ba-e635734bff6d.jpg)<br>220-0094-01<br>2018 |?|WFD0290BF33|
 # General Chroma 29 Info
 
 Resolution 296 x 128 BWR or BWY.

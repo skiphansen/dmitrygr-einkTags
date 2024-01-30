@@ -125,6 +125,7 @@ int P2rdCmd(char *CmdLine);
 int P2wrCmd(char *CmdLine);
 int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
 int PowerUpEPD(void);
+int InitEPD(void);
 int EpdBusyWait(int State,int Timeout);
 
 // Eventual CC1101 API functions.  
@@ -411,7 +412,10 @@ uint8_t Chroma29_C8154Init1[] = {
    0x25, // VCOM2 LUT (LUTC2)
    0x0A,0x0A,0x01,0x02,0x14,0x0D,0x14,0x14,
    0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+   0
+};
 
+uint8_t Chroma29_C8154Init2[] = {
    16,
    0x26, // RED0 LUT (LUTR0)
    0x4A,0x4A,0x01,0x82,0x54,0x0D,0x54,0x54,
@@ -426,9 +430,9 @@ uint8_t Chroma29_C8154Init1[] = {
    0x24, // GRAY2 LUT (LUTG2)
    0x01,0x81,0x01,0x83,0x84,0x09,0x86,0x46,
    0x0A,0x84,0x44,0x19,0x03,0x04,0x09,
-
    0
 };
+
 
 const char *Cmd2Str(uint8_t Cmd)
 {
@@ -1255,19 +1259,15 @@ int P2wrCmd(char *CmdLine)
    AsyncResp *pMsg;
 
    do {
+      LOG("Calling PowerUpEPD\n");
       if(PowerUpEPD() != 0) {
          break;
       }
-#if 0
-   // Send read Rev command
 
-      Cmd[1] = EPD_FLG_ENABLE | EPD_FLG_START_XFER | EPD_FLG_END_XFER | EPD_FLG_SEND_RD;
-      Cmd[2] = 0x71;
-      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+      LOG("Calling InitEPD\n");
+      if(InitEPD() != 0) {
          break;
       }
-      free(pMsg);
-#endif
    } while(false);
    return RESULT_OK;
 #endif
@@ -1361,6 +1361,115 @@ int PowerUpEPD()
 
    return Ret;
 }
+
+int InitEPD()
+{
+   uint8_t Cmd[256];
+   AsyncResp *pMsg;
+   int Ret = RESULT_FAIL;
+   int CmdLen = 0;
+
+// 128h x 296 w
+   #define V_SIZE 128
+   #define H_SIZE 296
+   uint8_t Image[V_SIZE][H_SIZE];
+   int x;
+   int y;
+   int TotalBytes;
+   int Byte2Send;
+   int ByteSent = 0;
+
+   do {
+      memset(Cmd,0,sizeof(Cmd));
+      Cmd[CmdLen++] = CMD_EPD;
+      Cmd[CmdLen++] = EPD_FLG_DEFAULT;
+      memcpy(&Cmd[CmdLen],Chroma29_C8154Init1,sizeof(Chroma29_C8154Init1));
+      CmdLen += sizeof(Chroma29_C8154Init1);
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+      CmdLen = 2;
+      memcpy(&Cmd[CmdLen],Chroma29_C8154Init2,sizeof(Chroma29_C8154Init2));
+      CmdLen += sizeof(Chroma29_C8154Init2);
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   // 128h x 296w
+   // Send Black, White and Gray image data
+   // 2 bits per pixel, 4 pixels per bytes
+      memset(Image,0,sizeof(Image));
+#if  1
+      CmdLen = 1;
+      Cmd[CmdLen++] &= ~EPD_FLG_END_XFER;
+
+      TotalBytes = V_SIZE * H_SIZE / 4;
+      while(ByteSent < TotalBytes) {
+         Byte2Send = TotalBytes - ByteSent;
+         if(Byte2Send > MAX_FRAME_IO_LEN - 32) {
+            Byte2Send = MAX_FRAME_IO_LEN - 32;
+         }
+         if(ByteSent == 0) {
+            Byte2Send--;   // Adjust available space for command byte
+         }
+         else {
+         // Command byte already sent, just send data
+            CmdLen = 2;
+            Cmd[1] &= ~EPD_FLG_CMD;
+         }
+//       LOG("ByteSent %d, Byte2Send %d\n",ByteSent,Byte2Send);
+
+         Cmd[CmdLen++] = (uint8_t) Byte2Send;
+         if(ByteSent == 0) {
+            Cmd[CmdLen++] = 0x10;
+         }
+
+         memset(&Cmd[CmdLen],0,Byte2Send);
+         CmdLen += Byte2Send;
+         Cmd[CmdLen++] = 0;   // no more data in this msg
+         ByteSent += Byte2Send;
+         if(ByteSent == TotalBytes) {
+         // Last frame, end the transfer
+            Cmd[CmdLen++] = 0;
+            Cmd[1] |= EPD_FLG_END_XFER;
+         }
+         if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+            break;
+         }
+         free(pMsg);
+      }
+
+      if(pMsg == NULL) {
+         break;
+      }
+      CmdLen = 1;
+      Cmd[CmdLen++] = EPD_FLG_DEFAULT;
+      Cmd[CmdLen++] = 1;
+      Cmd[CmdLen++] = 0x12;
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+      EpdBusyWait(1,2000);
+#else
+   // Draw cross across middle
+      for(x = 0; x < H_SIZE; x++) {
+         Image[V_SIZE/2][x] = 3;
+      }
+      for(y = 0; y < V_SIZE; y++) {
+         Image[y][H_SIZE/2] = 3;
+      }
+#endif
+
+
+   // 
+   // Red 1 bit per pixel, 8 pixels per bytes
+   } while(false);
+
+   return Ret;
+}
+
 
 int EpdBusyWait(int State,int Timeout)
 {

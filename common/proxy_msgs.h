@@ -30,6 +30,15 @@
 #endif
 #endif
 
+#define MAX_FRAME_IO_LEN      120
+// MAX_FRAME_IO_LEN is the maximum frame data length before framing is added.
+
+// If all of the data needs to be escaped then we need twice that amount for
+// a raw data buffer. Add 2 to mark the beginning of the frame, 4 bytes for
+// the CRC (2 data bytes plus perhaps 2 escapes) and finally 2 bytes to mark 
+// the end of the frame.
+#define MAX_RAW_BUF_LEN    2 + (MAX_FRAME_IO_LEN*2) + 4 + 2
+
 #define CMD_PING           1
 #define CMD_PEEK           2
 #define CMD_POKE           3
@@ -86,7 +95,8 @@ typedef enum {
 #define EPD_FLG_DEFAULT       ( EPD_FLG_CMD \
                               | EPD_FLG_ENABLE \
                               | EPD_FLG_START_XFER \
-                              | EPD_FLG_END_XFER)
+                              | EPD_FLG_END_XFER \
+                              | EPD_FLG_RESET)
 
 #define EEPROM_ERASE_SECTOR   0
 #define EEPROM_ERASE_BLOCK    1
