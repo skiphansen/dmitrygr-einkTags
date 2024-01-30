@@ -299,6 +299,9 @@ int MainLoop()
       // we received a new message
          gMsgQueueHead = pMsg->Link;
          if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
+            if(g.Verbose & VERBOSE_TIMESTAMPS) {
+               PrintTime(false);
+            }
             LOG("Received %d byte message:\n",pMsg->MsgLen);
             DumpHex(pMsg->Msg,pMsg->MsgLen);
          }
@@ -485,9 +488,8 @@ int ParseSerialData(uint8_t *Buf,int Len)
    int MsgLen;
 
    if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
-      printf("\n");
       if(g.Verbose & VERBOSE_TIMESTAMPS) {
-         PrintTime(true);
+         PrintTime(false);
       }
       LOG("Read %d raw bytes:\n",Len);
       DumpHex(Buf,Len);
@@ -569,7 +571,7 @@ int SendAsyncMsg(uint8_t *Msg,int MsgLen)
    gTxMsgLen = 0;
    if(g.Verbose & VERBOSE_DUMP_RAW_MSGS) {
       if(g.Verbose & VERBOSE_TIMESTAMPS) {
-         PrintTime(true);
+         PrintTime(false);
       }
       LOG("Sending %d bytes:\n",MsgLen);
       DumpHex(Msg,MsgLen);
@@ -734,6 +736,9 @@ void RunOneCommand(char *Command)
       // we received a new message
          gMsgQueueHead = pMsg->Link;
          if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
+            if(g.Verbose & VERBOSE_TIMESTAMPS) {
+               PrintTime(false);
+            }
             LOG("Received %d byte message:\n",pMsg->MsgLen);
             DumpHex(pMsg->Msg,pMsg->MsgLen);
          }
@@ -992,6 +997,9 @@ AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout)
       // we have received the response we were waiting for
          gMsgQueueHead = pMsg->Link;
          if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
+            if(g.Verbose & VERBOSE_TIMESTAMPS) {
+               PrintTime(false);
+            }
             LOG("Received %d byte message:\n",pMsg->MsgLen);
             DumpHex(pMsg->Msg,pMsg->MsgLen);
          }
@@ -1055,7 +1063,10 @@ int RecvSerialData(uint8_t *Buf,int BufLen)
       ELOG("read returned %d\n",Ret);
    }
    else if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
-      LOG("Read %d raw bytes\n");
+      if(g.Verbose & VERBOSE_TIMESTAMPS) {
+         PrintTime(false);
+      }
+      LOG("Read %d raw bytes\n",Ret);
       DumpHex(Buf,Ret);
    }
 

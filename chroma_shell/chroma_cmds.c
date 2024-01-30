@@ -103,6 +103,11 @@
 #define P1_EPD_CS       0x02
 #define P1_EPD_RESET    0x04
 
+typedef struct {
+   size_t TblSize;
+   uint8_t *pTbl;
+} InitTbl;
+
 int BoardTypeCmd(char *CmdLine);
 int RadioCfgCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
@@ -124,6 +129,7 @@ int P1wrCmd(char *CmdLine);
 int P2rdCmd(char *CmdLine);
 int P2wrCmd(char *CmdLine);
 int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
+int SendInitTbl(InitTbl *pTbl);
 int PowerUpEPD(void);
 int InitEPD(void);
 int EpdBusyWait(int State,int Timeout);
@@ -385,54 +391,99 @@ uint8_t Chroma29_C8154Init0[] = {
 };
 
 uint8_t Chroma29_C8154Init1[] = {
-   6,
+   2,
    0x00, // Panel Setting (PSR)
-   0x93,0x61,0x80,0x01,0x28,
+   0x83, // 10 x 0 0 0 1 1
+         // ^^   ^ ^ ^ ^  ^- RST_N controller not 
+         //  |   | | | +---- SHD_N DC-DC converter on
+         //  |   | | +------ SHL Shift left
+         //  |   | +-------- UD scan down
+         //  |   +---------- KWR Pixel with K/W/Red  run LU1 and LU2
+         //  +-------------- RES 128x296
+   4,
+   0x61, //RESOLUTION SETTING (TRES)
+   0x80,0x01,0x28,
+};
 
-   8,
+uint8_t Chroma29_C8154Init2[] = {
+   2,
    0x30, // PLL control (PLL)
-   0x29,0x50,0x17,0x82,0x08,0x60,0x22,
+   0x29,
 
+   2,
+   0x50, // Vcom and data interval setting (CDI)
+   0x17,
+
+   2,
+   0x82, // VCM_DC Setting (VDCS)
+   0x08,
+
+   2,
+   0x60, // TCON setting (TCON)
+   0x22
+};
+
+uint8_t Chroma29_C8154InitLUTC1[] = {
    16,
    0x20, // VCOM1 LUT (LUTC1)
    0x01,0x01,0x01,0x03,0x04,0x09,0x06,0x06,
-   0x0A,0x04,0x04,0x19,0x03,0x04,0x09,
+   0x0A,0x04,0x04,0x19,0x03,0x04,0x09
+};
 
+uint8_t Chroma29_C8154InitLUTW[] = {
    16,
    0x21, // WHITE LUT (LUTW) (R21H)
    0x01,0x01,0x01,0x03,0x84,0x09,0x86,0x46,
-   0x0A,0x84,0x44,0x19,0x03,0x44,0x09,
+   0x0A,0x84,0x44,0x19,0x03,0x44,0x09
+};
 
+uint8_t Chroma29_C8154InitLUTB[] = {
    16,
    0x22, // BLACK LUT (LUTB) (R22H)
    0x01,0x01,0x01,0x43,0x04,0x09,0x86,0x46,
-   0x0A,0x84,0x44,0x19,0x83,0x04,0x09,
+   0x0A,0x84,0x44,0x19,0x83,0x04,0x09
+};
 
+uint8_t Chroma29_C8154InitLUTC2[] = {
    16,
    0x25, // VCOM2 LUT (LUTC2)
    0x0A,0x0A,0x01,0x02,0x14,0x0D,0x14,0x14,
    0x01,0x00,0x00,0x00,0x00,0x00,0x00,
-   0
 };
 
-uint8_t Chroma29_C8154Init2[] = {
+uint8_t Chroma29_C8154InitLUTR0[] = {
    16,
    0x26, // RED0 LUT (LUTR0)
    0x4A,0x4A,0x01,0x82,0x54,0x0D,0x54,0x54,
-   0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x01,0x00,0x00,0x00,0x00,0x00,0x00
+};
 
+uint8_t Chroma29_C8154InitLUTR1[] = {
    16,
    0x27, // RED0 LUT (LUTR1)
    0x0A,0x0A,0x01,0x02,0x14,0x0D,0x14,0x14,
-   0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x01,0x00,0x00,0x00,0x00,0x00,0x00
+};
 
+uint8_t Chroma29_C8154InitLUTG2[] = {
    16,
    0x24, // GRAY2 LUT (LUTG2)
    0x01,0x81,0x01,0x83,0x84,0x09,0x86,0x46,
-   0x0A,0x84,0x44,0x19,0x03,0x04,0x09,
-   0
+   0x0A,0x84,0x44,0x19,0x03,0x04,0x09
 };
 
+InitTbl Chroma29_C8154InitTbl[] = {
+   {sizeof(Chroma29_C8154Init1),Chroma29_C8154Init1},
+   {sizeof(Chroma29_C8154Init2),Chroma29_C8154Init2},
+   {sizeof(Chroma29_C8154InitLUTC1),Chroma29_C8154InitLUTC1},
+   {sizeof(Chroma29_C8154InitLUTW),Chroma29_C8154InitLUTW},
+   {sizeof(Chroma29_C8154InitLUTB),Chroma29_C8154InitLUTB},
+   {sizeof(Chroma29_C8154InitLUTC2),Chroma29_C8154InitLUTC2},
+   {sizeof(Chroma29_C8154InitLUTR0),Chroma29_C8154InitLUTR0},
+   {sizeof(Chroma29_C8154InitLUTR1),Chroma29_C8154InitLUTR1},
+   {sizeof(Chroma29_C8154InitLUTG2),Chroma29_C8154InitLUTG2},
+   {0}   // End of table
+};
 
 const char *Cmd2Str(uint8_t Cmd)
 {
@@ -1295,6 +1346,28 @@ void HandleCmd(uint8_t *Msg,int MsgLen)
    }
 }
 
+int SendInitTbl(InitTbl *pTbl)
+{
+   uint8_t Cmd[MAX_FRAME_IO_LEN];
+   AsyncResp *pMsg;
+   int Ret = RESULT_OK;
+   memset(Cmd,0,sizeof(Cmd));
+   Cmd[0] = CMD_EPD;
+// Set reset high
+   Cmd[1] = EPD_FLG_DEFAULT;
+   while(pTbl->TblSize) {
+      memcpy(&Cmd[2],pTbl->pTbl,pTbl->TblSize);
+      if((pMsg = SendCmd(Cmd,pTbl->TblSize + 2,2000)) == NULL) {
+         Ret = RESULT_FAIL;
+         break;
+      }
+      free(pMsg);
+      pTbl++;
+   }
+
+   return Ret;
+}
+
 int PowerUpEPD()
 {
    uint8_t Cmd[256];
@@ -1373,45 +1446,36 @@ int InitEPD()
    #define H_SIZE 128
    #define V_SIZE 296
    uint8_t Image[V_SIZE][H_SIZE/4];
+   uint8_t RedImage[V_SIZE][H_SIZE/8];
    int x;
    int y;
    int TotalBytes;
    int ImageData2Send;
    int ImageDataSent = 0;
-   uint8_t *pImage = &Image[0][0];
+   uint8_t *pImage;
 
    do {
-      memset(Cmd,0,sizeof(Cmd));
-      Cmd[CmdLen++] = CMD_EPD;
-      Cmd[CmdLen++] = EPD_FLG_DEFAULT;
-      memcpy(&Cmd[CmdLen],Chroma29_C8154Init1,sizeof(Chroma29_C8154Init1));
-      CmdLen += sizeof(Chroma29_C8154Init1);
-      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+      if(SendInitTbl(Chroma29_C8154InitTbl)) {
          break;
       }
-      free(pMsg);
-      CmdLen = 2;
-      memcpy(&Cmd[CmdLen],Chroma29_C8154Init2,sizeof(Chroma29_C8154Init2));
-      CmdLen += sizeof(Chroma29_C8154Init2);
-      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
-         break;
-      }
-      free(pMsg);
+
    // 128h x 296w
    // Send Black, White and Gray image data
    // 2 bits per pixel, 4 pixels per bytes
-      memset(Image,0,sizeof(Image));
+      memset(Image,0x00,sizeof(Image));
 
-   // Draw cross across middle
+   // Draw black line across middle
       for(x = 0; x < H_SIZE/4; x++) {
          Image[V_SIZE/2][x] = 0xff;
       }
-      for(y = 0; y < V_SIZE; y++) {
-         Image[y][H_SIZE/8] |= 0x03;
-      }
+      memset(Cmd,0,sizeof(Cmd));
+      Cmd[0] = CMD_EPD;
+      Cmd[1] = EPD_FLG_DEFAULT;
+      Cmd[1] &= ~EPD_FLG_END_XFER;  // Send entire image as one transfer
 
       TotalBytes = V_SIZE * H_SIZE / 4;
-      Cmd[1] &= ~EPD_FLG_END_XFER;  // Send entire image as one transfer
+      pImage = &Image[0][0];
+      LOG("Sending %d bytes of B/W data\n",TotalBytes);
       while(ImageDataSent < TotalBytes) {
          ImageData2Send = TotalBytes - ImageDataSent;
       // Sending opcode + Flags + data count + image data
@@ -1426,7 +1490,7 @@ int InitEPD()
          CmdLen = 2;
          Cmd[CmdLen++] = (uint8_t) ImageData2Send;
          if(ImageDataSent == 0) {
-            Cmd[CmdLen++] = 0x10;   // Send EPD command
+            Cmd[CmdLen++] = 0x10;   // Send Display Start Transmission 1 (DTM1)
             ImageData2Send--;
          }
          memcpy(&Cmd[CmdLen],pImage,ImageData2Send);
@@ -1446,6 +1510,56 @@ int InitEPD()
       if(pMsg == NULL) {
          break;
       }
+
+   // 128h x 296w
+   // Send red image data 1 bits per pixel, 8 pixels per bytes
+      memset(RedImage,0xff,sizeof(RedImage));
+
+      for(y = 0; y < V_SIZE; y++) {
+         RedImage[y][H_SIZE/16] &= ~1;
+      }
+
+      TotalBytes = V_SIZE * H_SIZE / 8;
+      ImageDataSent = 0;
+      Cmd[0] = CMD_EPD;
+      Cmd[1] = (EPD_FLG_DEFAULT & ~EPD_FLG_END_XFER);
+      pImage = &RedImage[0][0];
+      LOG("Sending %d bytes of Red data\n",TotalBytes);
+      while(ImageDataSent < TotalBytes) {
+         ImageData2Send = TotalBytes - ImageDataSent;
+      // Sending opcode + Flags + data count + image data
+         if(ImageData2Send > (MAX_FRAME_IO_LEN - 3)) {
+            ImageData2Send = MAX_FRAME_IO_LEN - 3;
+         }
+         if(ImageDataSent != 0) {
+         // Command byte already sent, just send data
+            Cmd[1] &= ~EPD_FLG_CMD;
+         }
+
+         CmdLen = 2;
+         Cmd[CmdLen++] = (uint8_t) ImageData2Send;
+         if(ImageDataSent == 0) {
+            Cmd[CmdLen++] = 0x13;   // Send Display Start Transmission 2 (DTM2)
+            ImageData2Send--;
+         }
+         memcpy(&Cmd[CmdLen],pImage,ImageData2Send);
+         pImage += ImageData2Send;
+         CmdLen += ImageData2Send;
+         ImageDataSent += ImageData2Send;
+         if(ImageDataSent == TotalBytes) {
+         // Last frame, end the transfer
+            Cmd[1] |= EPD_FLG_END_XFER;
+         }
+         if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+            break;
+         }
+         free(pMsg);
+      }
+
+      if(pMsg == NULL) {
+         break;
+      }
+
       CmdLen = 1;
       Cmd[CmdLen++] = EPD_FLG_DEFAULT;
       Cmd[CmdLen++] = 1;
@@ -1454,10 +1568,31 @@ int InitEPD()
          break;
       }
       free(pMsg);
+   // Turn off the power
       EpdBusyWait(1,2000);
+      CmdLen = 1;
+      Cmd[CmdLen++] = EPD_FLG_DEFAULT;
+      Cmd[CmdLen++] = 2;
+      Cmd[CmdLen++] = 0x82;   // VCM_DC Setting (VDCS)
+      Cmd[CmdLen++] = 0x00;   // off
+      Cmd[CmdLen++] = 5;
+      Cmd[CmdLen++] = 0x01;   // Power Setting (PWR)
+      Cmd[CmdLen++] = 0x02;   // VDS_EN = 1, VDG_EN = RVSHLS = RVSHLS = 0
+      Cmd[CmdLen++] = 0x00;   // VGHL_LV = 0 
+      Cmd[CmdLen++] = 0x00;   // VDPS_LV = 0
+      Cmd[CmdLen++] = 0x00;   // VDNS_LV
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
 
-   // 
-   // Red 1 bit per pixel, 8 pixels per bytes
+      CmdLen = 1;
+      Cmd[CmdLen++] = EPD_FLG_ENABLE;  // turn off power (active low)
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+
    } while(false);
 
    return Ret;
