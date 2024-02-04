@@ -142,7 +142,7 @@ int SetTx(float mhz);
 struct COMMAND_TABLE commandtable[] = {
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
-   { "dump_settings", "Display settings in EEPROM",NULL,0,DumpSettingsCmd},
+   { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
 //   { "eewd",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
@@ -669,7 +669,7 @@ int EEPROM_WrInternal(int Adr,FILE *fp,uint8_t *WrBuf,int Len)
          if(fp != NULL) {
          // reading data from file
             if(fread(&Cmd[MsgLen],Bytes2Write,1,fp) != 1) {
-               printf("fwrite failed\n");
+               printf("fread failed - %s\n",strerror(errno));
                break;
             }
          }
@@ -1121,125 +1121,166 @@ int DumpSettingsCmd(char *CmdLine)
    int Type;
    int Len;
    uint8_t Data[4+256];
-   int Err;
+   int Err = 0;
    int SkippedSlots = 0;
+   int Ret = RESULT_OK;
+   FILE *fp = NULL;
+   #define PAGES_TO_SCAN   10
+   uint8_t Image[PAGES_TO_SCAN * EEPROM_ERZ_SECTOR_SZ];
 
-   for(Page = 0; Page < 10; Page++) {
-      Adr = Page * EEPROM_ERZ_SECTOR_SZ;
-      if((Err = EEPROM_RdInternal(Adr,NULL,Data,sizeof(magicNum))) != 0) {
-         break;
+   do {
+      if(*CmdLine) {
+         if((fp = fopen(CmdLine,"r")) == NULL) {
+            LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
+            Ret = RESULT_FAIL;
+            break;
+         }
+         if(fread(Image,sizeof(Image),1,fp) != 1) {
+            printf("fread failed - %s\n",strerror(errno));
+            break;
+         }
       }
-
-      if(memcmp(Data,magicNum,sizeof(magicNum)) == 0) {
-         break;
-      }
-   }
-
-   if(Page < 10) {
-      LOG_RAW("Found setting's magic number in page %d @ 0x%x\n",Page,Adr);
-      EndAdr = Adr + EEPROM_ERZ_SECTOR_SZ;
-      Adr += 4;
-      while(Err == 0 && Adr < EndAdr) {
-         memset(Data,0xaa,sizeof(Data));
-         if((Err = EEPROM_RdInternal(Adr,NULL,Data,2)) != 0) {
-            break;
+      for(Page = 0; Page < PAGES_TO_SCAN; Page++) {
+         Adr = Page * EEPROM_ERZ_SECTOR_SZ;
+         if(fp != NULL) {
+            memcpy(Data,&Image[Adr],sizeof(magicNum));
          }
-
-      // first byte is type, (0xff for done), second is length
-         Type = Data[0];
-         Len = Data[1];
-
-         if(Len < 1) {
-            LOG_RAW("Len == %d, WTF?\n",Len);
-            break;
-         }
-
-         switch(Type) {
-            case 0x0:
-               SkippedSlots++;
-               break;
-
-            case 0x9:  // ADC intercept
-               Msg = "ADC intercept";
-               break;
-
-            case 0x12:  // ADC slope
-               Msg = "ADC slope";
-               break;
-
-            case 0x23:  // VCOM
-               Msg = "VCOM";
-               break;
-
-            case 0x01:  // MAC
-               Msg = "type 0x01 MAC";
-               break;
-
-            case 0x2a:  // MAC
-               Msg = "type 0x2A MAC";
-               break;
-
-            case 0xff:
-               LOG_RAW("End of settings @ 0x%x, %d erased slots.\n",
-                       Adr,SkippedSlots);
-               break;
-
-            default:
-               LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Adr);
-               break;
-         }
-         if(Type == 0xff) {
-            break;
-         }
-
-         if(Msg != NULL) {
-            LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Adr);
-            Msg = NULL;
-         }
-
-         if(Type != 0 && Len > 2) {
-            if((Err = EEPROM_RdInternal(Adr + 2,NULL,&Data[2],Len-2)) != 0) {
+         else {
+            Err = EEPROM_RdInternal(Adr,NULL,Data,sizeof(magicNum));
+            if(Err != 0) {
                break;
             }
-            switch(Type) {
-               case 0x01:  {
-               // MAC
-                  char MacString[11];
-                  int i;
-                  char Byte;
+         }
 
-                  MacString[0] = Data[2];
-                  MacString[1] = Data[3];
-                  for(i = 0; i < 8; i++) {
-                     Byte = Data[4 + (i/2)];
-                     MacString[2 + i] = '0';
-                     if(i & 1) {
-                     // lower nibble
-                        MacString[2 + i] += Byte & 0xf;
-                     }
-                     else {
-                     // upper nibble
-                        MacString[2 + i] += (Byte >> 4) & 0xf;
-                     }
-                  }
-                  MacString[10] = 0;
-                  LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
-                  LOG_RAW("MAC: ");
-                  DumpHex(&Data[2],Len-2);
+         if(memcmp(Data,magicNum,sizeof(magicNum)) == 0) {
+            break;
+         }
+      }
+
+      if(Err != 0) {
+         break;
+      }
+
+      if(Page < PAGES_TO_SCAN) {
+         LOG_RAW("Found setting's magic number in page %d @ 0x%x\n",Page,Adr);
+         EndAdr = Adr + EEPROM_ERZ_SECTOR_SZ;
+         Adr += 4;
+         while(Err == 0 && Adr < EndAdr) {
+            memset(Data,0xaa,sizeof(Data));
+            if(fp != NULL) {
+               memcpy(Data,&Image[Adr],2);
+            }
+            else if((Err = EEPROM_RdInternal(Adr,NULL,Data,2)) != 0) {
+               break;
+            }
+
+         // first byte is type, (0xff for done), second is length
+            Type = Data[0];
+            Len = Data[1];
+
+            if(Len < 1) {
+               LOG_RAW("Len == %d, WTF?\n",Len);
+               break;
+            }
+
+            switch(Type) {
+               case 0x0:
+                  SkippedSlots++;
                   break;
-               }
+
+               case 0x01:  // MAC
+                  Msg = "type 0x01 MAC";
+                  break;
+
+               case 0x9:  // ADC intercept
+                  Msg = "ADC intercept";
+                  break;
+
+               case 0x12:  // ADC slope
+                  Msg = "ADC slope";
+                  break;
+
+               case 0x23:  // VCOM
+                  Msg = "VCOM";
+                  break;
+
+               case 0x2a:  // MAC
+                  Msg = "type 0x2A MAC";
+                  break;
+
+               case 0xff:
+                  LOG_RAW("End of settings @ 0x%x, %d erased slots.\n",
+                          Adr,SkippedSlots);
+                  break;
 
                default:
-                  DumpHex(&Data[2],Len-2);
+                  LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Adr);
                   break;
             }
-            LOG_RAW("\n");
+            if(Type == 0xff) {
+               break;
+            }
+
+            if(Msg != NULL) {
+               LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Adr);
+               Msg = NULL;
+            }
+
+            if(Type != 0 && Len > 2) {
+               if(fp != NULL) {
+                  memcpy(&Data[2],&Image[Adr + 2],Len-2);
+               }
+               else {
+                  Err = EEPROM_RdInternal(Adr + 2,NULL,&Data[2],Len-2);
+                  if(Err != 0) {
+                     break;
+                  }
+               }
+
+               switch(Type) {
+                  case 0x01:  {
+                  // MAC
+                     char MacString[11];
+                     int i;
+                     char Byte;
+
+                     MacString[0] = Data[2];
+                     MacString[1] = Data[3];
+                     for(i = 0; i < 8; i++) {
+                        Byte = Data[4 + (i/2)];
+                        MacString[2 + i] = '0';
+                        if(i & 1) {
+                        // lower nibble
+                           MacString[2 + i] += Byte & 0xf;
+                        }
+                        else {
+                        // upper nibble
+                           MacString[2 + i] += (Byte >> 4) & 0xf;
+                        }
+                     }
+                     MacString[10] = 0;
+                     LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
+                     LOG_RAW("MAC: ");
+                     DumpHex(&Data[2],Len-2);
+                     break;
+                  }
+
+                  default:
+                     DumpHex(&Data[2],Len-2);
+                     break;
+               }
+               LOG_RAW("\n");
+            }
+            Adr += Len;
          }
-         Adr += Len;
       }
+   } while(false);
+
+   if(fp != NULL) {
+      fclose(fp);
    }
 
-   return RESULT_OK;
+   return Ret;
 }
 
 int PortRdWrCmd(uint8_t Port,bool bWrite,char *CmdLine)

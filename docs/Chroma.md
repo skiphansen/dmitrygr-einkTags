@@ -9,9 +9,9 @@ Three color, either black, white, and red (BWR) or black, white, and yellow (BWY
 | Chroma 16 | 1.08 x 1.08 in | 152 x 152 |? | N |
 | Chroma 21 | 1.9 x 1.00  in | 212 x 104 |? | N |
 | Chroma 27 | 2.4 x 1.20  in | 296 x 152 |? | N |
-| [Chroma29](Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
+| [Chroma 29](Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
 | Chroma 37 | 3.2 x 1.85  in | 416 x 240 |? | N |
-| Chroma 42 | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
+| [Chroma 42](Chroma42.md) | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
 | Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N |
 | Chroma 74 | 6.4 x 3.50  in | 640 x 384 | 1024K | Y |
 | Chroma 74H+ (?) | 6.4 x 3.90  in | 800 x 480 | ? | N |
@@ -78,7 +78,7 @@ Note: there are some variations between different board revisions.
 | 4| P1.0 | EPD BUSY | display pin 9|
 | 5| P0.0 | EPD BS1 | display pin 8|
 | 6| P0.1 | TP6/TP16 ||
-| 7| P0.2 | N/C ? | |
+| 7| P0.2 | EPD nCS1 [See note 3](#notes) | display pin 1|
 | 8| P0.3 | SPI EEPROM CLK|
 | 9| P0.4 | SPI EEPROM MOSI|
 | 10| DVDD
@@ -115,7 +115,7 @@ Note: there are some variations between different board revisions.
 | -| -| -| -|
 |P0.0 | output | EPD BS1 | display pin 8|
 |P0.1 | TP6/TP16 ||
-|P0.2 | N/C ? | |
+|P0.2 | EPD nCS1 [See note 3](#notes) |display pin 1 |
 |P0.3 | output | SPI EEPROM CLK|
 |P0.4 | output | SPI EEPROM MOSI|
 |P0.5 | input | SPI EEPROM MISO|
@@ -154,4 +154,8 @@ is SPI0's MISO it is not possible to read data from the EPD on this board rev.
 P1.4 appears to be N/C on issue 9 Chroma 29s and the silkscreen note "fit on
 Chroma" is not present.
 
-2. Display enable support was added on later hardware revisions.
+2. The display enable circuitry was not present on early hardware revisions.
+
+3. P0.2 is EPD nCS1 on the Chroma 42, it appears to be N/C on Chroma 29.
+
+

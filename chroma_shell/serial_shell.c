@@ -726,31 +726,6 @@ void RunOneCommand(char *Command)
       LOG_RAW("Running \"%s\"\n",Command);
    }
    ParseCmd(Command);
-
-   for( ; ; ) {
-      if((Ret = WaitEvent(100,ConCB,ProcessSerialData)) < 0) {
-         break;
-      }
-
-      if((pMsg = gMsgQueueHead) != NULL) {
-      // we received a new message
-         gMsgQueueHead = pMsg->Link;
-         if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
-            if(g.Verbose & VERBOSE_TIMESTAMPS) {
-               PrintTime(false);
-            }
-            LOG("Received %d byte message:\n",pMsg->MsgLen);
-            DumpHex(pMsg->Msg,pMsg->MsgLen);
-         }
-         if(pMsg->Msg[0] & CMD_RESP) {
-         // This is a response to a command we sent, check the return code
-            HandleResp(pMsg->Msg,pMsg->MsgLen);
-            free(pMsg);
-            break;
-         }
-         free(pMsg);
-      }
-   }
 }
 
 void Sleep(int Milliseconds)
