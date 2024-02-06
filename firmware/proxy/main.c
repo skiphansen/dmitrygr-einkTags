@@ -27,6 +27,10 @@
 #include "proxy_msgs.h"
 #include "radio.h"
 
+#ifndef HAS_CS1
+#define HAS_CS1   0
+#endif
+
 #define xstr(s) str(s)
 #define str(s) #s
 #define LOG pr
@@ -510,7 +514,14 @@ void EpdCmd(uint8_t Flags)
    // we have data
       if(Flags & EPD_FLG_START_XFER) {
       // set nCS low
-         SET_EPD_nCS(0);
+         if(Flags & EPD_FLG_CS) {
+            SET_EPD_nCS(0);
+         }
+#ifdef HAS_CS1
+         if(Flags & EPD_FLG_CS1) {
+            SET_EPD_nCS1(0);
+         }
+#endif
       }
       while(MsgLen < gRxMsgLen) {
          CmdBytes = *pData++;
@@ -545,6 +556,9 @@ void EpdCmd(uint8_t Flags)
    if(Flags & EPD_FLG_END_XFER) {
    // set nCS high
       SET_EPD_nCS(1);
+#ifdef HAS_CS1
+      SET_EPD_nCS1(1);
+#endif
    }
 }
 
@@ -556,6 +570,11 @@ static void ScreenInit()
    
    //directions set as needed
    P0DIR |= (1 << 0) | (1 << 6) | (1 << 7);
+#ifdef HAS_CS1
+// nCS1/p0.2 is also an output
+   P0DIR |= (1 << 2);
+#endif
+
    P1DIR = (P1DIR & (uint8_t)~(1 << 0)) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 5);
    
    //default state set (incl keeping it in reset and disabled, data mode selected)

@@ -88,11 +88,14 @@ typedef enum {
 #define EPD_FLG_SEND_RD       0x01  // Send data read
 #define EPD_FLG_CMD           0x02  // Clear Cmd/Data bit (i.e. byte is command)
 #define EPD_FLG_RESET         0x04  // Set reset bit
+#define EPD_FLG_CS            0x08  // Activate CS when START_XFER
 #define EPD_FLG_ENABLE        0x10  // Set enable BS1 bit
 #define EPD_FLG_START_XFER    0x20  // Activate nCS before sending data
 #define EPD_FLG_END_XFER      0x40  // Deactivate nCS after sending data
+#define EPD_FLG_CS1           0x80  // Activate CS1 when START_XFER
 
 #define EPD_FLG_DEFAULT       ( EPD_FLG_CMD \
+                              | EPD_FLG_CS \
                               | EPD_FLG_START_XFER \
                               | EPD_FLG_END_XFER \
                               | EPD_FLG_RESET)

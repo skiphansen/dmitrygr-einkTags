@@ -5,6 +5,7 @@
 
 #define SET_EPD_BS1(x)     do { __asm__("nop"); P0_0 = x; __asm__("nop"); } while(0)
 #define SET_EPD_nCS(x)     do { __asm__("nop"); P1_1 = x; __asm__("nop"); } while(0)
+#define SET_EPD_nCS1(x)    do { __asm__("nop"); P0_2 = x; __asm__("nop"); } while(0)
 #define EPD_BUSY()         P1_0
 #define SET_EPD_nRST(x)    do { __asm__("nop"); P1_2 = x; __asm__("nop"); } while(0)
 #define SET_EPD_nENABLE(x) do { __asm__("nop"); P0_6 = x; __asm__("nop"); } while(0)

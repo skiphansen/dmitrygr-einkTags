@@ -1,10 +1,31 @@
 # Chroma 42
 
+The display is 3.3 x 2.50 inch BWR or BWY with a resolution 400 x 300.
+
+The display controller supports 2 bits of gray scale for the B&W pixels and
+one bit for red (yellow) pixels. 
+
+The SPI flash chip is the 1024K byte [MX25V8006E](https://www.macronix.com/Lists/Datasheet/Attachments/8645/MX25V8006E,%202.5V,%208Mb,%20v1.7.pdf).
+
+The flash is organized as 256 4k sectors or 16 65k blocks. Sectors, blocks, or 
+the entire chip can be erased at a time.
+
 The Chroma 42 display was reverse engineered by capturing the EPD SPI bus while 
 sending an image using [atc1441's Custom PriceTag Access Point](https://github.com/atc1441/E-Paper_Pricetags/tree/main/Custom_PriceTag_AccesPoint) 
 to a tag running stock firmware.
 
 The commands were found to match the UC8154 fairly closely.  
+
+Two UC8154 like controllers are used in cascade mode with the master controller
+controlling the left half of the screen and the slave controller controlling
+the right half.
+
+  CS0 200 pixels + CS1 200 pixels   = 400 wide
++----------------+----------------+
+|                |                |
+                ...               | 300 high
+|                |                |
++----------------+----------------+
 
 The spec sheet that I have does not list the 0xe0 Cascade Setting (CCSET) 
 command, nor does it mention the ability to cascade two chips in the features 
@@ -17,17 +38,6 @@ command 0x61 however selects the expected resolution.
 It is certainly possible that I have misidentified the controller, but
 if so it's close enough for my purposes.
 
-## General Chroma 42 Info
-
-Display is 3.3 x 2.50 inch BWR or BWY with a resolution 400 x 300.
-
-The display controller supports 2 bits of gray scale for the B&W pixels and
-one bit for red (yellow) pixels. 
-
-The SPI flash chip is the 1024K byte [MX25V8006E](https://www.macronix.com/Lists/Datasheet/Attachments/8645/MX25V8006E,%202.5V,%208Mb,%20v1.7.pdf).
-
-The flash is organized as 256 4k sectors or 16 65k blocks. Sectors, blocks, or 
-the entire chip can be erased at a time.
 
 ## Connections For Flashing And Debugging
 
@@ -92,8 +102,9 @@ but it is not needed if you just want to flash custom firmware.
 |update display|<0x12>|Y | Y |
 |wait until busy goes inactive ||x | x |
 |reload the LUTs with all zeros|<0x20>...<0x22>,<0x24>|Y|Y|
-|init for shutdown |PSR, TRES, PLL|Y|Y|
-|wait for busy||x | x |
+|deinit for shutdown |PSR, TRES, PLL|Y|Y|
+|update display|<0x12>|Y | Y |
+|wait until busy goes inactive ||x | x |
 |shutdown power |VDCS, PWR|Y|Y|
 
 ## Board Revisions
