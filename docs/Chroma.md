@@ -14,7 +14,7 @@ Three color, either black, white, and red (BWR) or black, white, and yellow (BWY
 | [Chroma 42](Chroma42.md) | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
 | Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N |
 | Chroma 74 | 6.4 x 3.50  in | 640 x 384 | 1024K | Y |
-| Chroma 74H+ (?) | 6.4 x 3.90  in | 800 x 480 | ? | N |
+| [Chroma 74H+](Chroma74H_Plus.md) | 6.4 x 3.90  in | 800 x 480 | 1024K | N |
 | Chroma 125 | 10.0 x 7.50  in | 1304 x 984 | | N |
 
 ## Displaydata Aura Aeon Series Specs
@@ -30,14 +30,10 @@ Black and white only.
 
 ## Frequencies used by Dmitry code
 
-25 600 Khz spaced channels 903MHz to 927MHz
-Channel 0: 902.999756
-Channel 1: 903.599609
+25 600 Khz spaced channels 903MHz to 927MHz<br>
+Channel 0: 902.999756<br>
+Channel 1: 903.599609<br>
 ...
-Channel 12
-...
-Channel 24
-
 
 250 Kbps, 165KHz deviation, GFSK
 
