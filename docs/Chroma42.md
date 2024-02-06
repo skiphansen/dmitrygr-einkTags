@@ -19,14 +19,14 @@ The commands were found to match the UC8154 fairly closely.
 Two UC8154 like controllers are used in cascade mode with the master controller
 controlling the left half of the screen and the slave controller controlling
 the right half.
-
+```
   CS0 200 pixels + CS1 200 pixels   = 400 wide
 +----------------+----------------+
 |                |                |
                 ...               | 300 high
 |                |                |
 +----------------+----------------+
-
+```
 The spec sheet that I have does not list the 0xe0 Cascade Setting (CCSET) 
 command, nor does it mention the ability to cascade two chips in the features 
 section. However cascade mode is documented in the pin description section.
