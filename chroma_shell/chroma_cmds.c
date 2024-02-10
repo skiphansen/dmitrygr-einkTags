@@ -242,8 +242,8 @@ typedef struct {
 // Deviation = 5.157471 
 // Device Address = 0 
 // Manchester Enable = false 
-// Modulated = true 
-// Modulation Format = GFSK 
+// Modulated = false
+// Modulation Format = ASK/OOK 
 // PA Ramping = false 
 // Packet Length = 255 
 // Packet Length Mode = Reserved 
@@ -261,7 +261,7 @@ RfSetting g915CW[] = {
    {0xdf0b,0x3B},  // FREQ0: Frequency Control Word, Low Byte 
    {0xdf0c,0xF5},  // MDMCFG4: Modem configuration 
    {0xdf0d,0x83},  // MDMCFG3: Modem Configuration 
-   {0xdf0e,0x10},  // MDMCFG2: Modem Configuration 
+   {0xdf0e,0xb0},  // MDMCFG2: Modem Configuration 
    {0xdf11,0x15},  // DEVIATN: Modem Deviation Setting 
    {0xdf14,0x18},  // MCSM0: Main Radio Control State Machine Configuration 
    {0xdf15,0x17},  // FOCCFG: Frequency Offset Compensation Configuration 
@@ -285,8 +285,8 @@ RfSetting g915CW[] = {
 // Deviation = 5.157471 
 // Device Address = 0 
 // Manchester Enable = false 
-// Modulated = true 
-// Modulation Format = GFSK 
+// Modulated = false
+// Modulation Format = ASK/OOK 
 // PA Ramping = false 
 // Packet Length = 255 
 // Packet Length Mode = Reserved 
@@ -304,7 +304,7 @@ RfSetting g866CW[] = {
    {0xdf0b,0xC4},  // FREQ0: Frequency Control Word, Low Byte 
    {0xdf0c,0xF5},  // MDMCFG4: Modem configuration 
    {0xdf0d,0x83},  // MDMCFG3: Modem Configuration 
-   {0xdf0e,0x10},  // MDMCFG2: Modem Configuration 
+   {0xdf0e,0xb0},  // MDMCFG2: Modem Configuration 
    {0xdf11,0x15},  // DEVIATN: Modem Deviation Setting 
    {0xdf14,0x18},  // MCSM0: Main Radio Control State Machine Configuration 
    {0xdf15,0x17},  // FOCCFG: Frequency Offset Compensation Configuration 
