@@ -253,6 +253,13 @@
 			<F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h"/>
 		</Folder>
 		<Folder
+			Name="RfStudio"
+			Filters="">
+			<F N="../RfStudio/CC1101/settings/gs_typical.xml"/>
+			<F N="../RfStudio/CC1101/settings/ts_esp-idf-cc1101.xml"/>
+			<F N="../RfStudio/cc1110/typical_settings.xml"/>
+		</Folder>
+		<Folder
 			Name="Other Files"
 			Filters="">
 			<F N="../chroma_shell/.gitignore"/>
