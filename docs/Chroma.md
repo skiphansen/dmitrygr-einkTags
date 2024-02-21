@@ -28,16 +28,24 @@ Black and white only.
 | Aura 29F | 2.6 x 1.10  in | 296 x 128 | ? | N |
 | Aura 42 | 3.3 x 2.50  in | 400 x 300 | ? | N |
 
-## Frequencies used by Dmitry code
+## RF configuration used by Dmitry's code
 
-25 600 Khz spaced channels 903MHz to 927MHz<br>
-Channel 0: 902.999756<br>
-Channel 1: 903.599609<br>
-...
+250 Kbps, GFSK with data whitening.<br>
+Tx deviation: 165KHz<br>
+Rx bandwith: 650Khz
 
-250 Kbps, 165KHz deviation, GFSK
+Packets are variable length, CRC16 will be provided by the radio.
 
-Packets are variable length, CRC16 will be provided by the radio, as will whitening. 
+The system is configured to operate on one of 25 equally spaced channels from 
+903MHz to 927MHz
+
+| Channel | Frequency |
+| :-: | - |
+|1 | 902.999756|
+|2 | 904.006653|
+|3| 905.013550|
+|...||
+|25| 927.165283|
 
 ## USART usage
 
@@ -153,5 +161,4 @@ Chroma" is not present.
 2. The display enable circuitry was not present on early hardware revisions.
 
 3. P0.2 is EPD nCS1 on the Chroma 42, it appears to be N/C on Chroma 29.
-
 
