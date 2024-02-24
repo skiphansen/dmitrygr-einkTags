@@ -2,31 +2,44 @@
 
 ## Displaydata Chroma Aeon Series Specs
 
-Three color, either black, white, and red (BWR) or black, white, and yellow (BWY).
+Three colors, either black, white, and red (BWR) or black, white, and yellow (BWY).
 
-| Model | Screen size | Resolution | EEPROM size | Supported |
-| -| -| - | - | -|
-| Chroma 16 | 1.08 x 1.08 in | 152 x 152 |? | N |
-| Chroma 21 | 1.9 x 1.00  in | 212 x 104 |? | N |
-| Chroma 27 | 2.4 x 1.20  in | 296 x 152 |? | N |
-| [Chroma 29](Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y (some versions) |
-| Chroma 37 | 3.2 x 1.85  in | 416 x 240 |? | N |
-| [Chroma 42](Chroma42.md) | 3.3 x 2.50  in | 400 x 300 | 1024K | N |
-| Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N |
-| Chroma 74 | 6.4 x 3.50  in | 640 x 384 | 1024K | Y |
-| [Chroma 74H+](Chroma74H_Plus.md) | 6.4 x 3.90  in | 800 x 480 | 1024K | N |
-| Chroma 125 | 10.0 x 7.50  in | 1304 x 984 | | N |
+There is no known way to determine if a display is BWR or BWY from the serial
+or model number.
+
+| Model | Screen size | Resolution | EEPROM<br>size | Supported | [OEPL](https://github.com/jjwbruijn/OpenEPaperLink/tree/master)<br>support planned |
+| -| -| - | :-: | :-: | :-: |
+| Chroma 16 | 1.08 x 1.08 in | 152 x 152 |? | N | N |
+| Chroma 21 | 1.9 x 1.00  in | 212 x 104 |? | N | N |
+| Chroma 27 | 2.4 x 1.20  in | 296 x 152 |? | N | N |
+| [Chroma 29](Chroma29.md) | 2.6 x 1.10  in | 296 x 128 | 128K | Y<br>(some versions) | Y |
+| Chroma 37 | 3.2 x 1.85  in | 416 x 240 |? | N | N |
+| [Chroma 42](Chroma42.md) | 3.3 x 2.50  in | 400 x 300 | 1024K | N | Y |
+| Chroma 60 | 4.7 x 3.50  in | 648 x 480 |? | N | maybe |
+| Chroma 74 | 6.4 x 3.50  in | 640 x 384 | 1024K | Y | Y |
+| [Chroma 74H+](Chroma74H_Plus.md) | 6.4 x 3.90  in | 800 x 480 | 1024K | N | maybe |
+| Chroma 125 | 10.0 x 7.50  in | 1304 x 984 | | N | N |
+
+The displays with OEPL support marked as "maybe" are a function of supply.
+I don't currently have enough of these display types to make it worth the 
+effort, but that could change.
+
+The displays with OEPl support marked as "N" means that I don't have any so
+I can't add support.  
+
+All of the orignal Chroma tags used the same basic design.  To add support
+for a new model it is likely that only the EPD driver will need to be changed.
 
 ## Displaydata Aura Aeon Series Specs
 
 Black and white only.
 
-| Model | Screen size | Resolution | EEPROM size | Supported |
-| -| -| - | - | -|
-| Aura 21 | 1.9 x 1.00  in | 212 x 104 |? | N |
-| Aura 29 | 2.6 x 1.10  in | 296 x 128 | ? | N |
-| Aura 29F | 2.6 x 1.10  in | 296 x 128 | ? | N |
-| Aura 42 | 3.3 x 2.50  in | 400 x 300 | ? | N |
+| Model | Screen size | Resolution | EEPROM<br>size | Supported | [OEPL](https://github.com/jjwbruijn/OpenEPaperLink/tree/master)<br>support planned |
+| -| -| - | :-: | :-: | :-: |
+| Aura 21 | 1.9 x 1.00  in | 212 x 104 |? | N | N |
+| Aura 29 | 2.6 x 1.10  in | 296 x 128 | ? | N | N |
+| Aura 29F | 2.6 x 1.10  in | 296 x 128 | ? | N | N |
+| Aura 42 | 3.3 x 2.50  in | 400 x 300 | ? | N | N |
 
 ## RF configuration used by Dmitry's code
 
