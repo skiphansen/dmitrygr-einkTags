@@ -117,6 +117,7 @@ int ResetCmd(char *CmdLine);
 int RxCmd(char *CmdLine);
 int EEPROM_ReadCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
+int EEPROM_Erase(char *CmdLine);
 int EEPROM_RestoreCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
@@ -148,6 +149,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
 //   { "eewd",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
+   { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
    { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
@@ -1008,6 +1010,7 @@ int EEPROM_BackupCmd(char *CmdLine)
    int EEPROM_Len = GetEEPROM_Len();
    FILE *fp = NULL;
 
+
    do {
       printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
       if((fp = fopen(CmdLine,"w")) == NULL) {
@@ -1024,6 +1027,42 @@ int EEPROM_BackupCmd(char *CmdLine)
 
    return Ret;
 }
+
+int EEPROM_Erase(char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int Adr;
+   int Sector;
+   int EEPROM_Len = GetEEPROM_Len();
+   uint8_t Cmd[6] = {CMD_EEPROM_ERASE};
+   AsyncResp *pMsg;
+
+   do {
+      if(sscanf(CmdLine,"%x %d",&Adr,&Sector) != 2) {
+         break;
+      }
+      if(Adr < 0 || Adr > EEPROM_Len-1) {
+         LOG_RAW("Invalid address (0x%x > 0x%x)\n",Adr,EEPROM_Len-1);
+         break;
+      }
+      if(Sector < 0 || (Sector * 4096) > EEPROM_Len) {
+         PRINTF("Invalid sector %d is invalid, must be between 0 and %d\n",
+                (EEPROM_Len / 4096) - 1);
+         break;
+      }
+      memcpy(&Cmd[1],&Adr,sizeof(uint32_t));
+      Cmd[5] = (uint8_t) Sector;
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         Ret = RESULT_FAIL;
+         break;
+      }
+      free(pMsg);
+      Ret = RESULT_OK;
+   } while(false);
+
+   return Ret;
+}
+
 
 int EEPROM_RestoreCmd(char *CmdLine)
 {

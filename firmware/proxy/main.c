@@ -389,11 +389,28 @@ void HandleMsg()
          break;
 
       case CMD_EEPROM_ERASE:
-         u1setEepromMode();
-         if(!eepromErase(0,32)) {
-            gRxBuf[1] = CMD_ERR_FAILED;
+         LOG("Erase flash");
+         if(gRxMsgLen == 1) {
+         // Just command byte, erase entire chip
+            u1setEepromMode();
+            if(!eepromErase(0,32)) {
+               gRxBuf[1] = CMD_ERR_FAILED;
+            }
+         }
+         else if(gRxMsgLen == 6) {
+         // Adr, # sectors
+            LOG(", %d sectors from 0x%0lx",gRxBuf[5],uCast0.Uint32Value);
+            u1setEepromMode();
+            if(!eepromErase(uCast0.Uint32Value,gRxBuf[5])) {
+               gRxBuf[1] = CMD_ERR_FAILED;
+            }
+         }
+         else {
+            LOG(", invalid arg");
+            gRxBuf[1] = CMD_ERR_INVALID_ARG;
          }
          u1setUartMode();
+         LOG("\n");
          break;
 
       default:

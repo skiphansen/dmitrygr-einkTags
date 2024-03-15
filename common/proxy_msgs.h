@@ -100,10 +100,5 @@ typedef enum {
                               | EPD_FLG_END_XFER \
                               | EPD_FLG_RESET)
 
-#define EEPROM_ERASE_SECTOR   0
-#define EEPROM_ERASE_BLOCK    1
-#define EEPROM_ERASE_CHIP     2
-
-
 #endif   // _PROXY_MSGS_H_
 
