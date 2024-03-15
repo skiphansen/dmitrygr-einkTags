@@ -1461,8 +1461,10 @@ int DumpSettingsCmd(char *CmdLine)
    FILE *fp = NULL;
    #define PAGES_TO_SCAN   10
    uint8_t Image[PAGES_TO_SCAN * EEPROM_ERZ_SECTOR_SZ];
+   uint8_t ErasedCount[256];
 
    do {
+      memset(ErasedCount,0,sizeof(ErasedCount));
       if(*CmdLine) {
          if((fp = fopen(CmdLine,"r")) == NULL) {
             LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
@@ -1512,13 +1514,14 @@ int DumpSettingsCmd(char *CmdLine)
             Type = Data[0];
             Len = Data[1];
 
-            if(Len < 1) {
+            if(Len < 1 || Len > 255) {
                LOG_RAW("Len == %d, WTF?\n",Len);
                break;
             }
 
             switch(Type) {
                case 0x0:
+                  ErasedCount[Len]++;
                   SkippedSlots++;
                   break;
 
@@ -1543,8 +1546,17 @@ int DumpSettingsCmd(char *CmdLine)
                   break;
 
                case 0xff:
-                  LOG_RAW("End of settings @ 0x%x, %d erased slots.\n",
-                          Adr,SkippedSlots);
+                  LOG_RAW("End of settings @ 0x%x.\n",Adr);
+
+                  if(SkippedSlots > 0) {
+                     LOG_RAW("Erased entrys:\nData Len\tCount\n");
+                     for(int i = 0; i < 256; i++) {
+                        if(ErasedCount[i] > 0) {
+                           LOG_RAW("%d\t\t%d\n",i-2,ErasedCount[i]);
+                        }
+                     }
+                     LOG_RAW("Total: %d\n",SkippedSlots);
+                  }
                   break;
 
                default:
