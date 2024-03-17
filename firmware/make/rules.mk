@@ -15,6 +15,13 @@ $(BUILD_DIR)/main.elf: $(OBJS)
 %.bin: %.ihx
 	objcopy $^ $(BUILD_DIR)/$(IMAGE_NAME).bin -I ihex -O binary
 	cp $(BUILD_DIR)/$(IMAGE_NAME).bin $(PREBUILT_DIR)
+	@# Display sizes, we're critically short for code and RAM space !
+	@grep '^Area' $(BUILD_DIR)/main.map | head -1
+	@echo '--------------------------------        ----        ----        ------- ----- ------------'
+	@grep = $(BUILD_DIR)/main.map | grep XDATA
+	@grep = $(BUILD_DIR)/main.map | grep CODE
+	@echo -n ".bin size: "
+	@ls -l $(PREBUILT_DIR)/$(IMAGE_NAME).bin | cut -f5 -d' '
 
 $(BUILD_DIR):
 	if [ ! -e $(BUILD_DIR) ]; then mkdir -p $(BUILD_DIR); fi
