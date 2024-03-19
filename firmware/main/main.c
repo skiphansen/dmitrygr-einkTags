@@ -906,7 +906,12 @@ void main(void)
    #endif
    pr("eeprom has %u image slots\n", mNumImgSlots);
    
-   if (0) {
+#if 0
+   drawImageAtAddress(0);
+   pr("Done.\n");
+   while(1);
+#endif      
+   if (1) {
       
       drawFullscreenMsg((const __xdata char*)"ASSOCIATE READY");
       //screenTest();

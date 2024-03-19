@@ -337,6 +337,7 @@ static void drawPrvDecodeImageOnce(void)
    }
 }
 
+#if 1
 void drawImageAtAddress(uint32_t addr)
 {
    uint32_t __xdata clutAddr;
@@ -357,6 +358,45 @@ void drawImageAtAddress(uint32_t addr)
    screenTxEnd();
    screenShutdown();
 }
+#else
+void drawImageAtAddress(uint32_t addr) __reentrant 
+{
+   uint16_t x;
+   uint16_t y;
+   uint8_t z = 0;
+   uint8_t data;
+   uint8_t pixel = 0;
+
+   pr("Sending image\n");
+   screenTxStart(false);
+   for(y = 0; y < SCREEN_HEIGHT; y++) {
+      for(x = 0; x < SCREEN_WIDTH; x += 2) {
+#if 0
+         if(z++ >= 39) {
+            z = 0;
+            pixel++;
+            if(pixel >= 8) {
+               pixel = 0;
+            }
+         }
+#else
+         pixel = 6;
+         if(y == SCREEN_HEIGHT / 2) {
+            pixel = 0;
+         }
+         else {
+            if(x == SCREEN_WIDTH / 2) {
+               pixel = 7;
+            }
+         }
+#endif
+         data = (pixel << 4) | pixel;
+         screenByteTx(data);
+      }
+   }
+   screenTxEnd();
+}
+#endif
 
 #pragma callee_saves myStrlen
 static uint16_t myStrlen(const char *str)
