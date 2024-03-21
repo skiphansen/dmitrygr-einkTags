@@ -31,6 +31,7 @@ based his firmware on.
 | "B" | edk286 Issue 8<br>220-0067-08<br>2014| similar to UC8154 | WF0290T1PBZ01 | Display is always enabled (nEnable is ignored)|
 | "B" | edk286 Issue 9<br>220-0067-09<br>2015| similar to UC8154 | WF0290T1PBZ01|1. EPD pin 4&5 (VGL,VGH) are n/c<br>2. Q2 & Q3 added for nEnable|
 | ? | [edk296 Issue 1](https://user-images.githubusercontent.com/1102694/112720670-0b763400-8f00-11eb-93ba-e635734bff6d.jpg)<br>220-0094-01<br>2018 |?|WFD0290BF33|
+| ? | [edk505 Issue4](https://cdn.discordapp.com/attachments/1134835190460583976/1220472054252568596/rn_image_picker_lib_temp_d4af2f14-4cf5-437b-97bc-031d243d11fb.jpg?ex=660f102d&is=65fc9b2d&hm=f0c94fa63e17d651fb66460a65a4276f1cfffa73e72e498f8f2392b036a9bf32&)<br>220-0095-004<br>2019| ? | DEPG0290RWU51011HPB1E|Processor is a CC1310 |
 # General Chroma 29 Info
 
 Resolution 296 x 128 BWR or BWY.
@@ -136,4 +137,5 @@ a tag running stock firmware.
 |Vcom2 LUT<br>(Cmd 0x25)|0x0A 0x0A 0x01 0x02 0x14 0x0D 0x14 0x14<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00|
 |Red0 LUT<br>(Cmd 0x26)|0x4A 0x4A 0x01 0x82 0x54 0x0D 0x54 0x54<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00 |
 |Red1 LUT<br>(Cmd 0x27)|0x0A 0x0A 0x01 0x02 0x14 0x0D 0x14 0x14<br>0x01 0x00 0x00 0x00 0x00 0x00 0x00|
+
 
