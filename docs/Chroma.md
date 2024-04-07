@@ -41,6 +41,64 @@ Black and white only.
 | Aura 29F | 2.6 x 1.10  in | 296 x 128 | ? | N | N |
 | Aura 42 | 3.3 x 2.50  in | 400 x 300 | ? | N | N |
 
+## Flashing CC1110 Based Chroma Tags
+
+Unlike other TAGs the test points needed to flash custom firmware are not 
+accessible without opening the case.  
+
+The test points needed for flashing are labeled by the silk screen and 
+should be easy to locate.
+
+The case is fairly easy to open and if it is opened carefully is 
+unlikely to be damaged.  
+
+After programming the case can be snap back together easily.
+
+## Programmers
+
+There are at least 3 ways to flash the firmware:
+
+1. The TI CC-Debugger or an inexpensive clone.
+2. ATC1440's [ESP_CC_Flasher](https://github.com/atc1441/ESP_CC_Flasher).
+3. Rpi based [flash_cc2531](https://github.com/jmichault/flash_cc2531).
+4. Rpi based [cc1110-prog](https://github.com/zephray/cc1110-prog).
+
+All flashing methods require 4 wires: GND, DC, DD and Reset_n.  
+
+The TI programmer and some clones alway require the target's VDD to be connect
+for level translators.
+
+| Signal | Test point |
+|-|-|
+| GND     |TP8 or TP18 |
+| +VBAT   |TP4 or TP14 |
+| DC      |TP5 or TP15|
+| DD      |TP3 or TP13|
+| Reset_n |TP2 or TP12 |
+
+Note: Test points TP10 and above are on the top/component side of the PCB
+the rest are on the other side.
+
+## CC-Debugger
+
+If you go the CC-Debugger route you can use TI [Windows based app](https://www.ti.com/tool/FLASH-PROGRAMMER).
+
+If you run Linux [cc-tool](https://github.com/dashesy/cc-tool) works well.
+
+![cc-debugger-pinout](https://github.com/jjwbruijn/OpenEPaperLink/assets/4642629/4065f3fe-93b9-4930-bbe7-04d631b34c0c)
+
+| Signal | Test point | CC debugger pin |
+|-|-|-|
+| GND     |TP8 or TP18 | 1 | 
+| +VBAT   |TP4 or TP14 | 2 |
+| DC      |TP5 or TP15 | 3 | 
+| DD      |TP3 or TP13 | 4 |
+| Reset_n |TP2 or TP12 | 7 |
+
+If you like you can jumper pins 2 and 9 on the CC-Debugger to power the
+tag from the debugger to prevent having to have batteries installed while 
+programming.
+
 ## RF configuration used by Dmitry's code
 
 250 Kbps, GFSK with data whitening.<br>
@@ -131,8 +189,8 @@ Note: there are some variations between different board revisions.
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
 |P0.0 | output | EPD BS1 | display pin 8|
-|P0.1 | TP6/TP16 ||
-|P0.2 | EPD nCS1 [See note 3](#notes) |display pin 1 |
+|P0.1 | ? | TP6/TP16 | N/C other than test point AFAIK |
+|P0.2 | output | EPD nCS1 [See note 3](#notes) |display pin 1 |
 |P0.3 | output | SPI EEPROM CLK|
 |P0.4 | output | SPI EEPROM MOSI|
 |P0.5 | input | SPI EEPROM MISO|
@@ -143,9 +201,9 @@ Note: there are some variations between different board revisions.
 
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
-|P1.0 | EPD BUSY | display pin 9|
-|P1.1 | EPD nCS | display pin 12|
-|P1.2 | output | | EPD nRESET | display pin 10|
+|P1.0 | input | EPD BUSY | display pin 9|
+|P1.1 | output | EPD nCS | display pin 12|
+|P1.2 | output | EPD nRESET | display pin 10|
 |P1.3 | output | EPD DO/SCK | display pin 13|
 |P1.4 | [See note 1](#notes)||
 |P1.5 | output | EPD D1/SDIN | display pin 14 |
@@ -156,10 +214,10 @@ Note: there are some variations between different board revisions.
 | Bit | Direction | Connection | notes|
 | -| -| -| -|
 |P2.0 | output | EEPROM nCS ||
-|P2.1/DBG_DAT | TP3/TP13| Programmer interface |
-|P2.2/DBG_CLK | TP5/TP15 | Programmer interface|
-|P2.3/XOSC32_Q1 | 32.768 kHz crystal |
-|P2.4/XOSC32_Q2 | 32.768 kHz crystal |
+|P2.1/DBG_DAT | input | TP3/TP13| Programmer interface |
+|P2.2/DBG_CLK | input | TP5/TP15 | Programmer interface|
+|P2.3/XOSC32_Q1 | input | 32.768 kHz crystal |
+|P2.4/XOSC32_Q2 | input | 32.768 kHz crystal |
 
 ## Notes
 
