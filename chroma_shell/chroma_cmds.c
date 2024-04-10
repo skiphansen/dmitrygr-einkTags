@@ -116,6 +116,7 @@ int PingCmd(char *CmdLine);
 int ResetCmd(char *CmdLine);
 int RxCmd(char *CmdLine);
 int EEPROM_ReadCmd(char *CmdLine);
+int EEPROM_WrCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int EEPROM_Erase(char *CmdLine);
 int EEPROM_RestoreCmd(char *CmdLine);
@@ -147,7 +148,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
-//   { "eewd",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
+   { "eewr",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
    { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
    { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
@@ -1000,6 +1001,57 @@ int EEPROM_ReadCmd(char *CmdLine)
 
       Ret = EEPROM_RdInternal(Adr,NULL,NULL,Len);
    } while(false);
+
+   return Ret;
+}
+
+// eewr(adr,filename);
+int EEPROM_WrCmd(char *CmdLine)
+{
+   int Ret = RESULT_USAGE;
+   int Adr;
+   int Len;
+   int EEPROM_Len = GetEEPROM_Len();
+   char *cp;
+   struct stat Stat;
+   FILE *fp = NULL;
+
+   do {
+      if(sscanf(CmdLine,"%x",&Adr) != 1) {
+         break;
+      }
+
+      if(Adr < 0 || Adr > EEPROM_Len-1) {
+         LOG_RAW("Invalid address (0x%x > 0x%x)\n",Adr,EEPROM_Len-1);
+         break;
+      }
+
+      if((cp = NextToken(CmdLine)) == NULL) {
+         break;
+      }
+
+      if(stat(cp,&Stat) != 0) {
+         LOG("stat(\"%s\") failed - %s\n",cp,strerror(errno));
+         Ret = RESULT_FAIL;
+         break;
+      }
+
+      if((fp = fopen(cp,"r")) == NULL) {
+         LOG("fopen(\"%s\") failed - %s\n",cp,strerror(errno));
+         Ret = RESULT_FAIL;
+         break;
+      }
+      if(Len < 0 || (Adr + Stat.st_size) > EEPROM_Len) {
+         PRINTF("Invalid length %d\n",Stat.st_size);
+         break;
+      }
+
+      Ret = EEPROM_WrInternal(Adr,fp,NULL,Stat.st_size);
+   } while(false);
+
+   if(fp != NULL) {
+      fclose(fp);
+   }
 
    return Ret;
 }

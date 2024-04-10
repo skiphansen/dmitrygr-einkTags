@@ -74,7 +74,6 @@ static struct COMMAND_TABLE *FindCmd(char *CmdLine,int bSilent);
 void ParseCmd(char *CmdLine);
 int MatchCmd(char *CmdLine, char *Command);
 char *SkipSpaces(char *In);
-char *NextToken(char *In);
 void HandleCmd(uint8_t *Msg,int MsgLen);
 int ParseSerialData(uint8_t *Buf,int Len);
 void HandleResp(uint8_t *Msg,int MsgLen);
@@ -718,9 +717,6 @@ void TabCompletion(const char *buf, linenoiseCompletions *lc)
 
 void RunOneCommand(char *Command)
 {
-   int Ret;
-   AsyncMsg *pMsg;
-
    if(!gQuiet) {
       PrintHeader();
       LOG_RAW("Running \"%s\"\n",Command);
