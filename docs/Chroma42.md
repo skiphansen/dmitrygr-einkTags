@@ -112,4 +112,4 @@ but it is not needed if you just want to flash custom firmware.
 | SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
 | :-: | - | - | - | - |
 | "B" | edk288 Issue 2<br>220-0073-02<br>2014| Two UC8154s in cascade mode | WF0420T1PBF04 | 
-
+| "B" | edk288 Issue 4<br>220-0073-02<br>2018| ?                           | WF0420T8DBF150E42 |

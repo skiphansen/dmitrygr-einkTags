@@ -138,6 +138,44 @@ USART1 shared dynamically between SPI flash (EEPROM) and debug serial port.
 |0x0000-0x7fff   |Flash|
 
 
+## Chroma Serial Number and MAC address
+
+The Chroma's serial number (SN) is printed on the label on the back of the tag
+and in barcode format on the label and the from of the display.
+
+The SN has 11 characters consisting of 2 letters, 8 digits and one letter.
+For example "JM10339094B".
+
+The first two letters of the SN appear to indicate the model of the display.
+
+| First 2 Letters | Model | Notes |
+| - | - | - |
+| JA | BWR Chroma 29 |
+| JF | BWY? Chroma 29 |
+| JN | BWR Chroma 37 |
+| JC | BWR Chroma 42 |
+| JD | BWR Chroma 60 |
+| JG | Chroma 21 |
+| JH | BWY? Chroma 42 |
+| JL | BWR Chroma 74 |
+| JM | BWY Chroma 74 |
+| KA | BW Aura 29 |
+| ME | Chroma 29 | CC1310 SOC |
+| MS | Chroma 74H+ | CC1310 SOC |
+
+The next 8 digits are an unique per tag identifier.
+
+The last character seems to indicate the version of the RF protocol spoken
+by the display.
+
+The SN is programmed into the SPI flash during manufacture with the possible
+exception of the last character.
+
+Since the OEPL uses the 8 byte extended address specified by [IEEE 802.15.4](https://github.com/fanqh/document/blob/master/802.15.4-2006.pdf) 
+and the unique identifier is only 4 bytes the most significate 4 bytes of the
+extended address are fixed (0x44 0x67 0x4b 0x7a).
+
+
 ## CC1110F pin connections
 
 The CC1110F pin connections are assumed to be common amoung all Chroma Tags,
@@ -232,4 +270,5 @@ Chroma" is not present.
 2. The display enable circuitry was not present on early hardware revisions.
 
 3. P0.2 is EPD nCS1 on the Chroma 42, it appears to be N/C on Chroma 29.
+
 
