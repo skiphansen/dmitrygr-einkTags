@@ -454,11 +454,11 @@ uint8_t Chroma29_C8154Init0[] = {
 uint8_t Chroma29_C8154Init1[] = {
    2,
    0x00, // Panel Setting (PSR)
-   0x83, // 10 x 0 0 0 1 1
+   0x8f, // 10 x 0 1 1 1 1
          // ^^   ^ ^ ^ ^  ^- RST_N controller not 
          //  |   | | | +---- SHD_N DC-DC converter on
-         //  |   | | +------ SHL Shift left
-         //  |   | +-------- UD scan down
+         //  |   | | +------ SHL Shift right
+         //  |   | +-------- UD scan up
          //  |   +---------- KWR Pixel with K/W/Red run LU1 and LU2
          //  +-------------- RES 128x296
    4,
@@ -547,7 +547,7 @@ InitTbl Chroma29_C8154InitTbl[] = {
    {0}   // End of table
 };
 
-#define CHROMA_42
+// #define CHROMA_42
 
 uint8_t Chroma42_C8154Init0[] = {
    5,
@@ -586,8 +586,8 @@ uint8_t Chroma42_C8154Init2[] = {
    0x17,
 
    2,
-   0x82, // VCM_DC Setting (VDCS)
-   0x08,
+   0x82, // VCM_DC Setting (VDCS)  this should NOT be a fixed value!
+   0x08, // .8v which matches markings on example panel
 
    2,
    0x60, // TCON setting (TCON)
