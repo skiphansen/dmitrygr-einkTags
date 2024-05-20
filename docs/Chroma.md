@@ -222,6 +222,21 @@ Note: there are some variations between different board revisions.
 | 35| P1.4 | [See note 1](#notes) ||
 | 36| P1.3 | EPD DO/SCK | display pin 13|
 
+## Chroma Test points
+
+| Test Point | CC1110 Pin | Usage | Notes |
+| - | :-: | -|-|
+| TP2 / TP12 | 31| RESET_N | Programmer interface |
+| TP3 / TP13|  15| P2.1/DBG_DAT |  Programmer interface |
+| TP4 / TP14 | - | +VBAT   |
+| TP5 / TP15 | 16| P2.2/DBG_CLK |  Programmer interface|
+| TP6 / TP16 | 6| P0.1 | |
+| TP7 / TP17 | 33| P1.6, USART1 TXD | Serial data from CC1110 |
+| TP8 / TP18 | - | GND     |
+| TP9 / TP19 | 32| P1.7, USART1 RXD | Serial data to CC1110 |
+|TP10| - | J1.23 PREVGL | EPD supply for VCOM, VGL and VSL |
+|TP11| - | J1.21 PREVGH |EPD supply for VGH and VSH |
+
 
 ## Port 0 bits
 | Bit | Direction | Connection | notes|

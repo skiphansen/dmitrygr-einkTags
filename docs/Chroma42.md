@@ -10,6 +10,7 @@ The SPI flash chip is the 1024K byte [MX25V8006E](https://www.macronix.com/Lists
 The flash is organized as 256 4k sectors or 16 65k blocks. Sectors, blocks, or 
 the entire chip can be erased at a time.
 
+## Chroma 42 JC display
 The Chroma 42 display was reverse engineered by capturing the EPD SPI bus while 
 sending an image using [atc1441's Custom PriceTag Access Point](https://github.com/atc1441/E-Paper_Pricetags/tree/main/Custom_PriceTag_AccesPoint) 
 to a tag running stock firmware.
@@ -37,7 +38,6 @@ command 0x61 however selects the expected resolution.
 
 It is certainly possible that I have misidentified the controller, but
 if so it's close enough for my purposes.
-
 
 ## Connections For Flashing And Debugging
 
@@ -75,7 +75,7 @@ but it is not needed if you just want to flash custom firmware.
 |TP10| J1.23 PREVGL ?|
 |TP11 | J1.21 PREVGH ? |
 
-## Logic Analyzer Connections for EPD Reverse Engineering
+## Logic Analyzer Connections Chroma 42 JC EPD Reverse Engineering
 
 | Signal | EPD pin | CC1110 pin | Logic Analyzer pin |
 | -|-| -| - |
@@ -111,5 +111,20 @@ but it is not needed if you just want to flash custom firmware.
 
 | SN Rev<br>(Last character)|Board Rev | Controller | EPD Panel | Notes |
 | :-: | - | - | - | - |
-| "B" | edk288 Issue 2<br>220-0073-02<br>2014| Two UC8154s in cascade mode | WF0420T1PBF04 | 
-| "B" | edk288 Issue 4<br>220-0073-02<br>2018| ?                           | WF0420T8DBF150E42 |
+| "JC0xxxxxxxB" | edk288 Issue 2<br>220-0073-02<br>2014| Two UC8154s in cascade mode | WF0420T1PBF04 | 
+| "JH1xxxxxxxB" | edk288 Issue 4<br>220-0073-02<br>2018| ?                           | WF0420T8DBF150E42 |
+
+## Chroma 42 JH display
+
+## Logic Analyzer Connections Chroma 42 JH EPD Reverse Engineering
+
+| Signal | EPD pin | CC1110 pin | Logic Analyzer pin |
+| -|-| -| - |
+| GND | 18 |  - | 1 |
+| MOSI | 14 | 34  | 2 |
+| CLK | 13 | 36  | 3 |
+| nReset |10 | 1  | 4 |
+| nCS | 12 | 3  | 5|
+| Busy | 9 | 4  | 6|
+| D/nC | 11 | 13  | 7|
+
