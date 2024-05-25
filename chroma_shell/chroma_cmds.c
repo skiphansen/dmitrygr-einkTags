@@ -1581,6 +1581,10 @@ int DumpSettingsCmd(char *CmdLine)
                   Msg = "type 0x01 MAC";
                   break;
 
+               case 0x5:  // EPD SN
+                  Msg = "EPD SN";
+                  break;
+                          
                case 0x9:  // ADC intercept
                   Msg = "ADC intercept";
                   break;
@@ -1662,6 +1666,13 @@ int DumpSettingsCmd(char *CmdLine)
                      DumpHex(&Data[2],Len-2);
                      break;
                   }
+
+                  case 0x5:
+                  // EPD SN
+                     DumpHex(&Data[2],Len-2);
+                     Data[Len] = 0;
+                     LOG_RAW("EPD SN: 0x%02x, \"%s\"\n",Data[2],&Data[3]);
+                     break;
 
                   default:
                      DumpHex(&Data[2],Len-2);
