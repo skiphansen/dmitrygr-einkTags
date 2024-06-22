@@ -485,6 +485,7 @@ int ParseSerialData(uint8_t *Buf,int Len)
    int Ret = 0;
    int j;
    int MsgLen;
+	static int RawLen = 0;
 
    if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
       if(g.Verbose & VERBOSE_TIMESTAMPS) {
@@ -497,10 +498,26 @@ int ParseSerialData(uint8_t *Buf,int Len)
       MsgLen = SerialFrameIO_ParseByte(Buf[j]);
       if(MsgLen == 0) {
       // Byte wasn't part of a message
-         printf("%c",Buf[j]);
-         if(Buf[j] == 0xa && (g.Verbose & VERBOSE_TIMESTAMPS)) {
-            PrintTime(false);
-         }
+			char c = Buf[j];
+		// cr, lf -> cr
+			if(c == '\r') {
+				c = '\n';
+			}
+
+			if(c == '\n') {
+				if(RawLen != 0) {
+					printf("\r\n");
+				}
+				RawLen = 0;
+			}
+			else {
+			// print raw output
+				if(RawLen == 0 && (g.Verbose & VERBOSE_TIMESTAMPS)) {
+					PrintTime(false);
+				}
+				RawLen++;
+				printf("%c",c);
+			}
       }
 
       if(MsgLen > 0) {

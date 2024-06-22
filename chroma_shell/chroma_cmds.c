@@ -1581,7 +1581,7 @@ int DumpSettingsCmd(char *CmdLine)
                   Msg = "type 0x01 MAC";
                   break;
 
-               case 0x5:  // EPD SN
+               case 0x5:  // EPD SN (aka cell id?  See factory cmd 0x1e)
                   Msg = "EPD SN";
                   break;
                           
@@ -1592,6 +1592,7 @@ int DumpSettingsCmd(char *CmdLine)
                case 0x12:  // ADC slope
                   Msg = "ADC slope";
                   break;
+
 
                case 0x23:  // VCOM
                   Msg = "VCOM";
