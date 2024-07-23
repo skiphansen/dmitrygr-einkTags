@@ -6,25 +6,34 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 project(chroma_shell C)
 set(CMAKE_BUILD_TYPE "Debug")
 
+option(COBS_TEST "Build for testing COBS library" OFF)
+
 # Compilation options
 set(CMAKE_C_FLAGS "-std=gnu99 -Wall -MD")
-add_compile_options(-DDARWIN_DEBUG -DUDS_TP=UDS_TP_ISOTP_C)
 
 set(RF_CAT_INCLUDE ../firmware/rfcat/include)
 set(COMMON ../common)
 
 # Sources for this executable
-set (SOURCES 
-   serial_shell.c 
-   chroma_cmds.c
-   ${COMMON}/SerialFraming.c
-   linenoise/linenoise.c
-   logging.c
-)
+if(COBS_TEST)
+   set (SOURCES 
+     ${COMMON}/CobsFraming.c
+     logging.c
+   )
+   add_compile_options(-DCOBS_TEST)
+else()
+   set (SOURCES 
+      serial_shell.c 
+      chroma_cmds.c
+      ${COMMON}/CobsFraming.c
+      linenoise/linenoise.c
+      logging.c
+   )
+endif(COBS_TEST)
 
 add_executable(chroma_shell ${SOURCES})
 
-include_directories(${COMMON} ${RF_CAT_INCLUDE} linenoise)
+include_directories(. ${COMMON} ${RF_CAT_INCLUDE} linenoise)
 
 install(TARGETS chroma_shell DESTINATION sbin/)
 
