@@ -25,8 +25,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <linux/serial.h>
 #include "logging.h"
 #include "linenoise.h"
 #include "cmds.h"
@@ -485,7 +487,7 @@ int ParseSerialData(uint8_t *Buf,int Len)
    int Ret = 0;
    int j;
    int MsgLen;
-	static int RawLen = 0;
+   static int RawLen = 0;
 
    if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
       if(g.Verbose & VERBOSE_TIMESTAMPS) {
@@ -498,26 +500,26 @@ int ParseSerialData(uint8_t *Buf,int Len)
       MsgLen = SerialFrameIO_ParseByte(Buf[j]);
       if(MsgLen == 0) {
       // Byte wasn't part of a message
-			char c = Buf[j];
-		// cr, lf -> cr
-			if(c == '\r') {
-				c = '\n';
-			}
+         char c = Buf[j];
+      // cr, lf -> cr
+         if(c == '\r') {
+            c = '\n';
+         }
 
-			if(c == '\n') {
-				if(RawLen != 0) {
-					printf("\r\n");
-				}
-				RawLen = 0;
-			}
-			else {
-			// print raw output
-				if(RawLen == 0 && (g.Verbose & VERBOSE_TIMESTAMPS)) {
-					PrintTime(false);
-				}
-				RawLen++;
-				printf("%c",c);
-			}
+         if(c == '\n') {
+            if(RawLen != 0) {
+               printf("\r\n");
+            }
+            RawLen = 0;
+         }
+         else {
+         // print raw output
+            if(RawLen == 0 && (g.Verbose & VERBOSE_TIMESTAMPS)) {
+               PrintTime(false);
+            }
+            RawLen++;
+            printf("%c",c);
+         }
       }
 
       if(MsgLen > 0) {
@@ -810,6 +812,7 @@ bool OpenSerialPort(const char *Device,int Baudrate)
    int fd = -1;
    int Err = 0;  // assume the best
    struct termios options;
+   struct serial_struct ss;
    bool Ret = false;
 
    do {
@@ -875,6 +878,17 @@ bool OpenSerialPort(const char *Device,int Baudrate)
          Err = errno;
          break;
       }
+
+      if(ioctl(fd,TIOCGSERIAL,&ss) < 0) {
+         ELOG("ioctl(TIOCGSERIAL) failed: %s\n",strerror(errno));
+      }
+      else {
+         ss.flags |= ASYNC_LOW_LATENCY;
+         if(ioctl(fd,TIOCSSERIAL,&ss) < 0) {
+            ELOG("ioctl(TIOCSSERIAL) failed: %s\n",strerror(errno));
+         }
+      }
+
       gSerialFd = fd;
       Ret = true;
    } while(false);
@@ -996,6 +1010,9 @@ AsyncMsg *Wait4Response(uint8_t Cmd,int Timeout)
             free(pMsg);
             pMsg = NULL;
          }
+         break;
+      }
+      if(IsTimedOut(&Timer)) {
          break;
       }
    } while(true);
