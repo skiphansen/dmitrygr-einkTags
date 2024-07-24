@@ -21,12 +21,12 @@ project has the 2.4 ghz zbs based tags well in hand.
 
 ## My Goal
 
-My eventual goals are:
+My  goals were:
 1. Port the subgig code to the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) project.
 2. Add support for the Chroma 42 and Chroma 60 tags which I also have.
 
-The reason I've interested in ePaper displays is that I have several applications
-that I'd like to use them for:
+The reason I became interested in ePaper displays is that I have several applications
+that I wanted to use them for:
 
 1. Monitoring the water level in my septic tank to prevent unpleasant surprises!
 1. Charting daily tide levels.
@@ -44,6 +44,9 @@ that I'd like to use them for:
 |EPOP900  | Builds, but untested  |
 |zbs29v025  |Builds, but untested |
 |zbs29v026|Builds, but untested |
+
+OEPL support for some versions of the Chroma 29, Chroma 42 and Chroma 74 has
+been completed, see the OEPL [Wiki](https://github.com/OpenEPaperLink/OpenEPaperLink/wiki/Chroma-Series-SubGhz-Tags) for details.
 
 ## License
 
