@@ -33,7 +33,7 @@
 #include "linenoise.h"
 #include "cmds.h"
 #include "serial_shell.h"
-#include "SerialFraming.h"
+#include "CobsFraming.h"
 
 //#define LOOP_BACK_TEST  1
 
@@ -131,10 +131,11 @@ Globals g;
 
 void SendByte(uint8_t SendByte);
 
-#define MAX_ASYNC_MSG_LEN  128
-uint8_t gTxBuf[MAX_ASYNC_MSG_LEN];
+#define ASYNC_MSG_BUF_LEN  128
+uint8_t gTxBuf[ASYNC_MSG_BUF_LEN];
 int gTxMsgLen;
-uint8_t RxBuf[MAX_ASYNC_MSG_LEN];
+int gMaxMsgLen;
+uint8_t RxBuf[ASYNC_MSG_BUF_LEN];
 
 int main(int argc, char* argv[])
 {
@@ -210,7 +211,7 @@ int main(int argc, char* argv[])
       if(!OpenSerialPort(gDevicePath,gSerialBaudrate)) {
          break;
       }
-      SerialFrameIO_Init(RxBuf,sizeof(RxBuf)-1);
+      gMaxMsgLen = SerialFrameIO_Init(RxBuf,sizeof(RxBuf)-1);
       linenoiseHistoryLoad(GetHistoryPath());
       linenoiseSetCompletionCallback(TabCompletion);
       if(ImmediateCommand == NULL) {
@@ -456,7 +457,7 @@ int ProcessSerialData()
 {
    int Ret = 0;
    int BytesRead;
-   uint8_t Buf[MAX_ASYNC_MSG_LEN];
+   uint8_t Buf[ASYNC_MSG_BUF_LEN];
 
    if((BytesRead = RecvSerialData(Buf,sizeof(Buf))) > 0) {
       Ret = ParseSerialData(Buf,BytesRead);
@@ -584,21 +585,31 @@ void SerialFrameIO_SendByte(uint8_t TxByte)
 int SendAsyncMsg(uint8_t *Msg,int MsgLen)
 {
    int Ret = -1;    // Assume the worse
+   uint8_t Temp[ASYNC_MSG_BUF_LEN];
 
-
-   gTxMsgLen = 0;
-   if(g.Verbose & VERBOSE_DUMP_RAW_MSGS) {
-      if(g.Verbose & VERBOSE_TIMESTAMPS) {
-         PrintTime(false);
+   do {
+      if(MsgLen > gMaxMsgLen) {
+         LOG("MsgLen %d is too large, max is %d\n",MsgLen,gMaxMsgLen);
+         break;
       }
-      LOG("Sending %d bytes:\n",MsgLen);
-      DumpHex(Msg,MsgLen);
-   }
+   // Make a local copy to ensure the buffer is writeable and that 2 bytes 
+   // are available for the CRC which is appended.
+      memcpy(Temp,Msg,MsgLen);
 
-   SerialFrameIO_SendMsg(Msg,MsgLen);
-   if(SendSerialData(gTxBuf,gTxMsgLen)) {
-      Ret = 0;
-   }
+      gTxMsgLen = 0;
+      if(g.Verbose & VERBOSE_DUMP_RAW_MSGS) {
+         if(g.Verbose & VERBOSE_TIMESTAMPS) {
+            PrintTime(false);
+         }
+         LOG("Sending %d bytes:\n",MsgLen);
+         DumpHex(Temp,MsgLen);
+      }
+
+      SerialFrameIO_SendMsg(Temp,MsgLen);
+      if(SendSerialData(gTxBuf,gTxMsgLen)) {
+         Ret = 0;
+      }
+   } while(false);
    return Ret;
 }
 
@@ -867,6 +878,7 @@ bool OpenSerialPort(const char *Device,int Baudrate)
       options.c_cflag |= CS8;                /* 8 data bits */
       options.c_cflag &= ~PARENB;            /* no parity */
 
+
       if(cfsetspeed(&options,Baudrate) == -1) {
          ELOG("cfsetspeed() failed: %s\n",strerror(errno));
          Err = errno;
@@ -925,6 +937,7 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
    while(Ret == 0) {
       FD_ZERO(&ReadFdSet);
       FD_ZERO(&WriteFdSet);
+
       if(ConCB != NULL) {
          FD_SET(gLs.ifd,&ReadFdSet);
       }
@@ -945,6 +958,7 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
          else {
             continue;
          }
+
       }
 
       if(FD_ISSET(0,&ReadFdSet)) {
@@ -959,7 +973,6 @@ int WaitEvent(int Timeout,ConsoleCB ConCB,SerialDataCB SerialCB)
          }
          break;
       }
-
       if(SerialCB != NULL && FD_ISSET(gSerialFd,&ReadFdSet)) {
          Ret = SerialCB();
       }

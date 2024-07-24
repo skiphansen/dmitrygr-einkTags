@@ -23,7 +23,7 @@
 #include "printf.h"
 #include "cpu.h"
 #include "wdt.h"
-#include "SerialFraming.h"
+#include "CobsFraming.h"
 #include "proxy_msgs.h"
 #include "radio.h"
 
@@ -54,6 +54,7 @@ volatile __xdata uint8_t gRfStatus;
 // before we get the end of frame.  Additionally an 0 is appended to the
 // received data for convenience & efficiency
 uint8_t __xdata gRxBuf[MAX_FRAME_IO_LEN+3];
+uint8_t __xdata gTxBuf[MAX_FRAME_IO_LEN+3];
 // uint8_t __xdata gTxBuf[MAX_RAW_BUF_LEN];
 int gRxMsgLen;
 int gTxMsgLen;
@@ -75,6 +76,7 @@ void startRX(void);
 void TryRx(void);
 void EpdCmd(uint8_t Flags);
 static void ScreenInit(void);
+void SendResp(uint8_t Cmd,uint8_t Err,uint8_t *Data,int DataLen);
 
 void main(void)
 {
@@ -144,7 +146,7 @@ void HandleMsg()
 #if 0
    {
       LOG("gRxBuf:");
-      for(MsgLen = 0; MsgLen < 16; MsgLen++) {
+      for(MsgLen = 0; MsgLen < gRxMsgLen; MsgLen++) {
          LOG(" %02x",gRxBuf[MsgLen]);
       }
       LOG("\n");
@@ -495,8 +497,11 @@ void TryRx()
 
    if((Len = radioRxDequeuePktGet(&Buf,&Lqi,&RSSI)) > 0) {
    // Send it
-      SerialFrameIO_SendResp(CMD_RX_DATA,RSSI,Buf,Len);
+      gTxBuf[0] = CMD_RX_DATA;
+      gTxBuf[1] = RSSI;
+      xMemCopy(&gTxBuf[2],Buf,Len);
       radioRxDequeuedPktRelease();
+      SerialFrameIO_SendMsg(gTxBuf,Len+2);
    }
 }
 

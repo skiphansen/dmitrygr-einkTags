@@ -14,7 +14,7 @@
 #ifndef _SERIALFRAMING_H_
 #define _SERIALFRAMING_H_
 
-void SerialFrameIO_Init(uint8_t *RxBuf,int RxBufSize);
+int SerialFrameIO_Init(uint8_t *RxBuf,int RxBufSize);
 int SerialFrameIO_ParseByte(uint8_t RxByte);
 void SerialFrameIO_SendMsg(uint8_t *Msg,int MsgLen);
 void SerialFrameIO_SendCmd(uint8_t Cmd,uint8_t *Data,int DataLen);

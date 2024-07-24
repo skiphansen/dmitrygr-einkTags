@@ -35,14 +35,14 @@
 // 
 
 #include <stdint.h>
-#include "SerialFraming.h"
-#include "logging.h"
+#include "CobsFraming.h"
 
 #ifdef COBS_TEST
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "logging.h"
 
 uint8_t TestData[1000];
 uint8_t Encoded[2000];
@@ -51,12 +51,6 @@ int gTxLen;
 #endif
 
 // #define NO_CRC
-
-typedef enum {
-   FLAG_WAIT = 1,    // waiting for 0x00 to start new frame
-   GET_DATA_LEN,     // last byte was 0x00 get count to next one or EOF
-   GET_DATA,         // have count to next 0x00 getting data
-} ReceiveState;
 
 struct {
    uint8_t *RxBuf;
@@ -102,13 +96,16 @@ int SerialFrameIO_CalcBufLen(int MaxMsgLen)
 }
 
 
-void SerialFrameIO_Init(uint8_t *Buf,int BufSize)
+// Return the maximum message length based on the size of the buffer provided.
+int SerialFrameIO_Init(uint8_t *Buf,int BufSize)
 {
    int OverHead = 2 + 2 + 1;
    OverHead += (BufSize - OverHead) / 254;
 
    gCOBS.MaxMsgLen = BufSize - OverHead;
    gCOBS.RxBuf = Buf;
+
+   return gCOBS.MaxMsgLen;
 }
 
 // Parse a byte of data
@@ -133,25 +130,10 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
          RunLen = 0;
          Crc = 0xffff;
       }
-//      if(RxCount > 0 && Crc == 0) {
-      else {
-         if(Crc == 0) {
-         // Got a good frame
+      else if(Crc == 0) {
+      // Got a good frame
          Ret = RxCount - 2;   // Adjust for CRC
-         }
-         else {
-         // Bad CRC
-            for(int i = 0; i < RxCount; i++) {
-               if(TestData[i] != CobsBuf[i]) {
-                  printf("received data compare failed @ 0x%x. 0x%x != 0x%x\n",
-                         i,TestData[i],CobsBuf[i]);
-                  break;
-               }
-               printf("Decoded data (%d bytes):\n",RxCount);
-               DumpHex(CobsBuf,RxCount);
-            }
-         }
-         RxCount = -1;  // No longer decoding a frame
+         RxCount = -1;
       }
    }
    else if(RxCount >= 0) {
@@ -240,10 +222,8 @@ void SerialFrameIO_SendMsg(uint8_t *Msg,int MsgLen)
          UpdateCRC(*pData++,&Crc);
       }
       *pData = (uint8_t) (Crc & 0xff);
-      printf("CRC: 0x%x",*pData);
       pData++;
       *pData = (uint8_t) ((Crc >> 8) & 0xff);
-      printf(" 0x%x\n",*pData);
       SendCobsData(Msg,MsgLen + 2);
    }
 #else

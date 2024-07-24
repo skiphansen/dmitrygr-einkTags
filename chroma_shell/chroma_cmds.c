@@ -1209,8 +1209,12 @@ int PingCmd(char *CmdLine)
 {
    int Ret = RESULT_OK; // Assume the best
    uint8_t Cmd = CMD_PING;
+   AsyncMsg *pMsg;
 
    SendAsyncMsg(&Cmd,1);
+   if((pMsg = Wait4Response(Cmd,100)) != NULL) {
+      free(pMsg);
+   }
 
    return Ret;
 }
