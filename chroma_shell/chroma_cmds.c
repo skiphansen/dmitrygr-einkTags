@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "serial_shell.h"
 #include "cmds.h"
@@ -1010,7 +1011,6 @@ int EEPROM_WrCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
    int Adr;
-   int Len;
    int EEPROM_Len = GetEEPROM_Len();
    char *cp;
    struct stat Stat;
@@ -1041,7 +1041,7 @@ int EEPROM_WrCmd(char *CmdLine)
          Ret = RESULT_FAIL;
          break;
       }
-      if(Len < 0 || (Adr + Stat.st_size) > EEPROM_Len) {
+      if((Adr + Stat.st_size) > EEPROM_Len) {
          PRINTF("Invalid length %d\n",Stat.st_size);
          break;
       }
@@ -1061,9 +1061,11 @@ int EEPROM_BackupCmd(char *CmdLine)
    int Ret = RESULT_USAGE;
    int EEPROM_Len = GetEEPROM_Len();
    FILE *fp = NULL;
-
+   time_t StartTime;
+   time_t EndTime;
 
    do {
+      time(&StartTime);
       printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
       if((fp = fopen(CmdLine,"w")) == NULL) {
          LOG("fopen(\"%s\") failed - %s\n",strerror(errno));
@@ -1071,10 +1073,15 @@ int EEPROM_BackupCmd(char *CmdLine)
          break;
       }
       Ret = EEPROM_RdInternal(0,fp,NULL,EEPROM_Len);
+      time(&EndTime);
    } while(false);
 
    if(fp != NULL) {
       fclose(fp);
+   }
+
+   if(Ret == RESULT_OK) {
+      printf("Backup took %lu seconds\n",EndTime-StartTime);
    }
 
    return Ret;
