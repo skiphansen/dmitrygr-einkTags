@@ -415,6 +415,19 @@ void HandleMsg()
          LOG("\n");
          break;
 
+      case CMD_EEPROM_ID:
+         u1setEepromMode();
+         eepromPrvSelect();
+         eepromByte(0x90);
+         eepromByte(0x00);
+         eepromByte(0x00);
+         eepromByte(0x00);
+         gRxBuf[MsgLen++] = eepromByte(0); // manufacture ID
+         gRxBuf[MsgLen++] = eepromByte(0); // device ID
+         eepromPrvDeselect();
+         u1setUartMode();
+         break;
+
       default:
          LOG("Unknown command 0x%x ignored\n",gRxBuf[0]);
          gRxBuf[1] = CMD_ERR_INVALID_ARG;

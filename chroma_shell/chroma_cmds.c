@@ -120,6 +120,7 @@ int EEPROM_ReadCmd(char *CmdLine);
 int EEPROM_WrCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int EEPROM_Erase(char *CmdLine);
+int EEPROM_IdCmd(char *CmdLine);
 int EEPROM_RestoreCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
@@ -152,6 +153,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "eewr",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
    { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
+   { "ee_id", "Display EEPROM manufacture and device IDs","ee_id",0,EEPROM_IdCmd},
    { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
@@ -1122,6 +1124,44 @@ int EEPROM_Erase(char *CmdLine)
    return Ret;
 }
 
+
+int EEPROM_IdCmd(char *CmdLine)
+{
+   int Ret = RESULT_FAIL;
+   uint8_t Cmd[2] = {CMD_EEPROM_ID};
+   uint8_t ManufactureID;
+   uint8_t DeviceID;
+
+   AsyncResp *pMsg = SendCmd(Cmd,1,2000);
+   if(pMsg != NULL) {
+      Ret = RESULT_OK;
+
+      ManufactureID = pMsg->Msg[0];
+      DeviceID = pMsg->Msg[1];
+      printf("EEPROM Manufacture ID: 0x%02x, DeviceID: 0x%02x",
+             ManufactureID,DeviceID);
+
+      if(ManufactureID == 0xc2) {
+         printf(" (Macronix ");
+         switch(DeviceID) {
+            case 0x10:
+               printf("MX25V1006E, 128K");
+               break;
+               
+            default:
+               printf("0x%02x",DeviceID);
+               break;
+
+         }
+         printf(")");
+      }
+      printf("\n");
+      free(pMsg);
+   }
+
+   return Ret;
+
+}
 
 int EEPROM_RestoreCmd(char *CmdLine)
 {
