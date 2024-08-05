@@ -82,6 +82,11 @@ Usage: chroma_shell [options]
         -v<bitmap>      Set desired display levels (Hex bit map)
 ```
 
+## Connecting Serial port to Tag
+
+See this OpenEPaperLink [Wiki](https://github.com/OpenEPaperLink/OpenEPaperLink/wiki/Chroma-Series-SubGhz-Tags#debug-serial-port-connections)
+for serial port connection information.
+
 ## Running
 
 Once the shell has been built it can be run as follows:
@@ -147,4 +152,39 @@ Erasing chip...Erase flash
 
 100% complete
 ```
+
+## Flashing Chroma Tag with proxy firmware
+
+Two binaries are provided in `.../dmitrygr-einkTags/chroma_shell/proxy_firmware/`, proxy_vXX.bin and proxy_115200_vXX.bin.  
+
+If your serial port supports 1,000,000 baud flash the tag with proxy_vXX.bin otherwise flash
+the tag with proxy_115200_vXX.bin.
+
+If you are flashing a new tag with the proxy for the first time it is advisable
+to make a copy of the current firmware before flashing it in case you ever
+want to go back.  Fortunately the stock firmware is **NOT** read protected or
+we would not be able to do this.
+
+```
+skip@Dell-7040:~/esl/dmitrygr-einkTags/chroma_shell/proxy_firmware$ cc-tool -r cc1110.bin
+  Programmer: CC Debugger
+  Target: CC1110
+  Reading flash (32 KB)...
+  Completed (16.86 s.)
+skip@Dell-7040:~/esl/dmitrygr-einkTags/chroma_shell/proxy_firmware$
+```
+
+```
+skip@Dell-7040:~/esl/dmitrygr-einkTags/chroma_shell/proxy_firmware$ cc-tool -e -v -w proxy_v01.bin
+  Programmer: CC Debugger
+  Target: CC1110
+  Erasing flash...
+  Completed
+  Writing flash (11 KB)...
+  Completed (7.38 s.)
+  Verifying flash...
+  Completed (0.56 s.)
+skip@Dell-7040:~/esl/dmitrygr-einkTags/chroma_shell/proxy_firmware$
+```
+
 
