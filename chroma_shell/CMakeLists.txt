@@ -28,6 +28,7 @@ else()
       ${COMMON}/CobsFraming.c
       linenoise/linenoise.c
       logging.c
+      lut_dump.c
    )
 endif(COBS_TEST)
 

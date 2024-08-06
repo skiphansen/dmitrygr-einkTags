@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/chroma_shell",
             "stopAtEntry": true,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

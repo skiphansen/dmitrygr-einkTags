@@ -122,6 +122,7 @@ int EEPROM_BackupCmd(char *CmdLine);
 int EEPROM_Erase(char *CmdLine);
 int EEPROM_IdCmd(char *CmdLine);
 int EEPROM_RestoreCmd(char *CmdLine);
+int DumpLutCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
 int SN2MACCmd(char *CmdLine);
@@ -147,6 +148,7 @@ int SetTx(float mhz);
 
 struct COMMAND_TABLE commandtable[] = {
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
+   { "dump_lut", "Display LUTs extraced from EEPROM","dump_lut [file]",0,DumpLutCmd},
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},

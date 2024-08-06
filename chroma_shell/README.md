@@ -12,7 +12,7 @@ a Chroma electronic price tag running this project's proxy firmware.
 For non-developers the most useful function provided by chroma_shell is the
 ability to backup and restore the tag's EEPROM image.  This is useful because the
 "factory" setting stored in the EEPROM such as the tag's serial number
-are essential for the tag to operation.  If a software bug or user error
+are essential for the tag operation.  If a software bug or user error
 causes the information to lost a backup is the easiest way to recover.
 
 A number of other functions are available that assist reverse engineering
