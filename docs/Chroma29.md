@@ -111,6 +111,10 @@ but it is not needed if you just want to flash custom firmware.
 
 ## Logic Analyzer Connections for EPD Reverse Engineering
 
+The Chroma 29 display was reverse engineered by capturing the EPD SPI bus while 
+sending an image using [atc1441's Custom PriceTag Access Point](https://github.com/atc1441/E-Paper_Pricetags/tree/main/Custom_PriceTag_AccesPoint) 
+to a tag running stock firmware.
+
 | Signal | EPD pin | CC1110 pin | Logic Analyzer pin |
 | -|-| -| - |
 | GND | 18 |  - | 1 |
