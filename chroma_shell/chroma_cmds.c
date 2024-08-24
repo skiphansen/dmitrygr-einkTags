@@ -29,6 +29,7 @@
 #include "proxy_msgs.h"
 #include "linenoise.h"
 #include "cc1110-ext.h"
+#include "chroma_shell.h"
 
 #define DEFAULT_TO   100
 
@@ -103,13 +104,6 @@
 #define P1_EPD_BUSY     0x01
 #define P1_EPD_CS       0x02
 #define P1_EPD_RESET    0x04
-
-
-typedef struct {
-   size_t TblSize;
-   uint8_t *pTbl;
-} InitTbl;
-
 
 int BoardTypeCmd(char *CmdLine);
 int RadioCfgCmd(char *CmdLine);

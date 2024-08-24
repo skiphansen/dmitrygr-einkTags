@@ -29,12 +29,19 @@
 #include "proxy_msgs.h"
 #include "linenoise.h"
 #include "cc1110-ext.h"
+#include "chroma_shell.h"
 
-struct {
+typedef struct {
    const char *CmdText;
    uint8_t CmdHex;
-} g8176_cmd_lookup[] = {
-// uc8154 like commands
+} EpdCmdLut;
+
+const uint8_t gLutSignature[] = {0xce,0xfa,0xef,0xbe};   // "beefface"
+void LutCompare(uint8_t *pData,int DataLen);
+
+
+EpdCmdLut g8176_cmd_lookup[] = {
+// uc8176 like commands
    {"PANEL_SETTING",0x00},
    {"POWER_SETTING",0x01},
    {"POWER_OFF",0x02},
@@ -78,20 +85,183 @@ struct {
    {NULL}     // end of table
 };
 
-uint8_t gScript[4096];
+// uc8151 like commands
+EpdCmdLut g8159_cmd_lookup[] = {
+   {"PANEL_SETTING",0x00},
+   {"POWER_SETTING",0x01},
+   {"POWER_OFF",0x02},
+   {"POWER_OFF_SEQUENCE",0x03},
+   {"POWER_ON",0x04},
+   {"POWER_ON_MEASURE",0x05},
+   {"BOOSTER_SOFT_START",0x06},
+   {"DEEP_SLEEP",0x07},
+   {"DISPLAY_START_TRANSMISSION_DTM1",0x10},
+   {"DATA_STOP",0x11},
+   {"DISPLAY_REFRESH",0x12},
+   {"IPC",0x13},
+   {"LUT_VCP,",0x20},
+   {"LUT_B",0x21},
+   {"LUT_W",0x22},
+   {"LUT_G1",0x23},
+   {"LUT_G2",0x24},
+   {"LUT_R0",0x25},
+   {"LUT_R1",0x26},
+   {"LUT_R2",0x27},
+   {"LUT_R3",0x28},
+   {"LUT_XON",0x29},
+   {"PLL_CONTROL",0x30},
+   {"TEMPERATURE_CALIB",0x40},
+   {"TEMPERATURE_SELECT",0x41},
+   {"TEMPERATURE_WRITE",0x42},
+   {"TEMPERATURE_READ",0x43},
+   {"VCOM_INTERVAL",0x50},
+   {"LOWER_POWER_DETECT",0x51},
+   {"TCON_SETTING",0x60},
+   {"RESOLUTION_SETTING",0x61},
+   {"SPI_FLASH_CONTROL",0x65},
+   {"REVISION",0x70},
+   {"STATUS",0x71},
+   {"AUTO_MEASUREMENT_VCOM",0x80},
+   {"READ_VCOM",0x81},
+   {"VCOM_DC_SETTING",0x82},
+   {"PARTIAL_WINDOW",0x90},
+   {"PARTIAL_IN",0x91},
+   {"PARTIAL_OUT",0x92},
+   {"PROGRAM_MODE",0xA0},
+   {"ACTIVE_PROGRAM",0xA1},
+   {"READ_OTP",0xA2},
+   {"CASCADE_SET",0xE0},
+   {"POWER_SAVING",0xE3},
+   {"FORCE_TEMPERATURE",0xE5},
+   {NULL}     // end of table
+};
+
+// uc8154 like commands
+EpdCmdLut g8154_cmd_lookup[] = {
+   {"PANEL_SETTING",0x00},
+   {"POWER_SETTING",0x01},
+   {"POWER_OFF",0x02},
+   {"POWER_OFF_SEQUENCE",0x03},
+   {"POWER_ON",0x04},
+   {"POWER_ON_MEASURE",0x05},
+   {"BOOSTER_SOFT_START",0x06},
+   {"DISPLAY_START_TRANSMISSION_DTM1",0x10},
+   {"DATA_STOP",0x11},
+   {"DISPLAY_REFRESH",0x12},
+   {"DISPLAY_START_TRANSMISSION_DTM2",0x13},
+   {"LUT_TC1,",0x20},
+   {"LUT_W",0x21},
+   {"LUT_B",0x22},
+   {"LUT_G1",0x23},
+   {"LUT_G2",0x24},
+   {"LUT_C2",0x25},
+   {"LUT_R0",0x26},
+   {"LUT_R1",0x27},
+   {"PLL_CONTROL",0x30},
+   {"TEMPERATURE_CALIB",0x40},
+   {"TEMPERATURE_SELECT",0x41},
+   {"TEMPERATURE_WRITE",0x42},
+   {"TEMPERATURE_READ",0x43},
+   {"VCOM_INTERVAL",0x50},
+   {"LOWER_POWER_DETECT",0x51},
+   {"TCON_SETTING",0x60},
+   {"RESOLUTION_SETTING",0x61},
+   {"REVISION",0x70},
+   {"STATUS",0x71},
+   {"AUTO_MEASUREMENT_VCOM",0x80},
+   {"READ_VCOM",0x81},
+   {"VCOM_DC_SETTING",0x82},
+   {NULL}     // end of table
+};
+
+uint8_t gChroma42_8176_Luts[] = {
+   43,
+   0x21,  // W2W_LUT,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+   0x00,0x00,
+
+   45,
+   0x20, // VCOM_LUT,
+   0x00,0x18,0x00,0x00,0x00,0x01,0x00,0x84,
+   0x84,0x00,0x00,0x01,0x00,0x0A,0x0A,0x00,
+   0x00,0x1E,0x00,0x50,0x02,0x50,0x02,0x05,
+   0x00,0x03,0x02,0x06,0x02,0x24,0x00,0x0A,
+   0x05,0x32,0x05,0x06,0x00,0x05,0x06,0x32,
+   0x03,0x08,0x00,0x00,
+
+   43,
+   0x23, // W2B_LUT,
+   0x00,0x18,0x00,0x00,0x00,0x01,0x10,0x84,
+   0x84,0x00,0x00,0x01,0x60,0x0A,0x0A,0x00,
+   0x00,0x1E,0x48,0x50,0x02,0x50,0x02,0x05,
+   0x80,0x03,0x02,0x06,0x02,0x24,0x00,0x0A,
+   0x05,0x32,0x05,0x06,0x02,0x05,0x06,0x32,
+   0x03,0x08,
+
+   43,
+   0x24, // B2B_LUT,
+   0x00,0x18,0x00,0x00,0x00,0x01,0xA0,0x84,
+   0x84,0x00,0x00,0x01,0x60,0x0A,0x0A,0x00,
+   0x00,0x1E,0x48,0x50,0x02,0x50,0x02,0x05,
+   0x04,0x03,0x02,0x06,0x02,0x24,0x00,0x0A,
+   0x05,0x32,0x05,0x06,0x10,0x05,0x06,0x32,
+   0x03,0x08,
+
+   43,
+   0x22, // B2W_LUT,
+   0x80,0x18,0x00,0x00,0x00,0x01,0xA0,0x84,
+   0x84,0x00,0x00,0x01,0x60,0x0A,0x0A,0x00,
+   0x00,0x1E,0x48,0x50,0x02,0x50,0x02,0x05,
+   0x84,0x03,0x02,0x06,0x02,0x24,0x8C,0x0A,
+   0x05,0x32,0x05,0x06,0x8C,0x05,0x06,0x32,
+   0x03,0x08,
+   0
+};
+
+
+#define CHROMA74
+
+#ifdef CHROMA42
+   #define CMD_LUT   g8176_cmd_lookup
+   #define SCRIPT_SIZE  0x1000
+   #define SKIP_1       0x51
+#elif defined(CHROMA74)
+// CHROMA74 has 7 lookup tables
+   #define CMD_LUT   g8159_cmd_lookup
+   #define SCRIPT_SIZE  0x4000
+   #define SKIP_1       0x51
+#elif defined(CHROMA21)
+   #define CMD_LUT   g8154_cmd_lookup
+   #define SCRIPT_SIZE  0x1000
+   #define SKIP_1       0xb5
+#elif defined(CHROMA29)
+   #define CMD_LUT   g8154_cmd_lookup
+   #define SCRIPT_SIZE  0x1000
+   #define SKIP_1       0xb5
+#else
+   #error "Board type not defined"
+#endif
+
+uint8_t gScript[SCRIPT_SIZE];
+
+
 
 void LogEpdCmd(uint8_t Cmd)
 {
    int i;
    
-   for(i = 0; g8176_cmd_lookup[i].CmdText != NULL; i++) {
-      if(Cmd == g8176_cmd_lookup[i].CmdHex) {
-         printf("%s ",g8176_cmd_lookup[i].CmdText);
+   for(i = 0; CMD_LUT[i].CmdText != NULL; i++) {
+      if(Cmd == CMD_LUT[i].CmdHex) {
+         printf("%s ",CMD_LUT[i].CmdText);
          break;
       }
    }
 
-   if(g8176_cmd_lookup[i].CmdText == NULL) {
+   if(CMD_LUT[i].CmdText == NULL) {
       printf("Unknown ");
    }
    printf("(0x%02x)",Cmd);
@@ -100,11 +270,11 @@ void LogEpdCmd(uint8_t Cmd)
 int DumpLutCmd(char *CmdLine)
 {
    FILE *fp = NULL;
-   uint8_t *p;
    int Ret = RESULT_FAIL; // assume the worse
-   uint64_t NewOffset = 0;
-   uint64_t Offset;
+   uint64_t NewOffset;
+   uint64_t Offset = 0;
    long LutPageOffset = 0x2000;
+   int LutNum = 1;
 
    do {
       if(*CmdLine) {
@@ -123,73 +293,131 @@ int DumpLutCmd(char *CmdLine)
       }
 // add support for reading from flash
 
-      p = &gScript[0x51];
-      printf("Starting LUT dump @ 0x51 (EEPROM adr 0x%lx)\n",LutPageOffset + 0x51);
-      while(p < &gScript[sizeof(gScript)]) {
-         uint8_t Opcode = *p++;
-         int DataLen = (p[1] << 8) + p[0];
-         p += 2;
-#if 0
-         printf("Opcode 0x%x, DataLen %d: ",Opcode,DataLen);
-         if(DataLen > 0) {
-            DumpHex(p,DataLen);
-         }
-         printf("\n");
-#endif
+      if(memcmp(gScript,gLutSignature,sizeof(gLutSignature)) != 0) {
+         printf("LUT signature not found at offset 0x%lx\n",LutPageOffset);
+         break;
+      }
+      Offset += 4;
+      printf("LUT version %d.%d\n",gScript[Offset],gScript[Offset+1]);
+      Offset += 2;
 
-         if(Opcode == 0 || DataLen == 0) {
-            Offset = p - gScript;
-            NewOffset = 0;
-            switch(Offset) {
-               case 0xa6:
-                  NewOffset = 0x11e;
-                  break;
-
-               default:
-                  if(*p != 0xff) {
-                     NewOffset = Offset;
-                  }
-                  break;
-            }
-
-            if(NewOffset == 0) {
-               printf("Stopped parsing at page offset 0x%lx\n",Offset);
-               break;
-            }
-         }
+      printf("LUT label '%-30s'\n",&gScript[Offset]);
+      Offset += 30;
+// The first 69 (0x45) bytes @ offset 4 appear to be a header since
+// they are read at boot (logic analyzer trace) so the first non-header
+// byte is @ 0x04 + 0x45 = 0x049
+      NewOffset = SKIP_1;
+      while(Offset < sizeof(gScript)) {
+         uint8_t Opcode = gScript[Offset];
+         int DataLen = (gScript[Offset+2] << 8) + gScript[Offset + 1];
 
          if(NewOffset != 0) {
             if(Offset != NewOffset ) {
-               printf("skiping parsing from page offset 0x%lx to 0x%lx\n",
-                      Offset,NewOffset);
-               p = &gScript[NewOffset];
+               uint64_t SkipLen = NewOffset - Offset;
+               printf("skipping from offset 0x%lx to 0x%lx (%ld/0x%lx bytes)\n",
+                      Offset + LutPageOffset,NewOffset + LutPageOffset,
+                      SkipLen,SkipLen);
+               DumpHex(&gScript[Offset],SkipLen);
+               printf("\n");
+               Offset = NewOffset;
             }
             else {
-               printf("parsing continuing at page offset 0x%lx\n",Offset);
+               printf("parsing continuing at offset 0x%lx\n",Offset + LutPageOffset);
             }
             NewOffset = 0;
             continue;
          }
 
+#if 0
+         printf("0x%lx:\n",Offset + LutPageOffset);
+         printf("Opcode 0x%x, DataLen %d: ",Opcode,DataLen);
+         if(DataLen > 0) {
+            DumpHex(&gScript[Offset+3],DataLen);
+         }
+         printf("\n");
+#endif
+
+         switch(Offset) {
+#ifdef CHROMA42
+            case 0xa3:
+               NewOffset = 0x11b;
+               NewOffset = 0x0e8;
+               break;
+#endif
+
+#ifdef CHROMA74
+            case 0x16f:
+               NewOffset = 0x217;
+               break;
+#endif
+#ifdef CHROMA21
+#endif
+         }
+
+         if(NewOffset != 0) {
+            continue;
+         }
+
+         printf("\n");
          switch(Opcode) {
-            case 0x4:
-               printf("Wait for busy to go high\n");
-            // Intentional fall though
+            case 0x00:
+               printf("opcode 0: end of sequence @ 0x%lx\n",
+                      LutPageOffset + Offset);
+               break;
+
             case 0x01:  // Send command and data to 
-               LogEpdCmd(*p);
-               if(DataLen > 1) {
-                  printf("\n");
-                  DumpHex(p+1,DataLen - 1);
+#ifdef CHROMA42
+               if(gScript[Offset+3] == 0x01) {
+                  printf("Start of LUT #%d @ 0x%lx\n\n",
+                         LutNum++,LutPageOffset + Offset);
                }
+#endif
+               LogEpdCmd(gScript[Offset+3]);
+               if(DataLen > 1) {
+                  if(DataLen > 8) {
+                     printf(" %d (0x%x) bytes of data:",
+                            DataLen-1,DataLen-1);
+                  }
+                  LutCompare(&gScript[Offset+3],DataLen);
+                  printf("\n");
+                  DumpHex(&gScript[Offset+4],DataLen - 1);
+               }
+               Offset += DataLen;
+               break;
+
+            case 0x3:
+               printf("opcode 3: wait for busy to go high\n");
+               break;
+
+            case 0x4:
+               printf("opcode 4: write %d (0x%x) bytes of zeros to ",
+                      DataLen-1,DataLen-1);
+               LogEpdCmd(gScript[Offset+3]);
                printf("\n");
+               Offset++;
+               break;
+
+            case 0x5:
+               printf("opcode 5: wait for busy to go low\n");
+               break;
+
+            case 0x7:
+               printf("opcode 7: Send data to display\n");
+               break;
+
+            case 0xff:
+               printf("End of LUTs at offset 0x%lx\n",LutPageOffset + Offset);
+               Offset = sizeof(gScript);
                break;
 
             default:
-               printf("Opcode 0x%x ignored\n",Opcode);
+               printf("Opcode 0x%x at offset 0x%lx ignored\n",
+                      Opcode,LutPageOffset + Offset);
                break;
          }
-         p += DataLen;
+         Offset += 3;
       }
+      printf("page offset 0x%lx\n",LutPageOffset + Offset);
    } while(false);
 
    if(fp != NULL) {
@@ -198,4 +426,17 @@ int DumpLutCmd(char *CmdLine)
    return Ret;
 }
 
+void LutCompare(uint8_t *pData,int DataLen)
+{
+   uint8_t *p = gChroma42_8176_Luts;
+
+   while(*p) {
+      if(*p == DataLen) {
+         if(memcmp(p+1,pData,DataLen) == 0) {
+            printf(" (room temp LUT)");
+         }
+      }
+      p += *p + 1;
+   }
+}
 
