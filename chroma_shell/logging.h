@@ -41,12 +41,15 @@ void DumpHex(void *AdrIn,int Len);
 #define LOG_RAW(format, ...) _LOG(format,## __VA_ARGS__)
 
 #else    // DEBUG
+
 #define DumpHex(x,y)
 #define ELOG(format, ...)
 #define LOG(format, ...)
 #define LOG_RAW(format, ...)
 #define DUMP_HEX(x,y)
 #endif   // DEBUG_LOGGING
+
+void DumpHexSrc(void *AdrIn,int Len);
 
 #endif   // _LOGGING_H_
 

@@ -85,7 +85,7 @@ EpdCmdLut g8176_cmd_lookup[] = {
    {NULL}     // end of table
 };
 
-// uc8151 like commands
+// uc8159 like commands
 EpdCmdLut g8159_cmd_lookup[] = {
    {"PANEL_SETTING",0x00},
    {"POWER_SETTING",0x01},
@@ -222,8 +222,51 @@ uint8_t gChroma42_8176_Luts[] = {
    0
 };
 
+// uc8151 like commands
+EpdCmdLut g8151_cmd_lookup[] = {
+   {"PANEL_SETTING",0x00},
+   {"POWER_SETTING",0x01},
+   {"POWER_OFF",0x02},
+   {"POWER_OFF_SEQUENCE",0x03},
+   {"POWER_ON",0x04},
+   {"POWER_ON_MEASURE",0x05},
+   {"BOOSTER_SOFT_START",0x06},
+   {"DEEP_SLEEP",0x07},
+   {"DISPLAY_START_TRANSMISSION_DTM1",0x10},
+   {"DATA_STOP",0x11},
+   {"DISPLAY_REFRESH",0x12},
+   {"DISPLAY_START_TRANSMISSION_DTM2",0x13},
+   {"LUT_C,",0x20},
+   {"LUT_WW",0x21},
+   {"LUT_R",0x22},
+   {"LUT_W",0x23},
+   {"LUT_B",0x24},
+   {"PLL_CONTROL",0x30},
+   {"TEMPERATURE_CALIB",0x40},
+   {"TEMPERATURE_SELECT",0x41},
+   {"TEMPERATURE_WRITE",0x42},
+   {"TEMPERATURE_READ",0x43},
+   {"VCOM_INTERVAL",0x50},
+   {"LOWER_POWER_DETECT",0x51},
+   {"TCON_SETTING",0x60},
+   {"RESOLUTION_SETTING",0x61},
+   {"REVISION",0x70},
+   {"STATUS",0x71},
+   {"AUTO_MEASUREMENT_VCOM",0x80},
+   {"READ_VCOM",0x81},
+   {"VCOM_DC_SETTING",0x82},
+   {"PARTIAL_IN",0x91},
+   {"PARTIAL_OUT",0x92},
+   {"ACTIVE_PROG",0xa1},
+   {"READ_OTP",0xa2},
+   {"CASCADE_SET",0xe0},
+   {"FORCE_TEMP",0xe5},
+   {NULL}     // end of table
+};
 
-#define CHROMA74
+
+
+#define CHROMA21C
 
 #ifdef CHROMA42
    #define CMD_LUT   g8176_cmd_lookup
@@ -238,6 +281,12 @@ uint8_t gChroma42_8176_Luts[] = {
    #define CMD_LUT   g8154_cmd_lookup
    #define SCRIPT_SIZE  0x1000
    #define SKIP_1       0xb5
+
+#elif defined(CHROMA21C)
+   #define CMD_LUT   g8151_cmd_lookup
+   #define SCRIPT_SIZE  0x1000
+   #define SKIP_1       0x51
+
 #elif defined(CHROMA29)
    #define CMD_LUT   g8154_cmd_lookup
    #define SCRIPT_SIZE  0x1000
@@ -295,6 +344,7 @@ int DumpLutCmd(char *CmdLine)
 
       if(memcmp(gScript,gLutSignature,sizeof(gLutSignature)) != 0) {
          printf("LUT signature not found at offset 0x%lx\n",LutPageOffset);
+         DumpHex(gScript,sizeof(gLutSignature));
          break;
       }
       Offset += 4;
@@ -350,7 +400,10 @@ int DumpLutCmd(char *CmdLine)
                NewOffset = 0x217;
                break;
 #endif
-#ifdef CHROMA21
+#ifdef CHROMA21C
+            case 0xa5:
+               NewOffset = 0xf9;
+               break;
 #endif
          }
 
@@ -380,7 +433,7 @@ int DumpLutCmd(char *CmdLine)
                   }
                   LutCompare(&gScript[Offset+3],DataLen);
                   printf("\n");
-                  DumpHex(&gScript[Offset+4],DataLen - 1);
+                  DumpHexSrc(&gScript[Offset+4],DataLen - 1);
                }
                Offset += DataLen;
                break;
