@@ -25,6 +25,7 @@ else()
    set (SOURCES 
       serial_shell.c 
       chroma_cmds.c
+      sfdp-parser.c
       ${COMMON}/CobsFraming.c
       linenoise/linenoise.c
       logging.c

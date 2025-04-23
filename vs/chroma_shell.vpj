@@ -136,6 +136,7 @@
 			<F N="../chroma_shell/logging.c"/>
 			<F N="../chroma_shell/lut_dump.c"/>
 			<F N="../chroma_shell/serial_shell.c"/>
+			<F N="../chroma_shell/sfdp-parser.c"/>
 		</Folder>
 		<Folder
 			Name="Header Files"

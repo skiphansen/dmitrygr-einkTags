@@ -119,6 +119,7 @@ int EEPROM_RestoreCmd(char *CmdLine);
 int DumpLutCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
 int SetRegCmd(char *CmdLine);
+int SfdpCmd(char *CmdLine);
 int SN2MACCmd(char *CmdLine);
 int TxCmd(char *CmdLine);
 int DumpSettingsCmd(char *CmdLine);
@@ -134,6 +135,7 @@ int SendInitTbl(InitTbl *pTbl);
 int PowerUpEPD(void);
 int InitEPD(void);
 int EpdBusyWait(int State,int Timeout);
+int sfdp_dump(uint8_t *buf,int sz);
 
 // Eventual CC1101 API functions.  
 // Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
@@ -161,6 +163,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "p1wr", "Write port 1",NULL,0,P1wrCmd},
    { "p2rd", "Read port 2",NULL,0,P2rdCmd},
    { "p2wr", "Write port 2",NULL,0,P2wrCmd},
+   { "sfdp", "Dump SPI flash sfdp into",NULL,0,SfdpCmd},
    { "set_reg", "set chip register device",NULL,0,SetRegCmd},
    { "sn2mac",  "Convert a Chroma serial number string to MAC address",NULL,0,SN2MACCmd},
    { "tx", "Send text",NULL,0,TxCmd},
@@ -1143,6 +1146,10 @@ int EEPROM_IdCmd(char *CmdLine)
             case 0x10:
                printf("MX25V1006E, 128K");
                break;
+
+            case 0x13:
+               printf("MX25V8006E, 1 Mbyte");
+               break;
                
             default:
                printf("0x%02x",DeviceID);
@@ -1240,6 +1247,21 @@ int SetRegCmd(char *CmdLine)
    return 0;
 }
 
+int SfdpCmd(char *CmdLine)
+{
+   int Ret = RESULT_FAIL;
+   uint8_t Cmd = CMD_READ_SFDP;
+
+   AsyncResp *pMsg = SendCmd(&Cmd,1,2000);
+   if(pMsg != NULL) {
+      Ret = RESULT_OK;
+      sfdp_dump(pMsg->Msg,pMsg->MsgLen);
+      free(pMsg);
+   }
+
+   return Ret;
+}
+
 
 int PingCmd(char *CmdLine)
 {
@@ -1249,6 +1271,7 @@ int PingCmd(char *CmdLine)
 
    SendAsyncMsg(&Cmd,1);
    if((pMsg = Wait4Response(Cmd,100)) != NULL) {
+      printf("Received ping response\n");
       free(pMsg);
    }
 
