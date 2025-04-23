@@ -261,11 +261,15 @@ static int sfdp_macronix(uint32_t *w, size_t len)
 	parse_bits(w[1], 1, 1, "H/W Hold# pin", SUPP_OR_NOT);
 	parse_bits(w[1], 2, 2, "Deep Power down mode",SUPP_OR_NOT);
 	parse_bits(w[1], 3, 3, "S/W Reset", SUPP_OR_NOT);
-	p_hex_val(bits(w[1], 11, 4), "S/W Reset opcode", NULL);
+   if(bits(w[1],3,3)) {
+      p_hex_val(bits(w[1], 11, 4), "S/W Reset opcode", NULL);
+   }
    parse_bits(w[1], 12, 12, "Program Suspend/Resume", SUPP_OR_NOT);
    parse_bits(w[1], 13, 13, "Erase Suspend/Resume", SUPP_OR_NOT);
    parse_bits(w[1], 15, 15, "Wrap-Around Read mode", SUPP_OR_NOT);
-	p_hex_val(bits(w[1], 23, 16), "Wrap-Around Read mode opcode", NULL);
+   if(bits(w[1],15,15)) {
+      p_hex_val(bits(w[1], 23, 16), "Wrap-Around Read mode opcode", NULL);
+   }
    parse_bits(w[2], 0, 0, "Individual block lock", SUPP_OR_NOT);
 
    if(w[2] & (1 << 0)) {
