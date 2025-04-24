@@ -891,6 +891,8 @@ int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
          else if(RdBuf != NULL) {
          // Copy data read to buffer
             memcpy(RdBuf,&pMsg->Msg[2],Bytes2Read);
+            RdBuf += Bytes2Read;
+            Adr += Bytes2Read;
          }
          else {
          // Dumping EEPROM
@@ -1567,191 +1569,317 @@ int SetTx(float mhz)
 }
 
 
+int DumpOldSettings(uint8_t *Data,int Adr)
+{
+   const char *Msg = NULL;
+   int Type;
+   int Len;
+   int SkippedSlots = 0;
+   int Ret = RESULT_OK;
+   uint8_t ErasedCount[256];
+   int Offset = 4;
+
+// Scan for end of NVRAM type, if we find a type with the MSB set
+// then the data is in the new format
+   while(Offset < EEPROM_ERZ_SECTOR_SZ) {
+   // first byte is type, (0xff for done), second is length
+      Type = Data[Offset];
+      Len = Data[Offset + 1];
+
+      if(Type == 0xff) {
+         break;
+      }
+      if((Type & 0x80)) {
+      // MSB set and not end of settings
+         Ret = RESULT_NO_SUPPORT;
+         break;
+      }
+      Offset += Len;
+   }
+
+   memset(ErasedCount,0,sizeof(ErasedCount));
+   Offset = 4;
+   while(Ret == RESULT_OK && Offset < EEPROM_ERZ_SECTOR_SZ) {
+      Type = Data[Offset];
+      Len = Data[Offset + 1];
+
+      if(Len < 3) {
+         LOG_RAW("Invalid len %d @ 0x%x.\n",Len,Offset + Adr);
+         Ret = RESULT_BAD_LEN;
+         break;
+      }
+      switch(Type) {
+         case 0x0:
+            ErasedCount[Len]++;
+            SkippedSlots++;
+            break;
+
+         case 0x01:  // MAC
+            Msg = "type 0x01 MAC";
+            break;
+
+         case 0x5:  // EPD SN (aka cell id?  See factory cmd 0x1e)
+            Msg = "EPD SN";
+            break;
+
+         case 0x9:  // ADC intercept
+            Msg = "ADC intercept";
+            break;
+
+         case 0x12:  // ADC slope
+            Msg = "ADC slope";
+            break;
+
+         case 0x23:  // VCOM
+            Msg = "VCOM";
+            break;
+
+         case 0x2a:  // MAC
+            Msg = "type 0x2A MAC";
+            break;
+
+         case 0xff:
+            LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
+
+            if(SkippedSlots > 0) {
+               LOG_RAW("Erased entrys:\nData Len\tCount\n");
+               for(int i = 0; i < 256; i++) {
+                  if(ErasedCount[i] > 0) {
+                     LOG_RAW("%d\t\t%d\n",i-2,ErasedCount[i]);
+                  }
+               }
+               LOG_RAW("Total: %d\n",SkippedSlots);
+            }
+            break;
+
+         default:
+            LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Offset + Adr);
+            break;
+      }
+      if(Type == 0xff) {
+         break;
+      }
+
+      if(Msg != NULL) {
+         LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Offset + Adr);
+         Msg = NULL;
+      }
+
+      if(Type != 0 && Len > 2) {
+         switch(Type) {
+            case 0x01:  {
+            // MAC
+               char MacString[11];
+               int i;
+               char Byte;
+
+               MacString[0] = Data[Offset + 2];
+               MacString[1] = Data[Offset + 3];
+               for(i = 0; i < 8; i++) {
+                  Byte = Data[Offset + 4 + (i/2)];
+                  MacString[2 + i] = '0';
+                  if(i & 1) {
+                  // lower nibble
+                     MacString[2 + i] += Byte & 0xf;
+                  }
+                  else {
+                  // upper nibble
+                     MacString[2 + i] += (Byte >> 4) & 0xf;
+                  }
+               }
+               MacString[10] = 0;
+               LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
+               LOG_RAW("MAC: ");
+               DumpHex(&Data[Offset + 2],Len-2);
+               break;
+            }
+
+            case 0x5:
+            // EPD SN
+               Data[Len] = 0;
+               LOG_RAW("EPD SN: 0x%02x, \"%s\"\n",Data[Offset + 2],&Data[Offset + 3]);
+               break;
+
+            default:
+               DumpHex(&Data[Offset + 2],Len-2);
+               break;
+         }
+         LOG_RAW("\n");
+      }
+      Offset += Len;
+   }
+
+   return Ret;
+}
+
+int DumpNewSettings(uint8_t *Data,int Adr)
+{
+   const char *Msg = NULL;
+   int Type;
+   uint8_t RealType;
+   int Len;
+   int SkippedSlots = 0;
+   int Ret = RESULT_OK;
+   uint8_t ErasedCount[256];
+   uint8_t TypeLen[256];
+   int Offset = 4;
+
+   memset(ErasedCount,0,sizeof(ErasedCount));
+   memset(TypeLen,0,sizeof(TypeLen));
+   while(Ret == RESULT_OK && Offset < EEPROM_ERZ_SECTOR_SZ) {
+      Type = Data[Offset];
+      Len = Data[Offset + 1];
+      RealType = Type | 0x80;
+
+      if(Type != 0xff && Len < 3) {
+         LOG_RAW("Invalid len %d @ 0x%x.\n",Len,Offset + Adr);
+         Ret = RESULT_BAD_LEN;
+         break;
+      }
+      if(TypeLen[RealType] == 0) {
+         TypeLen[RealType] = Len;
+      }
+      else if(TypeLen[RealType] != Len) {
+         LOG_RAW("Internal error: type 0x%x changed len from %d to %d @ 0x%x\n",
+                 TypeLen[RealType],Len,Offset + Adr);
+      }
+
+      if((Type & 0x80) == 0) {
+         TypeLen[RealType] = Len;
+         ErasedCount[RealType]++;
+         SkippedSlots++;
+         Offset += Len;
+         continue;
+      }
+
+      switch(Type) {
+         case 0xff:
+            LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
+
+            if(SkippedSlots > 0) {
+               LOG_RAW("Erased entrys:\nType\tLen\tCount\n");
+               for(int i = 0; i < 256; i++) {
+                  if(ErasedCount[i] > 0) {
+                     LOG_RAW("0x%x\t%d\t%d\n",i,TypeLen[i],ErasedCount[i]);
+                  }
+               }
+               LOG_RAW("Total: %d\n",SkippedSlots);
+            }
+            break;
+
+         case 0x80:
+            break;
+
+         default:
+            LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len,Offset + Adr);
+            break;
+      }
+      if(Type == 0xff) {
+         break;
+      }
+
+      if(Msg != NULL) {
+         LOG_RAW("Found %d byte %s @ 0x%x\n",Len,Msg,Offset + Adr);
+         Msg = NULL;
+      }
+
+      switch(Type) {
+         case 0x80:  {
+         // MAC
+            char MacString[12];
+            int i;
+            char Byte;
+
+            LOG_RAW("RAW MAC data:\n");
+            DumpHex(&Data[Offset],Len);
+
+            MacString[0] = Data[Offset + 2];
+            MacString[1] = Data[Offset + 3];
+            for(i = 0; i < 8; i++) {
+               Byte = Data[Offset + 4 + (i/2)];
+               MacString[2 + i] = '0';
+               if(i & 1) {
+               // lower nibble
+                  MacString[2 + i] += Byte & 0xf;
+               }
+               else {
+               // upper nibble
+                  MacString[2 + i] += (Byte >> 4) & 0xf;
+               }
+            }
+            MacString[2 + i] += Byte & 0xf;
+            MacString[10] = Data[Offset + 8];
+            MacString[11] = 0;
+            LOG_RAW(" SN: %s\n",MacString);
+            LOG_RAW("MAC: ");
+            DumpHex(&Data[Offset + 2],Len-2);
+            break;
+         }
+
+         default:
+            DumpHex(&Data[Offset],Len);
+            break;
+      }
+      LOG_RAW("\n");
+      Offset += Len;
+   }
+
+   return Ret;
+}
+
 int DumpSettingsCmd(char *CmdLine)
 {
    static const uint8_t magicNum[4] = {0x56, 0x12, 0x09, 0x85};
    uint8_t Page;
-   const char *Msg = NULL;
    int Adr;
-   int EndAdr;
-   int Type;
-   int Len;
-   uint8_t Data[4+256];
-   int Err = 0;
-   int SkippedSlots = 0;
    int Ret = RESULT_OK;
+   int Err;
    FILE *fp = NULL;
    #define PAGES_TO_SCAN   10
-   uint8_t Image[PAGES_TO_SCAN * EEPROM_ERZ_SECTOR_SZ];
-   uint8_t ErasedCount[256];
+   uint8_t Image[EEPROM_ERZ_SECTOR_SZ];
 
    do {
-      memset(ErasedCount,0,sizeof(ErasedCount));
-      if(*CmdLine) {
-         if((fp = fopen(CmdLine,"r")) == NULL) {
-            LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
-            Ret = RESULT_FAIL;
-            break;
-         }
-         if(fread(Image,sizeof(Image),1,fp) != 1) {
-            printf("fread failed - %s\n",strerror(errno));
-            break;
-         }
-      }
       for(Page = 0; Page < PAGES_TO_SCAN; Page++) {
          Adr = Page * EEPROM_ERZ_SECTOR_SZ;
-         if(fp != NULL) {
-            memcpy(Data,&Image[Adr],sizeof(magicNum));
+         if(*CmdLine) {
+         // Reading from a file
+            if((fp = fopen(CmdLine,"r")) == NULL) {
+               LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
+               Ret = RESULT_FAIL;
+               break;
+            }
+            if(fread(Image,sizeof(Image),1,fp) != 1) {
+               printf("fread failed - %s\n",strerror(errno));
+               break;
+            }
          }
          else {
-            Err = EEPROM_RdInternal(Adr,NULL,Data,sizeof(magicNum));
+         // Reading from flash
+            Err = EEPROM_RdInternal(Adr,NULL,Image,sizeof(magicNum));
             if(Err != 0) {
                break;
             }
+            if(memcmp(Image,magicNum,sizeof(magicNum)) == 0) {
+            // Read the rest of the page
+               Err = EEPROM_RdInternal(Adr,NULL,Image,EEPROM_ERZ_SECTOR_SZ);
+               break;
+            }
          }
-
-         if(memcmp(Data,magicNum,sizeof(magicNum)) == 0) {
+         if(memcmp(Image,magicNum,sizeof(magicNum)) == 0) {
             break;
          }
       }
-
       if(Err != 0) {
          break;
       }
-
-      if(Page < PAGES_TO_SCAN) {
-         LOG_RAW("Found setting's magic number in page %d @ 0x%x\n",Page,Adr);
-         EndAdr = Adr + EEPROM_ERZ_SECTOR_SZ;
-         Adr += 4;
-         while(Err == 0 && Adr < EndAdr) {
-            memset(Data,0xaa,sizeof(Data));
-            if(fp != NULL) {
-               memcpy(Data,&Image[Adr],2);
-            }
-            else if((Err = EEPROM_RdInternal(Adr,NULL,Data,2)) != 0) {
-               break;
-            }
-
-         // first byte is type, (0xff for done), second is length
-            Type = Data[0];
-            Len = Data[1];
-
-            if(Len < 1 || Len > 255) {
-               LOG_RAW("Len == %d, WTF?\n",Len);
-               break;
-            }
-
-            switch(Type) {
-               case 0x0:
-                  ErasedCount[Len]++;
-                  SkippedSlots++;
-                  break;
-
-               case 0x01:  // MAC
-                  Msg = "type 0x01 MAC";
-                  break;
-
-               case 0x5:  // EPD SN (aka cell id?  See factory cmd 0x1e)
-                  Msg = "EPD SN";
-                  break;
-                          
-               case 0x9:  // ADC intercept
-                  Msg = "ADC intercept";
-                  break;
-
-               case 0x12:  // ADC slope
-                  Msg = "ADC slope";
-                  break;
-
-
-               case 0x23:  // VCOM
-                  Msg = "VCOM";
-                  break;
-
-               case 0x2a:  // MAC
-                  Msg = "type 0x2A MAC";
-                  break;
-
-               case 0xff:
-                  LOG_RAW("End of settings @ 0x%x.\n",Adr);
-
-                  if(SkippedSlots > 0) {
-                     LOG_RAW("Erased entrys:\nData Len\tCount\n");
-                     for(int i = 0; i < 256; i++) {
-                        if(ErasedCount[i] > 0) {
-                           LOG_RAW("%d\t\t%d\n",i-2,ErasedCount[i]);
-                        }
-                     }
-                     LOG_RAW("Total: %d\n",SkippedSlots);
-                  }
-                  break;
-
-               default:
-                  LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Adr);
-                  break;
-            }
-            if(Type == 0xff) {
-               break;
-            }
-
-            if(Msg != NULL) {
-               LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Adr);
-               Msg = NULL;
-            }
-
-            if(Type != 0 && Len > 2) {
-               if(fp != NULL) {
-                  memcpy(&Data[2],&Image[Adr + 2],Len-2);
-               }
-               else {
-                  Err = EEPROM_RdInternal(Adr + 2,NULL,&Data[2],Len-2);
-                  if(Err != 0) {
-                     break;
-                  }
-               }
-
-               switch(Type) {
-                  case 0x01:  {
-                  // MAC
-                     char MacString[11];
-                     int i;
-                     char Byte;
-
-                     MacString[0] = Data[2];
-                     MacString[1] = Data[3];
-                     for(i = 0; i < 8; i++) {
-                        Byte = Data[4 + (i/2)];
-                        MacString[2 + i] = '0';
-                        if(i & 1) {
-                        // lower nibble
-                           MacString[2 + i] += Byte & 0xf;
-                        }
-                        else {
-                        // upper nibble
-                           MacString[2 + i] += (Byte >> 4) & 0xf;
-                        }
-                     }
-                     MacString[10] = 0;
-                     LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
-                     LOG_RAW("MAC: ");
-                     DumpHex(&Data[2],Len-2);
-                     break;
-                  }
-
-                  case 0x5:
-                  // EPD SN
-                     Data[Len] = 0;
-                     LOG_RAW("EPD SN: 0x%02x, \"%s\"\n",Data[2],&Data[3]);
-                     break;
-
-                  default:
-                     DumpHex(&Data[2],Len-2);
-                     break;
-               }
-               LOG_RAW("\n");
-            }
-            Adr += Len;
-         }
+      if(Page == PAGES_TO_SCAN) {
+         LOG_RAW("Setting's magic number not found in first %d pages\n",
+                 PAGES_TO_SCAN);
+         break;
+      }
+      LOG_RAW("Found setting's magic number in page %d @ 0x%x\n",Page,Adr);
+      if((Ret = DumpOldSettings(Image,Adr)) == RESULT_NO_SUPPORT) {
+         Ret = DumpNewSettings(Image,Adr);
       }
    } while(false);
 
