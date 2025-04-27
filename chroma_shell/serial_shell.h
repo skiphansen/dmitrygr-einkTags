@@ -52,5 +52,6 @@ AsyncResp *SendCmd(uint8_t *Msg,int MsgLen,int Timeout);
 char *Skip2Space(char *In);
 void Sleep(int Milliseconds);
 char *NextToken(char *In);
+int ConvertValue(char **Arg,uint32_t *Value);
 
 #endif // _SHELL_H

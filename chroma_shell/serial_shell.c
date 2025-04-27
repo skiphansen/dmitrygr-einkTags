@@ -1104,3 +1104,47 @@ void _log(const char *fmt,...)
    va_end(args);
 }
 
+int ConvertValue(char **Arg,uint32_t *Value)
+{
+   char *cp = *Arg;
+   char *cp1;
+   int Ret = 0;   // assume the best
+   bool bIsHex = false;
+
+   do {
+      cp = SkipSpaces(cp);
+      if(!*cp) {
+      // No value
+         Ret = 1;
+         break;
+      }
+      if(cp[0] == '0' && cp[1] == 'x') {
+      // Hex arg
+         bIsHex = true;
+         cp += 2;
+      }
+      cp1 = cp;
+      while(*cp1) {
+         if(isspace(*cp1)) {
+            cp1++;
+            break;
+         }
+         if((bIsHex && !isxdigit(*cp1)) || (!bIsHex && !isdigit(*cp1))) {
+            Ret = 1;
+            break;
+         }
+         cp1++;
+      }
+      if(Ret == 1) {
+         break;
+      }
+      if(sscanf(cp,bIsHex ? "%x" : "%u",Value) != 1) {
+         Ret = 1;
+      }
+      *Arg = cp1;
+   } while(false);
+
+// LOG("Returning %d, Value 0x%x Arg '%s'\n",Ret,*Value,cp1);
+   return Ret;
+}
+

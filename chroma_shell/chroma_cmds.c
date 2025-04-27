@@ -130,7 +130,7 @@ int P1rdCmd(char *CmdLine);
 int P1wrCmd(char *CmdLine);
 int P2rdCmd(char *CmdLine);
 int P2wrCmd(char *CmdLine);
-int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len);
+int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len);
 int SendInitTbl(InitTbl *pTbl);
 int PowerUpEPD(void);
 int InitEPD(void);
@@ -800,9 +800,9 @@ const char *Rcode2Str(uint8_t Rcode)
    return Ret;
 }
 
-int GetEEPROM_Len(void)
+uint32_t GetEEPROM_Len(void)
 {
-   static int EEPROM_Len;
+   static uint32_t EEPROM_Len;
    AsyncMsg *pMsg;
    uint8_t Cmd[2];
 
@@ -822,7 +822,7 @@ int GetEEPROM_Len(void)
    return EEPROM_Len;
 }
 
-int EEPROM_RdInternal(int Adr,FILE *fp,uint8_t *RdBuf,int Len)
+int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
 {
    #define DUMP_BYTES_PER_LINE   16
    #define READ_CHUNK_LINES      4
@@ -986,19 +986,20 @@ int EEPROM_WrInternal(int Adr,FILE *fp,uint8_t *WrBuf,int Len)
 int EEPROM_ReadCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
-   int Adr;
-   int Len;
+   uint32_t Adr;
+   uint32_t Len;
    int EEPROM_Len = GetEEPROM_Len();
 
    do {
-      if(sscanf(CmdLine,"%x %d",&Adr,&Len) != 2) {
+      if(ConvertValue(&CmdLine,&Adr) || ConvertValue(&CmdLine,&Len)) {
          break;
       }
-      if(Adr < 0 || Adr > EEPROM_Len-1) {
+
+      if(Adr > EEPROM_Len-1) {
          LOG_RAW("Invalid address (0x%x > 0x%x)\n",Adr,EEPROM_Len-1);
          break;
       }
-      if(Len < 0 || (Len + Adr) > EEPROM_Len) {
+      if(Len == 0 || (Len + Adr) > EEPROM_Len) {
          PRINTF("Invalid length %d\n",Len);
          break;
       }
@@ -1093,9 +1094,9 @@ int EEPROM_BackupCmd(char *CmdLine)
 int EEPROM_Erase(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
-   int Adr;
+   uint32_t Adr;
    int Sector;
-   int EEPROM_Len = GetEEPROM_Len();
+   uint32_t EEPROM_Len = GetEEPROM_Len();
    uint8_t Cmd[6] = {CMD_EEPROM_ERASE};
    AsyncResp *pMsg;
 
@@ -1789,9 +1790,6 @@ int DumpNewSettings(uint8_t *Data,int Adr)
             char MacString[12];
             int i;
             char Byte;
-
-            LOG_RAW("RAW MAC data:\n");
-            DumpHex(&Data[Offset],Len);
 
             MacString[0] = Data[Offset + 2];
             MacString[1] = Data[Offset + 3];
