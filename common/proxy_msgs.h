@@ -61,13 +61,14 @@
 #define CMD_EEPROM_ERASE   0x14
 #define CMD_EEPROM_ID      0x15
 #define CMD_READ_SFDP      0x16
-#define CMD_LAST           CMD_READ_SFDP
+#define CMD_EEPROM_PD      0x17
+#define CMD_LAST           CMD_EEPROM_PD
 
 #define CMD_STRINGS \
    "NOP", "PEEK", "POKE","POKE_REG","STATUS","RFMODE","RESET","EEPROM_RD" ,\
    "EEPROM_WR","EEPROM_LEN","COMM_BUF_LEN","BOARD_TYPE","SET_RF_REGS",\
    "GET_RF_REGS","SET_RF_MODE","RX_DATA","TX_DATA","EPD","PORT_RW",\
-   "EEPROM_ERASE","EEPROM_ID","READ_SFDP"
+   "EEPROM_ERASE","EEPROM_ID","READ_SFDP","EEPROM_PD"
 
 typedef enum {
    CMD_ERR_NONE,
@@ -84,7 +85,7 @@ typedef enum {
 
 #define CMD_ERR_STRINGS \
    "OK","UNKNOWN_CMD", "INVALID_ARG","CRC_ERR","INTERNAL","ERR_BUF_OVFL",\
-   "TIMEOUT","BUSY","FAILED"
+   "TIMEOUT","BUSY","_FAILED"
 
 // CMD_EPD argument
 #define EPD_FLG_SEND_RD       0x01  // Send data read

@@ -111,6 +111,7 @@ int PingCmd(char *CmdLine);
 int ResetCmd(char *CmdLine);
 int RxCmd(char *CmdLine);
 int EEPROM_ReadCmd(char *CmdLine);
+int EEPROM_PowerCmd(char *CmdLine);
 int EEPROM_WrCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int EEPROM_Erase(char *CmdLine);
@@ -149,6 +150,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
    { "eewr",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
+   { "ee_pd", "Power up/down EEPROM","ee_pd <0 | 1>",0,EEPROM_PowerCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
    { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
    { "ee_id", "Display EEPROM manufacture and device IDs","ee_id",0,EEPROM_IdCmd},
@@ -1010,6 +1012,28 @@ int EEPROM_ReadCmd(char *CmdLine)
    return Ret;
 }
 
+int EEPROM_PowerCmd(char *CmdLine)
+{
+   int Ret = RESULT_FAIL;
+   uint8_t Cmd[2] = {CMD_EEPROM_PD};
+   int Option;
+
+   if(sscanf(CmdLine,"%d",&Option) != 1 || Option < 0 || Option > 1) {
+      Ret = RESULT_USAGE;
+   }
+   else {
+      Cmd[1] = (uint8_t) Option;
+      AsyncResp *pMsg = SendCmd(Cmd,sizeof(Cmd),2000);
+      if(pMsg != NULL) {
+         Ret = RESULT_OK;
+         free(pMsg);
+      }
+   }
+
+   return Ret;
+}
+
+
 // eewr(adr,filename);
 int EEPROM_WrCmd(char *CmdLine)
 {
@@ -1166,7 +1190,6 @@ int EEPROM_IdCmd(char *CmdLine)
    }
 
    return Ret;
-
 }
 
 int EEPROM_RestoreCmd(char *CmdLine)
