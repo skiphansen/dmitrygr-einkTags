@@ -149,7 +149,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
    { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
-   { "eewr",  "Write data to EEPROM","eewr <address> <length> <data>",0,EEPROM_WrCmd},
+   { "eewr",  "Write data to EEPROM","eewr <address> <filename>",0,EEPROM_WrCmd},
    { "ee_pd", "Power up/down EEPROM","ee_pd <0 | 1>",0,EEPROM_PowerCmd},
    { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
    { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
@@ -761,6 +761,7 @@ typedef struct {
 const BoardInfo gBoardInfo[] = {
    {"chroma29r",296,128},
    {"chroma42r",400,300},
+   {"ChromaAeon74",800,480},
    {NULL}   // End of table
 };
 
@@ -1427,13 +1428,14 @@ int BoardTypeCmd(char *CmdLine)
       }
 
       BoardType = (char *) &pMsg->Msg[2];
-      printf("Board type %s\n",BoardType);
+      printf("Board type: %s\n",BoardType);
 
       while(p->BoardString != NULL) {
          if(strcmp(BoardType,p->BoardString) == 0) {
             gBoard = p;
             break;
          }
+         p++;
       }
 
       if(gBoard == NULL) {
