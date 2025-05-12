@@ -1866,11 +1866,14 @@ int DumpSettingsCmd(char *CmdLine)
          Adr = Page * EEPROM_ERZ_SECTOR_SZ;
          if(*CmdLine) {
          // Reading from a file
-            if((fp = fopen(CmdLine,"r")) == NULL) {
-               LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
-               Ret = RESULT_FAIL;
-               break;
+            if(fp == NULL) {
+               if((fp = fopen(CmdLine,"r")) == NULL) {
+                  LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
+                  Ret = RESULT_FAIL;
+                  break;
+               }
             }
+            fseek(fp,SEEK_SET,Adr);
             if(fread(Image,sizeof(Image),1,fp) != 1) {
                printf("fread failed - %s\n",strerror(errno));
                break;
