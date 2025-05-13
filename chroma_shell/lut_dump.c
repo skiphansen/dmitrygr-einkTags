@@ -174,6 +174,44 @@ EpdCmdLut g8154_cmd_lookup[] = {
    {NULL}     // end of table
 };
 
+EpdCmdLut g1675_cmd_lookup[] = {
+   {"DRIVER CONTROL", 0x01},
+   {"GATE VOLTAGE", 0x03},
+   {"SOURCE VOLTAGE", 0x04},
+   {"DISPLAY CONTROL", 0x07},
+   {"NON OVERLAP", 0x0B},
+   {"BOOSTER SOFT START", 0x0C},
+   {"GATE SCAN START", 0x0F},
+   {"DEEP SLEEP", 0x10},
+   {"DATA MODE", 0x11},
+   {"SW RESET", 0x12},
+   {"TEMP SENSOR CTRL", 0x18},
+   {"TEMP WRITE", 0x1A},
+   {"TEMP READ", 0x1B},
+   {"TEMP CONTROL", 0x1C},
+   {"TEMP LOAD", 0x1D},
+   {"MASTER ACTIVATE", 0x20},
+   {"DISP CTRL1", 0x21},
+   {"DISP CTRL2", 0x22},
+   {"WRITE RAM", 0x24},
+   {"WRITE ALTRAM", 0x26},
+   {"READ RAM", 0x25},
+   {"VCOM SENSE", 0x28},
+   {"VCOM DURATION", 0x29},
+   {"WRITE VCOM", 0x2C},
+   {"READ OTP", 0x2D},
+   {"WRITE LUT", 0x32},
+   {"WRITE DUMMY", 0x3A},
+   {"WRITE GATELINE", 0x3B},
+   {"WRITE BORDER", 0x3C},
+   {"SET RAMXPOS", 0x44},
+   {"SET RAMYPOS", 0x45},
+   {"SET RAMXCOUNT", 0x4E},
+   {"SET RAMYCOUNT", 0x4F},
+   {"NOP", 0xFF},
+   {NULL}     // end of table
+};
+
 uint8_t gChroma42_8176_Luts[] = {
    43,
    0x21,  // W2W_LUT,
@@ -266,7 +304,7 @@ EpdCmdLut g8151_cmd_lookup[] = {
 
 
 
-#define CHROMA21C
+#define CHROMA29_CC1310
 
 #ifdef CHROMA42
    #define CMD_LUT   g8176_cmd_lookup
@@ -291,6 +329,12 @@ EpdCmdLut g8151_cmd_lookup[] = {
    #define CMD_LUT   g8154_cmd_lookup
    #define SCRIPT_SIZE  0x1000
    #define SKIP_1       0xb5
+
+#elif defined(CHROMA29_CC1310)
+   #define CMD_LUT   g1675_cmd_lookup
+   #define SCRIPT_SIZE  0x1000
+   #define SKIP_1       0x50
+
 #else
    #error "Board type not defined"
 #endif
