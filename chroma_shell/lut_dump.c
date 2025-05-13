@@ -320,7 +320,7 @@ EpdCmdLut g8151_cmd_lookup[] = {
    #define SCRIPT_SIZE  0x1000
    #define SKIP_1       0xb5
 
-#elif defined(CHROMA21C)
+#elif defined(CHROMA29C)
    #define CMD_LUT   g8151_cmd_lookup
    #define SCRIPT_SIZE  0x1000
    #define SKIP_1       0x51
@@ -444,7 +444,7 @@ int DumpLutCmd(char *CmdLine)
                NewOffset = 0x217;
                break;
 #endif
-#ifdef CHROMA21C
+#ifdef CHROMA29C
             case 0xa5:
                NewOffset = 0xf9;
                break;
