@@ -15,11 +15,36 @@
 #ifndef _CHROMA_SHELL_H
 #define _CHROMA_SHELL_H
 
+typedef enum {
+   CHROMA_TYPE_UNKNOWN,
+   CHROMA16_R,
+   CHROMA16_Y,
+   CHROMA21_R,
+   CHROMA21_Y,
+   CHROMA29_R,
+   CHROMA29_Y,
+   CHROMA29C_R,
+   CHROMA29_CC1310_R,
+   CHROMA29_CC1310_Y,
+   CHROMA42_R,
+   CHROMA42_Y,
+   CHROMA60_R,
+   CHROMA60_Y,
+   CHROMA74_R,
+   CHROMA74_Y,
+   CHROMA74_CC1311_Y,
+} ChromaType;
+
 typedef struct {
    size_t TblSize;
    uint8_t *pTbl;
 } InitTbl;
 
 extern InitTbl Chroma42_C8154InitTbl[];
+extern char *gSn;
+extern ChromaType gChromaType;
+
+int GetSnCmd(char *CmdLine);
+
 
 #endif   // _CHROMA_SHELL_H

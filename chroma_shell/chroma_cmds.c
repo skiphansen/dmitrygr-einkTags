@@ -31,6 +31,9 @@
 #include "cc1110-ext.h"
 #include "chroma_shell.h"
 
+char *gSn;
+ChromaType gChromaType;
+
 #define DEFAULT_TO   100
 
 #define EEPROM_WRITE_PAGE_SZ  256   // max write size & alignment
@@ -155,6 +158,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
    { "ee_id", "Display EEPROM manufacture and device IDs","ee_id",0,EEPROM_IdCmd},
    { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
+   { "get_sn", "Read SN from flash or file","get_sn [<path>]",0,GetSnCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
@@ -172,6 +176,36 @@ struct COMMAND_TABLE commandtable[] = {
    { "?", NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { "help",NULL, NULL,CMD_FLAG_HIDE, HelpCmd},
    { NULL}  // end of table
+};
+
+const struct {
+   const char *SN;
+   const char *Desc;
+   int ChromaType;
+} gSN2Type[] = {
+   {"JAC","BWR Chroma29C",CHROMA29C_R},
+   {"JA","BWR Chroma29",CHROMA29_R},
+   {"JB","BWR Chroma21",CHROMA21_R},
+   {"JC","BWR Chroma42",CHROMA42_R},
+   {"JD","BWR Chroma60",CHROMA60_R},
+   {"JF","BWY? Chroma29",CHROMA29_Y},
+   {"JG","BWY Chroma21",CHROMA21_Y},
+   {"JH","BWY Chroma42",CHROMA42_Y},
+   {"JJ","BWY? Chroma60",CHROMA60_Y},
+   {"JK","BWR? Chroma16",CHROMA16_R},
+   {"JL","BWR Chroma74",CHROMA74_R},
+   {"JM","BWY Chroma74",CHROMA74_Y},
+   {"JLC","BWR Chroma74",CHROMA74_R},
+   {"JMC","BWY Chroma74",CHROMA74_Y},
+   {"JN","BWR Chroma37"},
+   {"KA","BW Aura29"},
+   {"KD","BW Aura42"},
+   {"LD","Chroma21_CC1310"},
+   {"MEC","Chroma29_CC1310",CHROMA29_CC1310_R},
+   {"MJ","Chroma21_CC1310"},
+   {"MS","Chroma74H+"},
+   {"SR","BWY ChromaAeon74",CHROMA74_CC1311_Y},
+   {NULL}   // end of table
 };
 
 const struct {
@@ -1193,6 +1227,7 @@ int EEPROM_IdCmd(char *CmdLine)
    return Ret;
 }
 
+
 int EEPROM_RestoreCmd(char *CmdLine)
 {
    int Ret = RESULT_USAGE;
@@ -1595,7 +1630,7 @@ int SetTx(float mhz)
 }
 
 
-int DumpOldSettings(uint8_t *Data,int Adr)
+int DumpOldSettings(uint8_t *Data,int Adr,bool bSilent)
 {
    const char *Msg = NULL;
    int Type;
@@ -1665,21 +1700,26 @@ int DumpOldSettings(uint8_t *Data,int Adr)
             break;
 
          case 0xff:
-            LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
+            if(!bSilent) {
+               LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
 
-            if(SkippedSlots > 0) {
-               LOG_RAW("Erased entrys:\nData Len\tCount\n");
-               for(int i = 0; i < 256; i++) {
-                  if(ErasedCount[i] > 0) {
-                     LOG_RAW("%d\t\t%d\n",i-2,ErasedCount[i]);
+               if(SkippedSlots > 0) {
+                  LOG_RAW("Erased entrys:\nData Len\tCount\n");
+                  for(int i = 0; i < 256; i++) {
+                     if(ErasedCount[i] > 0) {
+                        LOG_RAW("%d\t\t%d\n",i-2,ErasedCount[i]);
+                     }
                   }
+                  LOG_RAW("Total: %d\n",SkippedSlots);
                }
-               LOG_RAW("Total: %d\n",SkippedSlots);
             }
             break;
 
          default:
-            LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len-2,Offset + Adr);
+            if(!bSilent) {
+               LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",
+                       Type,Len-2,Offset + Adr);
+            }
             break;
       }
       if(Type == 0xff) {
@@ -1687,15 +1727,18 @@ int DumpOldSettings(uint8_t *Data,int Adr)
       }
 
       if(Msg != NULL) {
-         LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Offset + Adr);
+         if(!bSilent) {
+            LOG_RAW("Found %d byte %s @ 0x%x\n",Len-2,Msg,Offset + Adr);
+         }
          Msg = NULL;
       }
 
       if(Type != 0 && Len > 2) {
          switch(Type) {
-            case 0x01:  {
+            case 0x01:  
+            case 0x2a: {
             // MAC
-               char MacString[11];
+               char MacString[12];
                int i;
                char Byte;
 
@@ -1713,24 +1756,47 @@ int DumpOldSettings(uint8_t *Data,int Adr)
                      MacString[2 + i] += (Byte >> 4) & 0xf;
                   }
                }
-               MacString[10] = 0;
-               LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
-               LOG_RAW("MAC: ");
-               DumpHex(&Data[Offset + 2],Len-2);
+               if(Len == 9) {
+               // SN includes type character
+                  MacString[10] = Data[Offset + 8];
+                  MacString[11] = 0;
+               }
+               else {
+                  MacString[10] = 0;
+               }
+               if(gSn != NULL) {
+                  free(gSn);
+               }
+               gSn = strdup(MacString);
+               if(!bSilent) {
+                  LOG_RAW(" SN: %s? (last character is board rev)\n",MacString);
+                  LOG_RAW("MAC: ");
+                  DumpHex(&Data[Offset + 2],Len-2);
+               }
                break;
             }
 
-            case 0x5:
+            case 0x5: {
             // EPD SN
-               Data[Len] = 0;
-               LOG_RAW("EPD SN: 0x%02x, \"%s\"\n",Data[Offset + 2],&Data[Offset + 3]);
+               if(!bSilent) {
+                  uint8_t Saved = Data[Offset + Len];
+                  Data[Offset + Len] = 0;
+                     LOG_RAW("EPD SN: 0x%02x, \"%s\"\n",
+                             Data[Offset + 2],&Data[Offset + 3]);
+                     Data[Offset + Len] = Saved;
+               }
                break;
+            }
 
             default:
-               DumpHex(&Data[Offset + 2],Len-2);
+               if(!bSilent) {
+                  DumpHex(&Data[Offset + 2],Len-2);
+               }
                break;
          }
-         LOG_RAW("\n");
+         if(!bSilent) {
+            LOG_RAW("\n");
+         }
       }
       Offset += Len;
    }
@@ -1738,7 +1804,7 @@ int DumpOldSettings(uint8_t *Data,int Adr)
    return Ret;
 }
 
-int DumpNewSettings(uint8_t *Data,int Adr)
+int DumpNewSettings(uint8_t *Data,int Adr,bool bSilent)
 {
    const char *Msg = NULL;
    int Type;
@@ -1780,16 +1846,17 @@ int DumpNewSettings(uint8_t *Data,int Adr)
 
       switch(Type) {
          case 0xff:
-            LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
-
-            if(SkippedSlots > 0) {
-               LOG_RAW("Erased entrys:\nType\tLen\tCount\n");
-               for(int i = 0; i < 256; i++) {
-                  if(ErasedCount[i] > 0) {
-                     LOG_RAW("0x%x\t%d\t%d\n",i,TypeLen[i],ErasedCount[i]);
+            if(!bSilent) {
+               LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
+               if(SkippedSlots > 0) {
+                  LOG_RAW("Erased entrys:\nType\tLen\tCount\n");
+                  for(int i = 0; i < 256; i++) {
+                     if(ErasedCount[i] > 0) {
+                        LOG_RAW("0x%x\t%d\t%d\n",i,TypeLen[i],ErasedCount[i]);
+                     }
                   }
+                  LOG_RAW("Total: %d\n",SkippedSlots);
                }
-               LOG_RAW("Total: %d\n",SkippedSlots);
             }
             break;
 
@@ -1797,7 +1864,10 @@ int DumpNewSettings(uint8_t *Data,int Adr)
             break;
 
          default:
-            LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",Type,Len,Offset + Adr);
+            if(!bSilent) {
+               LOG_RAW("Unknown type 0x%x, %d bytes @ 0x%x\n",
+                       Type,Len,Offset + Adr);
+            }
             break;
       }
       if(Type == 0xff) {
@@ -1805,7 +1875,9 @@ int DumpNewSettings(uint8_t *Data,int Adr)
       }
 
       if(Msg != NULL) {
-         LOG_RAW("Found %d byte %s @ 0x%x\n",Len,Msg,Offset + Adr);
+         if(!bSilent) {
+            LOG_RAW("Found %d byte %s @ 0x%x\n",Len,Msg,Offset + Adr);
+         }
          Msg = NULL;
       }
 
@@ -1833,33 +1905,52 @@ int DumpNewSettings(uint8_t *Data,int Adr)
             MacString[2 + i] += Byte & 0xf;
             MacString[10] = Data[Offset + 8];
             MacString[11] = 0;
-            LOG_RAW(" SN: %s\n",MacString);
-            LOG_RAW("MAC: ");
-            DumpHex(&Data[Offset + 2],Len-2);
+            if(gSn != NULL) {
+               free(gSn);
+            }
+            gSn = strdup(MacString);
+            if(!bSilent) {
+               LOG_RAW(" SN: %s\n",MacString);
+               LOG_RAW("MAC: ");
+               DumpHex(&Data[Offset + 2],Len-2);
+            }
             break;
          }
 
          default:
-            DumpHex(&Data[Offset],Len);
+            if(!bSilent) {
+               DumpHex(&Data[Offset],Len);
+            }
             break;
       }
-      LOG_RAW("\n");
+      if(!bSilent) {
+         LOG_RAW("\n");
+      }
       Offset += Len;
    }
 
    return Ret;
 }
 
-int DumpSettingsCmd(char *CmdLine)
+int DumpSettingsInternal(uint8_t *Image,int Adr,bool bSlient)
+{
+   int Ret;
+   if((Ret = DumpOldSettings(Image,Adr,bSlient)) == RESULT_NO_SUPPORT) {
+      Ret = DumpNewSettings(Image,Adr,bSlient);
+   }
+
+   return Ret;
+}
+
+int LoadSettings(char *CmdLine,uint8_t *Image,int *pAdr,bool bSilent)
 {
    static const uint8_t magicNum[4] = {0x56, 0x12, 0x09, 0x85};
    uint8_t Page;
    int Adr;
-   int Ret = RESULT_OK;
+   int Ret = RESULT_FAIL;
    int Err;
    FILE *fp = NULL;
    #define PAGES_TO_SCAN   10
-   uint8_t Image[EEPROM_ERZ_SECTOR_SZ];
 
    do {
       for(Page = 0; Page < PAGES_TO_SCAN; Page++) {
@@ -1869,12 +1960,11 @@ int DumpSettingsCmd(char *CmdLine)
             if(fp == NULL) {
                if((fp = fopen(CmdLine,"r")) == NULL) {
                   LOG("fopen(\"%s\") failed - %s\n",CmdLine,strerror(errno));
-                  Ret = RESULT_FAIL;
                   break;
                }
             }
             fseek(fp,SEEK_SET,Adr);
-            if(fread(Image,sizeof(Image),1,fp) != 1) {
+            if(fread(Image,EEPROM_ERZ_SECTOR_SZ,1,fp) != 1) {
                printf("fread failed - %s\n",strerror(errno));
                break;
             }
@@ -1892,25 +1982,80 @@ int DumpSettingsCmd(char *CmdLine)
             }
          }
          if(memcmp(Image,magicNum,sizeof(magicNum)) == 0) {
+            Ret = RESULT_OK;
             break;
          }
       }
-      if(Err != 0) {
-         break;
-      }
-      if(Page == PAGES_TO_SCAN) {
+
+      if(Ret != RESULT_OK) {
          LOG_RAW("Setting's magic number not found in first %d pages\n",
                  PAGES_TO_SCAN);
          break;
       }
       LOG_RAW("Found setting's magic number in page %d @ 0x%x\n",Page,Adr);
-      if((Ret = DumpOldSettings(Image,Adr)) == RESULT_NO_SUPPORT) {
-         Ret = DumpNewSettings(Image,Adr);
-      }
    } while(false);
 
    if(fp != NULL) {
       fclose(fp);
+   }
+
+   if(pAdr != NULL) {
+      *pAdr = Adr;
+   }
+
+   return Ret;
+}
+
+int DumpSettingsCmd(char *CmdLine)
+{
+   int Adr;
+   uint8_t Image[EEPROM_ERZ_SECTOR_SZ];
+   int Ret = RESULT_OK;
+
+   if((Ret = LoadSettings(CmdLine,&Image[0],&Adr,false)) == RESULT_OK) {
+      DumpSettingsInternal(Image,Adr,false);
+   }
+
+   return Ret;
+}
+
+int GetSnCmd(char *CmdLine)
+{
+   int Adr;
+   uint8_t Image[EEPROM_ERZ_SECTOR_SZ];
+   int Ret;
+   const char *Desc = "unknown";
+   char Sn[4];
+
+   if(gSn != NULL) {
+   // Clear old sn in case a different tag has been connected
+      free(gSn);
+      gSn = NULL;
+   }
+   gChromaType = CHROMA_TYPE_UNKNOWN;
+
+   if((Ret = LoadSettings(CmdLine,&Image[0],&Adr,true)) == RESULT_OK) {
+      DumpSettingsInternal(Image,Adr,true);
+   }
+
+   if(gSn != NULL) {
+      Sn[0] = gSn[0];
+      Sn[1] = gSn[1];
+      if(strlen(gSn) == 11) {
+         Sn[2] = gSn[10];
+         Sn[3] = 0;
+      }
+      else {
+         Sn[2] = 0;
+      }
+      for(int i = 0; gSN2Type[i].SN != NULL; i++) {
+         if(strcmp(gSN2Type[i].SN,Sn) == 0) {
+            Desc = gSN2Type[i].Desc;
+            gChromaType = gSN2Type[i].ChromaType;
+            break;
+         }
+      }
+      printf("SN: %s (%s)\n",gSn,Desc);
    }
 
    return Ret;
