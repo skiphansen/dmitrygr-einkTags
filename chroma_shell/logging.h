@@ -24,6 +24,7 @@ void _log(const char *fmt,...);
 
 
 void DumpHex(void *AdrIn,int Len);
+void DumpHexAdr(void *AdrIn,int Len,int AdrValue);
 
 #define DEBUG_LOGGING
 #ifdef DEBUG_LOGGING
@@ -43,6 +44,7 @@ void DumpHex(void *AdrIn,int Len);
 #else    // DEBUG
 
 #define DumpHex(x,y)
+#define DumpHexAdr(x,y,z)
 #define ELOG(format, ...)
 #define LOG(format, ...)
 #define LOG_RAW(format, ...)

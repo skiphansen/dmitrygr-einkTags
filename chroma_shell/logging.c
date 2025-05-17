@@ -56,6 +56,23 @@ void DumpHex(void *AdrIn,int Len)
    }
 }
 
+void DumpHexAdr(void *AdrIn,int Len,int AdrValue)
+{
+   unsigned char *Adr = (unsigned char *) AdrIn;
+   int DumpLen;
+
+   for(int i = 0; i < Len; i += 16) {
+      LOG_RAW("%04X ",AdrValue);
+      DumpLen = Len - i;
+      if(DumpLen > 16) {
+         DumpLen = 16;
+      }
+      DumpHex(Adr,DumpLen);
+      AdrValue += 16;
+      Adr += 16;
+   }
+}
+
 void DumpHexSrc(void *AdrIn,int Len)
 {
    unsigned char *Adr = (unsigned char *) AdrIn;

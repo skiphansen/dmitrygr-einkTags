@@ -395,6 +395,7 @@ int DumpLutCmd(char *CmdLine)
             gLutCmds = g8154_cmd_lookup;
             ScriptSize = 0x1000;
             Skip1 = 0xb5;
+            Ret = RESULT_NO_SUPPORT;
             break;
 
          case CHROMA29C_R:
@@ -428,7 +429,7 @@ int DumpLutCmd(char *CmdLine)
 
          case CHROMA29_CC1310_R:
          case CHROMA29_CC1310_Y:
-            gLutCmds = g8154_cmd_lookup;
+            gLutCmds = g1675_cmd_lookup;
             ScriptSize = 0x1000;
             Skip1 = 0x50;
             break;
@@ -599,8 +600,9 @@ int DumpLutCmd(char *CmdLine)
          }
       }
       printf("Dump:\n");
-      DumpHex(gScript,i+1);
+      DumpHexAdr(gScript,i+1,LutPageOffset);
       printf("\n");
+      Ret = RESULT_FAIL;
    }
    else {
       printf("%s parsed successfully.\n\n",gSn);
