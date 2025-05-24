@@ -807,7 +807,7 @@ int HelpCmd(char *CmdLine)
       // help <cmd>
       if(!(pCmd->Flags & CMD_FLAG_HIDE)) {
          if(pCmd->Usage != NULL) {
-            printf("%s %s",pCmd->CmdString,pCmd->Usage);
+            printf("%s %s\n",pCmd->CmdString,pCmd->Usage);
          }
          else {
             printf("%s - %s\n",pCmd->CmdString,pCmd->HelpString);

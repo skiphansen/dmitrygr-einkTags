@@ -13,6 +13,7 @@ set(CMAKE_C_FLAGS "-std=gnu99 -Wall -MD")
 
 set(RF_CAT_INCLUDE ../firmware/rfcat/include)
 set(COMMON ../common)
+set(BB_EPAPER ../bb_epaper/src)
 
 # Sources for this executable
 if(COBS_TEST)
@@ -35,7 +36,7 @@ endif(COBS_TEST)
 
 add_executable(chroma_shell ${SOURCES})
 
-include_directories(. ${COMMON} ${RF_CAT_INCLUDE} linenoise)
+include_directories(. ${COMMON} ${RF_CAT_INCLUDE} linenoise ${BB_EPAPER})
 
 install(TARGETS chroma_shell DESTINATION sbin/)
 

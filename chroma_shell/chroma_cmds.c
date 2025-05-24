@@ -31,6 +31,14 @@
 #include "cc1110-ext.h"
 #include "chroma_shell.h"
 
+#define _BB_EPAPER_CPP_
+#define DEFINE_BB_TYPE_STRINGS
+
+#include "bb_epaper.h"
+#include "chroma_shell_io.inl"
+#include "bb_ep.inl"
+#include "bb_ep_gfx.inl"
+
 char *gSn;
 ChromaType gChromaType;
 
@@ -108,6 +116,7 @@ ChromaType gChromaType;
 #define P1_EPD_CS       0x02
 #define P1_EPD_RESET    0x04
 
+int BbTestCmd(char *CmdLine);
 int BoardTypeCmd(char *CmdLine);
 int RadioCfgCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
@@ -147,18 +156,19 @@ int setSidle(void);
 int SetTx(float mhz);
 
 struct COMMAND_TABLE commandtable[] = {
+   { "bb_test",  "Try to display an image using bb_epaper type","[type]",0,BbTestCmd},
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
-   { "dump_lut", "Display LUTs extraced from EEPROM","dump_lut [file]",0,DumpLutCmd},
+   { "dump_lut", "Display LUTs extraced from EEPROM","[file]",0,DumpLutCmd},
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
-   { "dump_settings", "Display EEPROM settings","dump_settings [file]",0,DumpSettingsCmd},
-   { "eerd",  "Read data from EEPROM","eerd <address> <length>",0,EEPROM_ReadCmd},
-   { "eewr",  "Write data to EEPROM","eewr <address> <filename>",0,EEPROM_WrCmd},
-   { "ee_pd", "Power up/down EEPROM","ee_pd <0 | 1>",0,EEPROM_PowerCmd},
-   { "ee_backup",  "Write EEPROM data to a file","ee_backup <path>",0,EEPROM_BackupCmd},
-   { "ee_erase",  "Erase EEPROM sectors","ee_erase <address> <sectors>",0,EEPROM_Erase},
-   { "ee_id", "Display EEPROM manufacture and device IDs","ee_id",0,EEPROM_IdCmd},
-   { "ee_restore", "Read EEPROM data from a file","ee_restore <path>",0,EEPROM_RestoreCmd},
-   { "get_sn", "Read SN from flash or file","get_sn [<path>]",0,GetSnCmd},
+   { "dump_settings", "Display EEPROM settings","[file]",0,DumpSettingsCmd},
+   { "eerd",  "Read data from EEPROM","<address> <length>",0,EEPROM_ReadCmd},
+   { "eewr",  "Write data to EEPROM","<address> <filename>",0,EEPROM_WrCmd},
+   { "ee_pd", "Power up/down EEPROM","<0 | 1>",0,EEPROM_PowerCmd},
+   { "ee_backup",  "Write EEPROM data to a file","<path>",0,EEPROM_BackupCmd},
+   { "ee_erase",  "Erase EEPROM sectors","<address> <sectors>",0,EEPROM_Erase},
+   { "ee_id", "Display EEPROM manufacture and device IDs",NULL,0,EEPROM_IdCmd},
+   { "ee_restore", "Read EEPROM data from a file","<path>",0,EEPROM_RestoreCmd},
+   { "get_sn", "Read SN from flash or file","[<path>]",0,GetSnCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
@@ -181,7 +191,8 @@ struct COMMAND_TABLE commandtable[] = {
 const struct {
    const char *SN;
    const char *Desc;
-   int ChromaType;
+   ChromaType ChromaType;
+   int BB_Epaper_Type;
 } gSN2Type[] = {
    {"JAC","BWR Chroma29C",CHROMA29C_R},
    {"JA","BWR Chroma29",CHROMA29_R},
@@ -201,10 +212,10 @@ const struct {
    {"KA","BW Aura29"},
    {"KD","BW Aura42"},
    {"LD","Chroma21_CC1310"},
-   {"MEC","Chroma29_CC1310",CHROMA29_CC1310_R},
+   {"MEC","Chroma29_CC1310",CHROMA29_CC1310_R,EP29R_128x296},
    {"MJ","Chroma21_CC1310"},
    {"MS","Chroma74H+"},
-   {"SR","BWY ChromaAeon74",CHROMA74_CC1311_Y},
+   {"SR","BWY ChromaAeon74",CHROMA74_CC1311_Y,EP75R_800x480},
    {NULL}   // end of table
 };
 
@@ -2615,7 +2626,7 @@ int InitEPD()
 
 int EpdBusyWait(int State,int Timeout)
 {
-   int Ret = RESULT_OK;
+   int Ret = RESULT_FAIL;
    AsyncResp *pMsg;
    bool bFirst = true;
    uint8_t Cmd[4] = {CMD_PORT_RW,1,0,0};
@@ -2645,6 +2656,267 @@ int EpdBusyWait(int State,int Timeout)
 
    return Ret;
 }
+
+void ListBBTypes()
+{
+   printf("Panel types:\n");
+   for(int i = 1; i < EP_PANEL_COUNT; i++) {
+      printf("%2d - %s\n",i,gBB_TypeStrings[i-1]);
+   }
+}
+
+int BbTestCmd(char *CmdLine)
+{
+   char Msg[] = "Hello world!";
+   int x = 400 - (((sizeof(Msg) - 1) * 16) / 2);
+   int y;
+   int BB_Type = EP_PANEL_UNDEFINED;
+   int Ret = RESULT_OK;
+   BBEPDISP bbep;
+   int Err;
+   time_t StartTime;
+   time_t EndTime;
+
+   do {
+      memset(&bbep,0,sizeof(bbep));
+      if(sscanf(CmdLine,"%d",&BB_Type) == 1) {
+         if(BB_Type <= EP_PANEL_UNDEFINED || BB_Type >= EP_PANEL_COUNT) {
+            Ret = RESULT_USAGE;
+            ListBBTypes();
+            printf("Invalid argument, type must be > 0 & < %d\n",
+                   EP_PANEL_COUNT);
+            break;
+         }
+      }
+      else {
+      // no argument, list types
+         ListBBTypes();
+         break;
+      }
+
+      if((Err = bbepSetPanelType(&bbep,BB_Type)) != BBEP_SUCCESS) {
+         printf("bbepSetPanelType failed %d\n",Err);
+         break;
+      }
+
+      x = bbep.native_width;
+      y = bbep.native_height;
+      printf("Selected display is %d X %d\n",x,y);
+
+   // Center message
+      x = (x - ((sizeof(Msg) - 1) * 16)) / 2;
+      y = (y - 16) / 2;
+
+      printf("Writing test message @ %d,%d\n",x,y);
+
+   // power up the display and reset it
+      do {
+         uint8_t Cmd[2] = {CMD_EPD, EPD_FLG_RESET};
+         AsyncResp *pMsg;
+
+         if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+            break;
+         }
+         free(pMsg);
+         delay(100);
+      // Release reset
+         Cmd[1] = 0;
+         if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+            break;
+         }
+         free(pMsg);
+         delay(10);
+      } while(false);
+
+      bbepInitIO(&bbep,8000000);
+      printf("bbepFill plane 0 ...");
+      fflush(stdout);
+      time(&StartTime);
+      bbepFill(&bbep,BBEP_WHITE,0);
+      time(&EndTime);
+      printf(" %ld secs\nbbepFill plane 1 ...",EndTime - StartTime);
+      fflush(stdout);
+      time(&StartTime);
+      bbepFill(&bbep,BBEP_WHITE,1);
+      time(&EndTime);
+      printf(" %ld secs\nbbepWriteString ...",EndTime - StartTime);
+      fflush(stdout);
+
+      Err = bbepWriteString(&bbep,x,y,Msg,FONT_16x16,BBEP_BLACK);
+      if(Err != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+      printf("\nbbepRefresh ...");
+      if((Err = bbepRefresh(&bbep,REFRESH_FULL)) != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+      printf("\nbbepWaitBusy\n");
+      time(&StartTime);
+      bbepWaitBusy(&bbep);
+      time(&EndTime);
+      printf("Refresh time %ld secs\n",EndTime - StartTime);
+      printf("bbepSleep ...");
+      fflush(stdout);
+      bbepSleep(&bbep,DEEP_SLEEP);
+      printf("\nDone\n");
+   } while(false);
+   return Ret;
+}
+
+void bbepWakeUp(BBEPDISP *pBBEP);
+
+enum {
+   FAKE_RST_PIN = 1,
+   FAKE_BUSY_PIN,
+   FAKE_CS_PIN,
+   FAKE_CS2_PIN
+} FakePinNum;
+
+void bbepInitIO(BBEPDISP *pBBEP, uint32_t u32Speed)
+{
+   pBBEP->iRSTPin = FAKE_RST_PIN;
+   pBBEP->iBUSYPin = FAKE_BUSY_PIN;
+   pBBEP->iCSPin = FAKE_CS_PIN;
+   pBBEP->iCS1Pin = FAKE_CS_PIN;
+   pBBEP->iCS2Pin = FAKE_CS2_PIN;
+}
+
+void digitalWrite(int iPin, int iState) 
+{
+   if(iPin == FAKE_RST_PIN) {
+      AsyncResp *pMsg;
+      uint8_t Cmd[2] = {CMD_EPD};
+      Cmd[1] = iState == 0 ? EPD_FLG_RESET : 0;
+
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         ELOG("Timeout\n");
+      }
+      else {
+         free(pMsg);
+      }
+   }
+   else {
+      ELOG("Unsupported Pin %d\n",iPin);
+   }
+}
+
+int digitalRead(int iPin)
+{
+   int Ret = 0;
+
+   if(iPin == FAKE_BUSY_PIN) {
+      AsyncResp *pMsg;
+      uint8_t Cmd[4] = {CMD_PORT_RW,1,0,0};
+
+      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+         ELOG("Timeout\n");
+      }
+      else {
+         Ret = pMsg->Msg[0];
+         free(pMsg);
+      }
+   }
+   else {
+      ELOG("Unsupported Pin %d\n",iPin);
+   }
+   return Ret;
+}
+
+void delay(int iTime)
+{
+   usleep(iTime * 1000);
+}
+
+void bbepWriteData(BBEPDISP *pBBEP, uint8_t *pData, int iLen)
+{
+   uint8_t Cmd[MAX_FRAME_IO_LEN] = {CMD_EPD, 0};
+   int Data2Send;
+   int DataSent = 0;
+   AsyncResp *pMsg;
+
+   while(DataSent < iLen) {
+      Data2Send = iLen - DataSent;
+      if(Data2Send > (MAX_FRAME_IO_LEN - 4)) {
+         Data2Send = MAX_FRAME_IO_LEN - 4;
+      }
+      Cmd[2] = (uint8_t) Data2Send;
+      memcpy(&Cmd[3],pData,Data2Send);
+#if 0
+      LOG("Writing %d bytes of data:\n",Data2Send);
+      DumpHex(pData,Data2Send);
+#endif
+      if((pMsg = SendCmd(Cmd,3 + Data2Send,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+      pData += Data2Send;
+      DataSent += Data2Send;
+   }
+}
+//
+// Convenience function to write a command byte along with a data
+// byte (it's single parameter)
+//
+void bbepCMD2(BBEPDISP *pBBEP, uint8_t cmd1, uint8_t cmd2)
+{
+   AsyncResp *pMsg;
+
+   if (!pBBEP->is_awake) {
+       // if it's asleep, it can't receive commands
+       bbepWakeUp(pBBEP);
+       pBBEP->is_awake = 1;
+   }
+//   LOG("Cmd 0x%x, Data 0x%x\n",cmd1,cmd2);
+   uint8_t Cmd[5] = {CMD_EPD, EPD_FLG_CMD};
+   Cmd[2] = 2;
+   Cmd[3] = cmd1;
+   Cmd[4] = cmd2;
+
+   if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) != NULL) {
+      free(pMsg);
+   }
+}
+
+// 
+// Write a single byte as a COMMAND (D/C set low)
+// 
+void bbepWriteCmd(BBEPDISP *pBBEP, uint8_t cmd)
+{
+   uint8_t Cmd[4] = {CMD_EPD, EPD_FLG_CMD};
+   AsyncResp *pMsg;
+
+   if (!pBBEP->is_awake) { 
+       // if it's asleep, it can't receive commands
+       bbepWakeUp(pBBEP);
+       pBBEP->is_awake = 1;
+   }
+
+   Cmd[2] = 1;
+   Cmd[3] = cmd;
+//   LOG("Cmd 0x%02x\n",cmd);
+
+   if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) != NULL) {
+      free(pMsg);
+   }
+}
+
+long millis(void)
+{
+   return 0;
+}
+
+long micros(void)
+{
+   return 0;
+}
+
+void bbepSetCS2(BBEPDISP *pBBEP, uint8_t cs)
+{
+   LOG("Called\n");
+}
+
 
 void Usage()
 {

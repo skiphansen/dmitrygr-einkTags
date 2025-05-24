@@ -14,7 +14,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "args": ["-D/dev/ttyUSB0"],
+            "args": ["-D/dev/ttyUSB0","-b 115200"],
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
