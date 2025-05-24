@@ -2668,7 +2668,7 @@ void ListBBTypes()
 int BbTestCmd(char *CmdLine)
 {
    char Msg[] = "Hello world!";
-   int x = 400 - (((sizeof(Msg) - 1) * 16) / 2);
+   int x;
    int y;
    int BB_Type = EP_PANEL_UNDEFINED;
    int Ret = RESULT_OK;
@@ -2676,6 +2676,9 @@ int BbTestCmd(char *CmdLine)
    int Err;
    time_t StartTime;
    time_t EndTime;
+   int Font = FONT_16x16;
+   int FontWidth;
+   int FontHeight;
 
    do {
       memset(&bbep,0,sizeof(bbep));
@@ -2699,15 +2702,45 @@ int BbTestCmd(char *CmdLine)
          break;
       }
 
-      x = bbep.native_width;
-      y = bbep.native_height;
-      printf("Selected display is %d X %d\n",x,y);
-
    // Center message
-      x = (x - ((sizeof(Msg) - 1) * 16)) / 2;
-      y = (y - 16) / 2;
+      printf("Selected display is %d X %d pixels\n",bbep.width,bbep.height);
+      while(Font >= FONT_6x8) {
+         switch(Font) {
+            case FONT_6x8:
+               FontWidth = 6;
+               FontHeight = 8;
+               break;
 
-      printf("Writing test message @ %d,%d\n",x,y);
+            case FONT_8x8:
+               FontWidth = 8;
+               FontHeight = 8;
+               break;
+
+            case FONT_12x16:
+               FontWidth = 12;
+               FontHeight =16;
+               break;
+
+            case FONT_16x16:
+               FontWidth = 16;
+               FontHeight = 16;
+               break;
+         }
+         x = (bbep.width - ((sizeof(Msg) - 1) * FontWidth)) / 2;
+         y = (bbep.height - FontHeight) / 2;
+         if(x >= 0 && y >=  0) {
+         // Fits
+            break;
+         }
+         Font--;
+      }
+
+      if(x < 0 || y < 0) {
+         printf("Error: test message won't fit on screen!\n");
+         break;
+      }
+      printf("Writing test message @ %d,%d with FONT_%dx%d\n",
+             x,y,FontWidth,FontHeight);
 
    // power up the display and reset it
       do {
