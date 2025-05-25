@@ -2667,7 +2667,7 @@ void ListBBTypes()
 
 int BbTestCmd(char *CmdLine)
 {
-   char Msg[] = "Hello world!";
+   char Msg[] = "Hello world";
    int x;
    int y;
    int BB_Type = EP_PANEL_UNDEFINED;
@@ -2726,7 +2726,7 @@ int BbTestCmd(char *CmdLine)
                FontHeight = 16;
                break;
          }
-         x = (bbep.width - ((sizeof(Msg) - 1) * FontWidth)) / 2;
+         x = (bbep.width - (sizeof(Msg) * FontWidth)) / 2;
          y = (bbep.height - FontHeight) / 2;
          if(x >= 0 && y >=  0) {
          // Fits
@@ -2780,6 +2780,14 @@ int BbTestCmd(char *CmdLine)
          printf(" failed %d\n",Err);
          break;
       }
+
+      x += (sizeof(Msg) - 1) * FontWidth;
+      Err = bbepWriteString(&bbep,x,y,"!",FONT_16x16,BBEP_RED);
+      if(Err != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+
       printf("\nbbepRefresh ...");
       if((Err = bbepRefresh(&bbep,REFRESH_FULL)) != BBEP_SUCCESS) {
          printf(" failed %d\n",Err);
