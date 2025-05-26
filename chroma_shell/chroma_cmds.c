@@ -39,6 +39,8 @@
 #include "bb_ep.inl"
 #include "bb_ep_gfx.inl"
 
+#define EPD_DATA_LOG    0
+
 char *gSn;
 ChromaType gChromaType;
 
@@ -2668,6 +2670,7 @@ void ListBBTypes()
 int BbTestCmd(char *CmdLine)
 {
    char Msg[] = "Hello world";
+//   char Msg[] = "Hello";
    int x;
    int y;
    int BB_Type = EP_PANEL_UNDEFINED;
@@ -2679,9 +2682,11 @@ int BbTestCmd(char *CmdLine)
    int Font = FONT_16x16;
    int FontWidth;
    int FontHeight;
+   int DisplayWidth;
+   int DisplayHeight;
+   bool bRotate = false;
 
    do {
-      memset(&bbep,0,sizeof(bbep));
       if(sscanf(CmdLine,"%d",&BB_Type) == 1) {
          if(BB_Type <= EP_PANEL_UNDEFINED || BB_Type >= EP_PANEL_COUNT) {
             Ret = RESULT_USAGE;
@@ -2701,9 +2706,33 @@ int BbTestCmd(char *CmdLine)
          printf("bbepSetPanelType failed %d\n",Err);
          break;
       }
+      bbepInitIO(&bbep,8000000);
+      if (bbepTestPanelType(&bbep) != bbep.chip_type) { 
+         printf("Error: Panel does not match chip type\n");
+         break;
+      }
+
+#if 0
+      if((Err = bbepAllocBuffer(&bbep)) != BBEP_SUCCESS) {
+         printf("bbepAllocBuffer failed %d\n",Err);
+         break;
+      }
+#endif
+
+      printf("%s is %d X %d pixels\n",
+             gBB_TypeStrings[BB_Type-1],bbep.width,bbep.height);
+
+      DisplayWidth = bbep.width;
+      DisplayHeight = bbep.height;
+      if(DisplayHeight > DisplayWidth) {
+         printf("Setting rotation to 270\n");
+         bRotate = true;
+         bbepSetRotation(&bbep,270);
+         DisplayHeight = bbep.width;
+         DisplayWidth = bbep.height;
+      }
 
    // Center message
-      printf("Selected display is %d X %d pixels\n",bbep.width,bbep.height);
       while(Font >= FONT_6x8) {
          switch(Font) {
             case FONT_6x8:
@@ -2718,7 +2747,7 @@ int BbTestCmd(char *CmdLine)
 
             case FONT_12x16:
                FontWidth = 12;
-               FontHeight =16;
+               FontHeight = 16;
                break;
 
             case FONT_16x16:
@@ -2726,42 +2755,40 @@ int BbTestCmd(char *CmdLine)
                FontHeight = 16;
                break;
          }
-         x = (bbep.width - (sizeof(Msg) * FontWidth)) / 2;
-         y = (bbep.height - FontHeight) / 2;
+
+         if(bRotate) {
+            x = (DisplayWidth - FontHeight) / 2;
+            y = (DisplayHeight - (sizeof(Msg) * FontWidth)) / 2;
+         }
+         else {
+            x = (DisplayWidth - (sizeof(Msg) * FontWidth)) / 2;
+            y = (DisplayHeight - FontHeight) / 2;
+         }
          if(x >= 0 && y >=  0) {
          // Fits
             break;
          }
-         Font--;
+         if(bRotate) {
+            if(Font == FONT_16x16) {
+               Font = FONT_8x8;
+            }
+            else if(Font == FONT_8x8) {
+               Font = -1;
+            }
+         }
+         else {
+            Font--;
+         }
       }
 
-      if(x < 0 || y < 0) {
+      if(Font < 0) {
          printf("Error: test message won't fit on screen!\n");
          break;
       }
+
       printf("Writing test message @ %d,%d with FONT_%dx%d\n",
              x,y,FontWidth,FontHeight);
 
-   // power up the display and reset it
-      do {
-         uint8_t Cmd[2] = {CMD_EPD, EPD_FLG_RESET};
-         AsyncResp *pMsg;
-
-         if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
-            break;
-         }
-         free(pMsg);
-         delay(100);
-      // Release reset
-         Cmd[1] = 0;
-         if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
-            break;
-         }
-         free(pMsg);
-         delay(10);
-      } while(false);
-
-      bbepInitIO(&bbep,8000000);
       printf("bbepFill plane 0 ...");
       fflush(stdout);
       time(&StartTime);
@@ -2775,24 +2802,26 @@ int BbTestCmd(char *CmdLine)
       printf(" %ld secs\nbbepWriteString ...",EndTime - StartTime);
       fflush(stdout);
 
-      Err = bbepWriteString(&bbep,x,y,Msg,FONT_16x16,BBEP_BLACK);
+      Err = bbepWriteString(&bbep,x,y,Msg,Font,BBEP_BLACK);
       if(Err != BBEP_SUCCESS) {
          printf(" failed %d\n",Err);
          break;
       }
 
       x += (sizeof(Msg) - 1) * FontWidth;
-      Err = bbepWriteString(&bbep,x,y,"!",FONT_16x16,BBEP_RED);
+      Err = bbepWriteString(&bbep,x,y,"!",Font,BBEP_RED);
       if(Err != BBEP_SUCCESS) {
          printf(" failed %d\n",Err);
          break;
       }
 
       printf("\nbbepRefresh ...");
+      fflush(stdout);
       if((Err = bbepRefresh(&bbep,REFRESH_FULL)) != BBEP_SUCCESS) {
          printf(" failed %d\n",Err);
          break;
       }
+      fflush(stdout);
       printf("\nbbepWaitBusy\n");
       time(&StartTime);
       bbepWaitBusy(&bbep);
@@ -2884,7 +2913,7 @@ void bbepWriteData(BBEPDISP *pBBEP, uint8_t *pData, int iLen)
       }
       Cmd[2] = (uint8_t) Data2Send;
       memcpy(&Cmd[3],pData,Data2Send);
-#if 0
+#if EPD_DATA_LOG
       LOG("Writing %d bytes of data:\n",Data2Send);
       DumpHex(pData,Data2Send);
 #endif
@@ -2909,7 +2938,9 @@ void bbepCMD2(BBEPDISP *pBBEP, uint8_t cmd1, uint8_t cmd2)
        bbepWakeUp(pBBEP);
        pBBEP->is_awake = 1;
    }
-//   LOG("Cmd 0x%x, Data 0x%x\n",cmd1,cmd2);
+#if EPD_DATA_LOG
+   LOG("Cmd 0x%x, Data 0x%x\n",cmd1,cmd2);
+#endif
    uint8_t Cmd[5] = {CMD_EPD, EPD_FLG_CMD};
    Cmd[2] = 2;
    Cmd[3] = cmd1;
@@ -2936,7 +2967,9 @@ void bbepWriteCmd(BBEPDISP *pBBEP, uint8_t cmd)
 
    Cmd[2] = 1;
    Cmd[3] = cmd;
-//   LOG("Cmd 0x%02x\n",cmd);
+#if EPD_DATA_LOG
+   LOG("Cmd 0x%02x\n",cmd);
+#endif
 
    if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) != NULL) {
       free(pMsg);
