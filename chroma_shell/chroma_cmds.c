@@ -1848,7 +1848,7 @@ int DumpNewSettings(uint8_t *Data,int Adr,bool bSilent)
       }
       else if(TypeLen[RealType] != Len) {
          LOG_RAW("Internal error: type 0x%x changed len from %d to %d @ 0x%x\n",
-                 TypeLen[RealType],Len,Offset + Adr);
+                 RealType,TypeLen[RealType],Len,Offset + Adr);
       }
 
       if((Type & 0x80) == 0) {
@@ -1864,9 +1864,9 @@ int DumpNewSettings(uint8_t *Data,int Adr,bool bSilent)
             if(!bSilent) {
                LOG_RAW("End of settings @ 0x%x.\n",Offset + Adr);
                if(SkippedSlots > 0) {
-                  LOG_RAW("Erased entrys:\nType\tLen\tCount\n");
-                  for(int i = 0; i < 256; i++) {
-                     if(ErasedCount[i] > 0) {
+                  LOG_RAW("Type\tLen\tErased count\n");
+                  for(int i = 0; i < 255; i++) {
+                     if(TypeLen[i] > 0) {
                         LOG_RAW("0x%x\t%d\t%d\n",i,TypeLen[i],ErasedCount[i]);
                      }
                   }
@@ -1988,11 +1988,12 @@ int LoadSettings(char *CmdLine,uint8_t *Image,int *pAdr,bool bSilent)
          // Reading from flash
             Err = EEPROM_RdInternal(Adr,NULL,Image,sizeof(magicNum));
             if(Err != 0) {
+               Ret = Err;
                break;
             }
             if(memcmp(Image,magicNum,sizeof(magicNum)) == 0) {
             // Read the rest of the page
-               Err = EEPROM_RdInternal(Adr,NULL,Image,EEPROM_ERZ_SECTOR_SZ);
+               Ret = EEPROM_RdInternal(Adr,NULL,Image,EEPROM_ERZ_SECTOR_SZ);
                break;
             }
          }
