@@ -42,6 +42,7 @@ const uint8_t gLutSignature[] = {0xce,0xfa,0xef,0xbe};   // "beefface"
 void LutCompare(uint8_t *pData,int DataLen);
 
 
+// 400 x 300 x 2
 EpdCmdLut g8176_cmd_lookup[] = {
 // uc8176 like commands
    {"PANEL_SETTING",0x00},
@@ -87,7 +88,7 @@ EpdCmdLut g8176_cmd_lookup[] = {
    {NULL}     // end of table
 };
 
-// uc8159 like commands
+// uc8159 like commands (640x480, 600x450,640,446,600,448)
 EpdCmdLut g8159_cmd_lookup[] = {
    {"PANEL_SETTING",0x00},
    {"POWER_SETTING",0x01},
@@ -138,7 +139,7 @@ EpdCmdLut g8159_cmd_lookup[] = {
    {NULL}     // end of table
 };
 
-// uc8154 like commands
+// uc8154 like commands 94x230, 94x252, 128x296, 200x300
 EpdCmdLut g8154_cmd_lookup[] = {
    {"PANEL_SETTING",0x00},
    {"POWER_SETTING",0x01},
@@ -359,7 +360,7 @@ int DumpLutCmd(char *CmdLine)
             break;
          }
       }
-// add support for reading from flash
+// TODO: add support for reading from flash
 
       if(memcmp(gScript,gLutSignature,sizeof(gLutSignature)) != 0) {
          printf("LUT signature not found at offset 0x%lx\n",LutPageOffset);
@@ -430,6 +431,12 @@ int DumpLutCmd(char *CmdLine)
          case CHROMA29_CC1310_R:
          case CHROMA29_CC1310_Y:
             gLutCmds = g1675_cmd_lookup;
+            ScriptSize = 0x1000;
+            Skip1 = 0x50;
+            break;
+
+         case CHROMA21_CC1310_R:
+            gLutCmds = g8176_cmd_lookup;
             ScriptSize = 0x1000;
             Skip1 = 0x50;
             break;
@@ -575,8 +582,14 @@ int DumpLutCmd(char *CmdLine)
                break;
 
             default:
-               printf("Opcode 0x%x at offset 0x%lx ignored\n",
-                      Opcode,LutPageOffset + Offset);
+               if(DataLen > 1) {
+                  printf("Opcode 0x%x at offset 0x%lx with %d bytes of data ignored:\n",
+                         Opcode,Offset,DataLen - 1);
+                  DumpHexAdr(&gScript[Offset],DataLen - 1,Offset+LutPageOffset);
+               }
+               else {
+                  printf("Opcode 0x%x at offset 0x%lx ignored\n",Opcode,Offset);
+               }
                break;
          }
          if(Ret != RESULT_OK) {
