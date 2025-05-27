@@ -33,6 +33,7 @@ typedef enum {
    CHROMA74_R,
    CHROMA74_Y,
    CHROMA74_CC1311_Y,
+   CHROMA21_CC1310_R,
 } ChromaType;
 
 typedef struct {

@@ -119,6 +119,7 @@ ChromaType gChromaType;
 #define P1_EPD_RESET    0x04
 
 int BbTestCmd(char *CmdLine);
+int ChipTypeCmd(char *CmdLine);
 int BoardTypeCmd(char *CmdLine);
 int RadioCfgCmd(char *CmdLine);
 int PingCmd(char *CmdLine);
@@ -160,6 +161,7 @@ int SetTx(float mhz);
 struct COMMAND_TABLE commandtable[] = {
    { "bb_test",  "Try to display an image using bb_epaper type","[type]",0,BbTestCmd},
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
+   { "chip_type", "Guess EPD controller type",NULL,0,ChipTypeCmd},
    { "dump_lut", "Display LUTs extraced from EEPROM","[file]",0,DumpLutCmd},
    { "dump_rf_regs", "Display settings of all RF registers",NULL,0,DumpRfRegsCmd},
    { "dump_settings", "Display EEPROM settings","[file]",0,DumpSettingsCmd},
@@ -215,7 +217,7 @@ const struct {
    {"KD","BW Aura42"},
    {"LD","Chroma21_CC1310"},
    {"MEC","Chroma29_CC1310",CHROMA29_CC1310_R,EP29R_128x296},
-   {"MJ","Chroma21_CC1310"},
+   {"MJC","Chroma21_CC1310",CHROMA21_CC1310_R},
    {"MS","Chroma74H+"},
    {"SR","BWY ChromaAeon74",CHROMA74_CC1311_Y,EP75R_800x480},
    {NULL}   // end of table
@@ -2834,6 +2836,38 @@ int BbTestCmd(char *CmdLine)
    } while(false);
    return Ret;
 }
+
+int ChipTypeCmd(char *CmdLine)
+{
+   BBEPDISP bbep;
+   int Ret = RESULT_OK;
+   int ChipType;
+   const char *ChipDesc = NULL;
+
+   bbepInitIO(&bbep,8000000);
+   ChipType = bbepTestPanelType(&bbep);
+   switch(ChipType) {
+      case BBEP_CHIP_SSD16xx:
+         ChipDesc = "SSD16xx";
+         break;
+
+      case BBEP_CHIP_UC81xx:
+         ChipDesc = "UC81xx";
+         break;
+
+      case BBEP_CHIP_IT8951:
+         ChipDesc = "IT8951";
+         break;
+
+      default:
+         ChipDesc = "Unkown";
+         break;
+   }
+   printf("Chip type %s\n",ChipDesc);
+
+   return Ret;
+}
+
 
 void bbepWakeUp(BBEPDISP *pBBEP);
 
