@@ -43,6 +43,7 @@
 
 char *gSn;
 ChromaType gChromaType;
+uint32_t gEEPROM_Len;
 
 #define DEFAULT_TO   100
 
@@ -151,7 +152,8 @@ int SendInitTbl(InitTbl *pTbl);
 int PowerUpEPD(void);
 int InitEPD(void);
 int EpdBusyWait(int State,int Timeout);
-int sfdp_dump(uint8_t *buf,int sz);
+int sfdp_dump(uint32_t *buf,int sz,bool bSilent);
+int GetEEPROM_Id(bool bSilent);
 
 // Eventual CC1101 API functions.  
 // Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
@@ -854,24 +856,41 @@ const char *Rcode2Str(uint8_t Rcode)
 
 uint32_t GetEEPROM_Len(void)
 {
-   static uint32_t EEPROM_Len;
-   AsyncMsg *pMsg;
+   AsyncResp *pMsg;
    uint8_t Cmd[2];
 
-   if(EEPROM_Len == 0) do {
+   do {
+      if(gEEPROM_Len != 0) {
+      // nothing to do 
+         break;
+      }
+   // try getting EEPROM ID first ... lowest overhead and must be supported
+      GetEEPROM_Id(true);
+      if(gEEPROM_Len != 0) {
+      // Success
+         break;
+      }
+   // try getting via SFDP 
+      Cmd[0] = CMD_READ_SFDP;
+      pMsg = SendCmd(Cmd,1,2000);
+      if(pMsg != NULL) {
+         gEEPROM_Len = sfdp_dump((uint32_t *) pMsg->Msg,pMsg->MsgLen,true);
+         free(pMsg);
+      }
+      if(gEEPROM_Len != 0) {
+      // Success
+         break;
+      }
+   // As a last resort use CMD_EEPROM_LEN (hopefully the proxy is not generic!)
       Cmd[0] = CMD_EEPROM_LEN;
-      if(SendAsyncMsg(&Cmd[0],1) != 0) {
-         break;
+      pMsg = SendCmd(Cmd,1,2000);
+      if(pMsg != NULL) {
+         memcpy(&gEEPROM_Len,pMsg->Msg,sizeof(gEEPROM_Len));
+         free(pMsg);
       }
-
-      if((pMsg = Wait4Response(CMD_EEPROM_LEN,100)) == NULL) {
-         break;
-      }
-      memcpy(&EEPROM_Len,&pMsg->Msg[2],sizeof(EEPROM_Len));
-      free(pMsg);
    } while(false);
 
-   return EEPROM_Len;
+   return gEEPROM_Len;
 }
 
 int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
@@ -1201,7 +1220,7 @@ int EEPROM_Erase(char *CmdLine)
 }
 
 
-int EEPROM_IdCmd(char *CmdLine)
+int GetEEPROM_Id(bool bSilent)
 {
    int Ret = RESULT_FAIL;
    uint8_t Cmd[2] = {CMD_EEPROM_ID};
@@ -1214,32 +1233,55 @@ int EEPROM_IdCmd(char *CmdLine)
 
       ManufactureID = pMsg->Msg[0];
       DeviceID = pMsg->Msg[1];
-      printf("EEPROM Manufacture ID: 0x%02x, DeviceID: 0x%02x",
-             ManufactureID,DeviceID);
+      if(!bSilent) {
+         printf("EEPROM Manufacture ID: 0x%02x, DeviceID: 0x%02x",
+                ManufactureID,DeviceID);
+         if(ManufactureID == 0xc2) {
+            printf(" (Macronix ");
+            switch(DeviceID) {
+               case 0x10:
+                  printf("MX25V1006E, 128K");
+                  break;
+
+               case 0x13:
+                  printf("MX25V8006E, 1 Mbyte");
+                  break;
+
+               default:
+                  printf("0x%02x",DeviceID);
+                  break;
+
+            }
+            printf(")");
+         }
+         printf("\n");
+      }
 
       if(ManufactureID == 0xc2) {
-         printf(" (Macronix ");
          switch(DeviceID) {
             case 0x10:
-               printf("MX25V1006E, 128K");
+            // MX25V1006E, 128K
+               gEEPROM_Len = 128 * 1024;
                break;
 
             case 0x13:
-               printf("MX25V8006E, 1 Mbyte");
-               break;
-               
-            default:
-               printf("0x%02x",DeviceID);
+            // MX25V8006E, 1 Mbyte
+               gEEPROM_Len = 1024 * 1024;
                break;
 
+            default:
+               break;
          }
-         printf(")");
       }
-      printf("\n");
       free(pMsg);
    }
 
    return Ret;
+}
+
+int EEPROM_IdCmd(char *CmdLine)
+{
+   return GetEEPROM_Id(false);
 }
 
 
@@ -1332,7 +1374,7 @@ int SfdpCmd(char *CmdLine)
    AsyncResp *pMsg = SendCmd(&Cmd,1,2000);
    if(pMsg != NULL) {
       Ret = RESULT_OK;
-      sfdp_dump(pMsg->Msg,pMsg->MsgLen);
+      sfdp_dump((uint32_t *) pMsg->Msg,pMsg->MsgLen,false);
       free(pMsg);
    }
 

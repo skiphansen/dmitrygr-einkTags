@@ -235,6 +235,21 @@ static int sfdp_basic(uint32_t *w, size_t len)
 	return 0;
 }
 
+static uint32_t sfdp_basic_get_size(uint32_t *w)
+{
+   uint32_t Ret;
+
+   if (bits(w[1], 31, 31)) {
+   // Flash Memory in megabytes
+      Ret = (1 << (bits(w[1], 30, 0)-23)) * 1024 * 1024;
+   } else {
+   // Flash Memory in bytes
+      Ret = bits(w[1], 30, 0)/8;
+   }
+	return Ret;
+}
+
+
 unsigned int Bcd2Bin(unsigned int Hex)
 {
    unsigned int Ret = 0;
@@ -305,13 +320,15 @@ static const struct sfdp_param_handler handlers[] = {
 	{ 0xffc2, "Macronix flash parameter table", sfdp_macronix }
 };
 
-int sfdp_dump(uint32_t *buf,int sz)
+// return eeprom size in bytes
+uint32_t sfdp_dump(uint32_t *buf,int sz,bool bSilent)
 {
 	struct {
 		struct sfdp_hdr hdr;
 		struct sfdp_param_hdr param[];
 	} *sfdp = (void*)buf;
 	int i, j;
+   uint32_t Ret = 0;
 
 	if (sfdp->hdr.signature == bswap_32(SFDP_SIGNATURE)) {
 		for (i = 0; i < sz/4; i++)
@@ -319,16 +336,19 @@ int sfdp_dump(uint32_t *buf,int sz)
 	}
 
 	if (sfdp->hdr.signature != SFDP_SIGNATURE) {
-		printf("Invalid signature %#08x, expected %#08x\n",
-				sfdp->hdr.signature, SFDP_SIGNATURE);
-      return 1;
+      if(!bSilent) {
+         printf("Invalid signature %#08x, expected %#08x\n",
+               sfdp->hdr.signature, SFDP_SIGNATURE);
+      }
+      return 0;
 	}
 
-	p_hex_val(sfdp->hdr.signature, "Signature",NULL);
-	p_dec_val(sfdp->hdr.major, "Major", NULL);
-	p_dec_val(sfdp->hdr.minor, "Minor", NULL);
-	p_dec_val(sfdp->hdr.nph + 1, "Parameters", NULL);
-	p_dec_val(sz, "Total length", NULL);
+   if(!bSilent) {
+   	p_hex_val(sfdp->hdr.signature, "Signature",NULL);
+   	p_dec_val(sfdp->hdr.major, "Major", NULL);
+   	p_dec_val(sfdp->hdr.minor, "Minor", NULL);
+   	p_dec_val(sfdp->hdr.nph + 1, "Parameters", NULL);
+   }
 
 	for (i = 0; i <= sfdp->hdr.nph; i++) {
 		const struct sfdp_param_handler *h = &sfdp_unknown_param;
@@ -337,6 +357,10 @@ int sfdp_dump(uint32_t *buf,int sz)
 		unsigned off = p->ptr[2] << 16 | p->ptr[1] << 8 | p->ptr[0];
 
 		for (j = 0; j < ARRAY_SIZE(handlers); j++) {
+         if(id == 0xff00 && bSilent) {
+         // just wanted flash memory size
+            return sfdp_basic_get_size(&buf[off/4]);
+         }
 			if (id == handlers[i].id) {
 				h = &handlers[i];
 				break;
@@ -361,5 +385,5 @@ int sfdp_dump(uint32_t *buf,int sz)
 			printf("Warning: Parameter %u data are behind the end of the file\n", id);
 	}
 
-	return 0;
+	return Ret;
 }
