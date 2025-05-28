@@ -490,13 +490,6 @@ int ParseSerialData(uint8_t *Buf,int Len)
    int MsgLen;
    static int RawLen = 0;
 
-   if(g.Verbose & VERBOSE_DUMP_RAW_RX) {
-      if(g.Verbose & VERBOSE_TIMESTAMPS) {
-         PrintTime(false);
-      }
-      LOG("Read %d raw bytes:\n",Len);
-      DumpHex(Buf,Len);
-   }
    for(j = 0; j < Len; j++) {
       MsgLen = SerialFrameIO_ParseByte(Buf[j]);
       if(MsgLen == 0) {

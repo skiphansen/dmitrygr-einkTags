@@ -50,6 +50,15 @@ uint8_t CobsBuf[2000];
 int gTxLen;
 #endif
 
+// #define COBS_VERBOSE_LOGGING
+
+#ifdef COBS_VERBOSE_LOGGING
+#include "logging.h"
+#define VLOG(format, ...) _LOG("%s: " format,__FUNCTION__,## __VA_ARGS__)
+#else
+#define VLOG(format, ...)
+#endif
+
 // #define NO_CRC
 
 struct {
@@ -126,6 +135,7 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
       Ret = -1;
       if(RxCount <= 0) {
       // Start of a new frame
+         VLOG("Start of frame\n");
          RxCount = 0;
          RunLen = 0;
          Crc = 0xffff;
@@ -134,6 +144,10 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
       // Got a good frame
          Ret = RxCount - 2;   // Adjust for CRC
          RxCount = -1;
+         VLOG("Returning %d byte frame\n",Ret);
+      }
+      else {
+         VLOG("End of frame CRC 0x%04x\n",Crc);
       }
    }
    else if(RxCount >= 0) {
@@ -141,17 +155,20 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
       Ret = -1;
       if(RunLen == 0) {
       // get overhead byte
+         VLOG("RunLen set to %d\n",RxByte);
          RunLen = RxByte;
       }
       else {
          RunLen--;
          if(RunLen == 0) {
          // update RunLen
+            VLOG("Data byte 0, RunLen set to %d\n",RxByte);
             RunLen = RxByte;
             RxByte = 0; // Data is 0
          }
          if(RxCount >= gCOBS.MaxMsgLen) {
          // this message is too big, toss it!
+            VLOG("Overflow, msg len >= %d\n",gCOBS.MaxMsgLen);
             RxCount = -1;
          }
          else {
@@ -159,6 +176,9 @@ int SerialFrameIO_ParseByte(uint8_t RxByte)
             UpdateCRC(RxByte,&Crc);
          }
       }
+   }
+   else {
+      VLOG("Byte 0x%x not consumed\n",RxByte);
    }
 
    return Ret;
