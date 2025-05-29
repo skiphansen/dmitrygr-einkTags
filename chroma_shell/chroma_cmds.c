@@ -2867,20 +2867,27 @@ int BbTestCmd(char *CmdLine)
       if(Mode & MODE_LINES) {
          int x0 = 0;
          int x1 = 0;
-         int y0 = bbep.width;
-         int y1 = 0;
-         printf("Drawing lines...");
-         fflush(stdout);
+         int y0 = 0;
+         int y1 = bbep.height-1;
+         printf("Drawing lines...\n");
+         printf("from %d,%d to %d,%d\n",x0,y0,x1,y1);
          bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
-         x0 = x1;  y0 = y1; y1 = bbep.height-1;
-         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
-         x0 = x1;  y0 = y1; x0 = 0;
+         x0 = x1;  y0 = y1; x1 = bbep.width - 1;
+         printf("from %d,%d to %d,%d\n",x0,y0,x1,y1);
          bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
          x0 = x1;  y0 = y1; y1 = 0;
+         printf("from %d,%d to %d,%d\n",x0,y0,x1,y1);
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+         x0 = x1;  y0 = y1; x1 = 0;
+         printf("from %d,%d to %d,%d\n",x0,y0,x1,y1);
          bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
       // diagonals
-         bbepDrawLine(&bbep,0,0,bbep.width-1,bbep.height-1,BBEP_BLACK);
-         bbepDrawLine(&bbep,bbep.width-1,0,0,bbep.height-1,BBEP_RED);
+         x0 = 0;  y0 = 0; x1 = bbep.width - 1; y1 = bbep.height-1; 
+         printf("from %d,%d to %d,%d\n",x0,y0,x1,y1);
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+         x0 = 0; y0 = bbep.height-1; x1 = bbep.width - 1; y1 = 0;
+         printf("from %d,%d to %d,%d (in plane 1 color)",x0,y0,x1,y1);
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_RED); 
          DisplayElapsedTime(true);
       }
       if(Mode & MODE_TEXT) {
