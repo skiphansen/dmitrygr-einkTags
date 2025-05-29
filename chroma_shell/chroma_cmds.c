@@ -161,7 +161,7 @@ int setSidle(void);
 int SetTx(float mhz);
 
 struct COMMAND_TABLE commandtable[] = {
-   { "bb_test",  "Try to display an image using bb_epaper type","[type]",0,BbTestCmd},
+   { "bb_test",  "Try to display an image using bb_epaper type","[<mode> <type>]",0,BbTestCmd},
    { "board_type",  "Display board type",NULL,0,BoardTypeCmd},
    { "chip_type", "Guess EPD controller type",NULL,0,ChipTypeCmd},
    { "dump_lut", "Display LUTs extraced from EEPROM","[file]",0,DumpLutCmd},
@@ -218,9 +218,9 @@ const struct {
    {"KA","BW Aura29"},
    {"KD","BW Aura42"},
    {"LD","Chroma21_CC1310"},
-   {"MEC","Chroma29_CC1310",CHROMA29_CC1310_R,EP29R_128x296},
+   {"MEC","BWR Chroma29_CC1310",CHROMA29_CC1310_R,EP29R_128x296},
    {"MJC","Chroma21_CC1310",CHROMA21_CC1310_R},
-   {"MS","Chroma74H+"},
+   {"MSC","BWY Chroma74H+",CHROMA74_CC1310_R},
    {"SR","BWY ChromaAeon74",CHROMA74_CC1311_Y,EP75R_800x480},
    {NULL}   // end of table
 };
@@ -2712,27 +2712,53 @@ void ListBBTypes()
    }
 }
 
+void DisplayElapsedTime(bool bPrint)
+{
+   static time_t StartTime;
+   time_t EndTime;
+
+   if(bPrint) {
+      time(&EndTime);
+      printf("\n%ld secs\n",EndTime - StartTime);
+      StartTime = EndTime;
+   }
+   else {
+      time(&StartTime);
+   }
+}
+
 int BbTestCmd(char *CmdLine)
 {
    char Msg[] = "Hello world";
-//   char Msg[] = "Hello";
    int x;
    int y;
    int BB_Type = EP_PANEL_UNDEFINED;
    int Ret = RESULT_OK;
    BBEPDISP bbep;
    int Err;
-   time_t StartTime;
-   time_t EndTime;
    int Font = FONT_16x16;
    int FontWidth;
    int FontHeight;
    int DisplayWidth;
    int DisplayHeight;
    bool bRotate = false;
+   int Mode;
+   #define MODE_TEXT       1
+   #define MODE_LINES      2
+   #define MODE_BUFFERED   4
 
    do {
-      if(sscanf(CmdLine,"%d",&BB_Type) == 1) {
+      if(sscanf(CmdLine,"%d %d",&Mode,&BB_Type) != 2 || Mode == 0 || Mode > 7) {
+      // no argument, list types
+         printf("Mode bitmap: 1: Text, 2: lines, 4:Buffered mode\n");
+         ListBBTypes();
+         break;
+      }
+      else {
+         if(Mode & MODE_LINES) {
+         // drawing lines requires buffering
+            Mode |= MODE_BUFFERED;
+         }
          if(BB_Type <= EP_PANEL_UNDEFINED || BB_Type >= EP_PANEL_COUNT) {
             Ret = RESULT_USAGE;
             ListBBTypes();
@@ -2740,11 +2766,6 @@ int BbTestCmd(char *CmdLine)
                    EP_PANEL_COUNT);
             break;
          }
-      }
-      else {
-      // no argument, list types
-         ListBBTypes();
-         break;
       }
 
       if((Err = bbepSetPanelType(&bbep,BB_Type)) != BBEP_SUCCESS) {
@@ -2756,16 +2777,16 @@ int BbTestCmd(char *CmdLine)
          printf("Error: Panel does not match chip type\n");
          break;
       }
-
-#if 0
-      if((Err = bbepAllocBuffer(&bbep)) != BBEP_SUCCESS) {
-         printf("bbepAllocBuffer failed %d\n",Err);
-         break;
-      }
-#endif
-
       printf("%s is %d X %d pixels\n",
              gBB_TypeStrings[BB_Type-1],bbep.width,bbep.height);
+
+      if(Mode & MODE_BUFFERED) {
+         if((Err = bbepAllocBuffer(&bbep)) != BBEP_SUCCESS) {
+            printf("bbepAllocBuffer failed %d\n",Err);
+            break;
+         }
+         printf("Local buffer allocated\n");
+      }
 
       DisplayWidth = bbep.width;
       DisplayHeight = bbep.height;
@@ -2836,42 +2857,77 @@ int BbTestCmd(char *CmdLine)
 
       printf("bbepFill plane 0 ...");
       fflush(stdout);
-      time(&StartTime);
+      DisplayElapsedTime(false);
       bbepFill(&bbep,BBEP_WHITE,0);
-      time(&EndTime);
-      printf(" %ld secs\nbbepFill plane 1 ...",EndTime - StartTime);
+      DisplayElapsedTime(true);
+      printf("bbepFill plane 1 ...");
       fflush(stdout);
-      time(&StartTime);
       bbepFill(&bbep,BBEP_WHITE,1);
-      time(&EndTime);
-      printf(" %ld secs\nbbepWriteString ...",EndTime - StartTime);
-      fflush(stdout);
+      DisplayElapsedTime(true);
+      if(Mode & MODE_LINES) {
+         int x0 = 0;
+         int x1 = 0;
+         int y0 = bbep.width;
+         int y1 = 0;
+         printf("Drawing lines...");
+         fflush(stdout);
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+         x0 = x1;  y0 = y1; y1 = bbep.height-1;
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+         x0 = x1;  y0 = y1; x0 = 0;
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+         x0 = x1;  y0 = y1; y1 = 0;
+         bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_BLACK); 
+      // diagonals
+         bbepDrawLine(&bbep,0,0,bbep.width-1,bbep.height-1,BBEP_BLACK);
+         bbepDrawLine(&bbep,bbep.width-1,0,0,bbep.height-1,BBEP_RED);
+         DisplayElapsedTime(true);
+      }
+      if(Mode & MODE_TEXT) {
+         printf("bbepWriteString...");
+         fflush(stdout);
+         Err = bbepWriteString(&bbep,x,y,Msg,Font,BBEP_BLACK,BBEP_WHITE);
+         if(Err != BBEP_SUCCESS) {
+            printf(" failed %d\n",Err);
+            break;
+         }
 
-      Err = bbepWriteString(&bbep,x,y,Msg,Font,BBEP_BLACK);
-      if(Err != BBEP_SUCCESS) {
-         printf(" failed %d\n",Err);
-         break;
+         x += (sizeof(Msg) - 1) * FontWidth;
+         Err = bbepWriteString(&bbep,x,y,"!",Font,BBEP_RED,BBEP_WHITE);
+         if(Err != BBEP_SUCCESS) {
+            printf(" failed %d\n",Err);
+            break;
+         }
+         DisplayElapsedTime(true);
       }
 
-      x += (sizeof(Msg) - 1) * FontWidth;
-      Err = bbepWriteString(&bbep,x,y,"!",Font,BBEP_RED);
-      if(Err != BBEP_SUCCESS) {
-         printf(" failed %d\n",Err);
-         break;
-      }
+      if(Mode & MODE_BUFFERED) {
+         printf("bbepWritePlane 0 ...");
+         fflush(stdout);
+         Err = bbepWritePlane(&bbep,0);
+         if(Err != BBEP_SUCCESS) {
+            printf(" failed %d\n",Err);
+            break;
+         }
 
-      printf("\nbbepRefresh ...");
+         DisplayElapsedTime(true);
+         printf("bbepWritePlane 1 ...");
+         fflush(stdout);
+         Err = bbepWritePlane(&bbep,1);
+         if(Err != BBEP_SUCCESS) {
+            printf(" failed %d\n",Err);
+            break;
+         }
+         DisplayElapsedTime(true);
+      }
+      printf("bbepRefresh ...");
       fflush(stdout);
       if((Err = bbepRefresh(&bbep,REFRESH_FULL)) != BBEP_SUCCESS) {
          printf(" failed %d\n",Err);
          break;
       }
-      fflush(stdout);
-      printf("\nbbepWaitBusy\n");
-      time(&StartTime);
       bbepWaitBusy(&bbep);
-      time(&EndTime);
-      printf("Refresh time %ld secs\n",EndTime - StartTime);
+      DisplayElapsedTime(true);
       printf("bbepSleep ...");
       fflush(stdout);
       bbepSleep(&bbep,DEEP_SLEEP);
