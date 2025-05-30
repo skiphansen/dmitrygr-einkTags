@@ -2727,6 +2727,7 @@ void DisplayElapsedTime(bool bPrint)
    }
 }
 
+#if 1
 int BbTestCmd(char *CmdLine)
 {
    char Msg[] = "Hello world";
@@ -2780,12 +2781,12 @@ int BbTestCmd(char *CmdLine)
       printf("%s is %d X %d pixels\n",
              gBB_TypeStrings[BB_Type-1],bbep.width,bbep.height);
 
+      printf("Using %sbuffered mode\n",(Mode & MODE_BUFFERED) ? "" : "un");
       if(Mode & MODE_BUFFERED) {
          if((Err = bbepAllocBuffer(&bbep)) != BBEP_SUCCESS) {
             printf("bbepAllocBuffer failed %d\n",Err);
             break;
          }
-         printf("Local buffer allocated\n");
       }
 
       DisplayWidth = bbep.width;
@@ -2855,14 +2856,10 @@ int BbTestCmd(char *CmdLine)
       printf("Writing test message @ %d,%d with FONT_%dx%d\n",
              x,y,FontWidth,FontHeight);
 
-      printf("bbepFill plane 0 ...");
+      printf("bbepFill ...");
       fflush(stdout);
       DisplayElapsedTime(false);
-      bbepFill(&bbep,BBEP_WHITE,0);
-      DisplayElapsedTime(true);
-      printf("bbepFill plane 1 ...");
-      fflush(stdout);
-      bbepFill(&bbep,BBEP_WHITE,1);
+      bbepFill(&bbep,BBEP_WHITE,PLANE_BOTH);
       DisplayElapsedTime(true);
       if(Mode & MODE_LINES) {
          int x0 = 0;
@@ -2893,14 +2890,14 @@ int BbTestCmd(char *CmdLine)
       if(Mode & MODE_TEXT) {
          printf("bbepWriteString...");
          fflush(stdout);
-         Err = bbepWriteString(&bbep,x,y,Msg,Font,BBEP_BLACK,BBEP_WHITE);
+         Err = bbepWriteString(&bbep,x,y,Msg,Font,BBEP_BLACK,BBEP_TRANSPARENT);
          if(Err != BBEP_SUCCESS) {
             printf(" failed %d\n",Err);
             break;
          }
 
          x += (sizeof(Msg) - 1) * FontWidth;
-         Err = bbepWriteString(&bbep,x,y,"!",Font,BBEP_RED,BBEP_WHITE);
+         Err = bbepWriteString(&bbep,x,y,"!",Font,BBEP_RED,BBEP_TRANSPARENT);
          if(Err != BBEP_SUCCESS) {
             printf(" failed %d\n",Err);
             break;
@@ -2909,18 +2906,9 @@ int BbTestCmd(char *CmdLine)
       }
 
       if(Mode & MODE_BUFFERED) {
-         printf("bbepWritePlane 0 ...");
+         printf("bbepWritePlane ...");
          fflush(stdout);
-         Err = bbepWritePlane(&bbep,0);
-         if(Err != BBEP_SUCCESS) {
-            printf(" failed %d\n",Err);
-            break;
-         }
-
-         DisplayElapsedTime(true);
-         printf("bbepWritePlane 1 ...");
-         fflush(stdout);
-         Err = bbepWritePlane(&bbep,1);
+         Err = bbepWritePlane(&bbep,PLANE_BOTH);
          if(Err != BBEP_SUCCESS) {
             printf(" failed %d\n",Err);
             break;
@@ -2942,6 +2930,57 @@ int BbTestCmd(char *CmdLine)
    } while(false);
    return Ret;
 }
+#else
+
+#define ALLOCATE_BUFFER 0
+int BbTestCmd(char *CmdLine)
+{
+   char Msg[] = "Hello world";
+   BBEPDISP bbep;
+   int Err;
+
+   do {
+      if((Err = bbepSetPanelType(&bbep,EP75R_800x480)) != BBEP_SUCCESS) {
+         printf("bbepSetPanelType failed %d\n",Err);
+         break;
+      }
+      bbepInitIO(&bbep,8000000);
+#if ALLOCATE_BUFFER
+      if((Err = bbepAllocBuffer(&bbep)) != BBEP_SUCCESS) {
+         printf("bbepAllocBuffer failed %d\n",Err);
+         break;
+      }
+#endif
+
+#if 1
+      bbepFill(&bbep,BBEP_WHITE,0);
+      bbepFill(&bbep,BBEP_WHITE,1);
+#else
+      bbepFill(&bbep,BBEP_WHITE,PLANE_BOTH);
+#endif
+      Err = bbepWriteString(&bbep,304,232,Msg,FONT_16x16,BBEP_BLACK,BBEP_WHITE);
+      if(Err != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+
+#if ALLOCATE_BUFFER
+      Err = bbepWritePlane(&bbep,PLANE_BOTH);
+      if(Err != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+#endif
+
+      if((Err = bbepRefresh(&bbep,REFRESH_FULL)) != BBEP_SUCCESS) {
+         printf(" failed %d\n",Err);
+         break;
+      }
+      bbepWaitBusy(&bbep);
+   } while(false);
+   return 0;
+}
+#endif
 
 int ChipTypeCmd(char *CmdLine)
 {
