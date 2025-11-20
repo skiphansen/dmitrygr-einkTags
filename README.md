@@ -22,14 +22,14 @@ project has the 2.4 ghz zbs based tags well in hand.
 ## My Goal
 
 My  goals were:
-1. Port the subgig code to the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) project.
-2. Add support for the Chroma 42 and Chroma 60 tags which I also have.
+1. Port the subgig code to the [OpenEPaperLink](https://github.com/jjwbruijn/OpenEPaperLink) project (completed).
+2. Add support for the Chroma 42 (completed) and Chroma 60 tags which I also have.
 
 The reason I became interested in ePaper displays is that I have several applications
 that I wanted to use them for:
 
 1. Monitoring the water level in my septic tank to prevent unpleasant surprises!
-1. Charting daily tide levels.
+1. Charting daily tide levels (completed).
 1. Displaying the current [weather](https://github.com/G6EJD/ESP32-e-Paper-Weather-Display) and predictions.
 
 ## Status
