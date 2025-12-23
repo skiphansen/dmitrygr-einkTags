@@ -53,3 +53,22 @@ purchases I've made.  Just beware there are DSLogic (without the plus)
 logic analyzers on ebay that lack the 256M bit buffer. The difference is
 just a DRAM chip, but save yourself the hassle and make sure you get the
 "plus" version. 
+
+## 24 Pin EPD interface 
+
+<img width="809" height="941" alt="image" src="https://github.com/user-attachments/assets/89e26b63-4538-417d-8302-59fda625f974" />
+
+## Logic Analyzer Connections
+
+| Pin | Signal | Note |
+| - | - | - |
+| 1 | Slave Chip Select | Rare, only if connected |
+| 9 | Busy |
+| 10 | Reset |
+| 11 | D/C | Typical, only needed if pin 8 is grounded |
+| 12 | Chip Select |
+| 13 | Clock |
+| 14 | Serial Data |
+
+
+
