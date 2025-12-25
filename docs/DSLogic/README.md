@@ -15,12 +15,13 @@ Note: A logic analyzer is **NOT** necessary to view the traces.
 
 | File | |
 | -| -|
-| Chroma29_epd_two_color.dsl| Chroma 29 test, part 1 |
-| Chroma29_epd_end.dsl | Chroma 29 test, part  2|
-|Chroma42_epd_two_color.dsl | Chroma 42 test, part 1 |
-|Chroma42_epd_two_color_2.dsl | Chroma 42 test, part 2 |
-|Chroma42_epd_two_color_3.dsl| Chroma 42 test, part 3 |
-|Chroma42_epd_two_color_4.dsl| Chroma 42 test, part 4 |
+| Chroma21_epd_two_color.dsl| Chroma 21 EPD capture displaying image |
+| Chroma29_epd_two_color.dsl| Chroma 29 EPD capture, part 1 |
+| Chroma29_epd_end.dsl | Chroma 29 EPD capture, part  2|
+|Chroma42_epd_two_color.dsl | Chroma 42 EPD capture, part 1 |
+|Chroma42_epd_two_color_2.dsl | Chroma 42 EPD capture, part 2 |
+|Chroma42_epd_two_color_3.dsl| Chroma 42 EPD capture, part 3 |
+|Chroma42_epd_two_color_4.dsl| Chroma 42 EPD capture, part 4 |
 |EPD_SPI.dsc | Configuation file for SPI capture of Chroma 29 |
 |EPD_SPI_Chroma42.dsc | Configuation file for SPI capture of Chroma 42 |
 |Solum_EL022F6W4A.dsl|  BWRY Solum EL022F6W4A startup<br>Displaying info screen!|
