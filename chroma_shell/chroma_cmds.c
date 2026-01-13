@@ -39,6 +39,7 @@
 #include "bb_ep.inl"
 #include "bb_ep_gfx.inl"
 
+#define MAX_PORTS       4
 #define EPD_DATA_LOG    0
 
 char *gSn;
@@ -141,11 +142,10 @@ int SN2MACCmd(char *CmdLine);
 int TxCmd(char *CmdLine);
 int DumpSettingsCmd(char *CmdLine);
 int PortRdWrCmd(uint8_t Port,bool bWrite,char *CmdLine);
-int P0rdCmd(char *CmdLine);
+int PortReadCmd(char *CmdLine);
+int PortWriteCmd(char *CmdLine);
 int P0wrCmd(char *CmdLine);
-int P1rdCmd(char *CmdLine);
 int P1wrCmd(char *CmdLine);
-int P2rdCmd(char *CmdLine);
 int P2wrCmd(char *CmdLine);
 int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len);
 int SendInitTbl(InitTbl *pTbl);
@@ -179,11 +179,8 @@ struct COMMAND_TABLE commandtable[] = {
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
    { "reset", "reset device",NULL,0,ResetCmd},
    { "rx", "Enter RF receive mode",NULL,0,RxCmd},
-   { "p0rd", "Read port 0",NULL,0,P0rdCmd},
-   { "p0wr", "Write port 0",NULL,0,P0wrCmd},
-   { "p1rd", "Read port 1",NULL,0,P1rdCmd},
-   { "p1wr", "Write port 1",NULL,0,P1wrCmd},
-   { "p2rd", "Read port 2",NULL,0,P2rdCmd},
+   { "port_read", "Read port X",NULL,0,PortReadCmd},
+   { "port_write", "Write port X","<port> <hex mask> <hex value>",0,PortWriteCmd},
    { "p2wr", "Write port 2",NULL,0,P2wrCmd},
    { "sfdp", "Dump SPI flash sfdp into",NULL,0,SfdpCmd},
    { "set_reg", "set chip register device",NULL,0,SetRegCmd},
@@ -2145,10 +2142,41 @@ int PortRdWrCmd(uint8_t Port,bool bWrite,char *CmdLine)
          Ret = RESULT_OK;
          break;
       }
-      LOG_RAW("Port%d: 0x%x\n",Port,pMsg->Msg[0]);
+      LOG_RAW("Port %d/%c: 0x%x\n",Port,'A' + Port,pMsg->Msg[0]);
       free(pMsg);
       Ret = RESULT_OK;
    } while(false);
+
+   return Ret;
+}
+
+// <Port> <Mask> <Value>
+int PortReadCmd(char *CmdLine)
+{
+   int Ret = RESULT_FAIL;
+   int Port;
+
+   if(sscanf(CmdLine,"%d",&Port) != 1 || Port < 0 || Port >= MAX_PORTS) {
+      Ret = RESULT_USAGE;
+   }
+   else {
+      Ret = PortRdWrCmd(Port,false,NULL);
+   }
+
+   return Ret;
+}
+
+int PortWriteCmd(char *CmdLine)
+{
+   int Ret = RESULT_FAIL;
+   uint32_t Port;
+
+   if(ConvertValue(&CmdLine,&Port) || Port > MAX_PORTS) {
+      Ret = RESULT_USAGE;
+   }
+   else {
+      Ret = PortRdWrCmd((uint32_t) Port,true,CmdLine);
+   }
 
    return Ret;
 }
@@ -2184,9 +2212,6 @@ int P2wrCmd(char *CmdLine)
    return PortRdWrCmd(2,true,CmdLine);
 #else
    do {
-      if(gBoardInfo == NULL) {
-
-      }
       LOG("Calling PowerUpEPD\n");
       if(PowerUpEPD() != 0) {
          break;
