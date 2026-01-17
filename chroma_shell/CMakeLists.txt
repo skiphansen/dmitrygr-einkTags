@@ -31,6 +31,7 @@ else()
       linenoise/linenoise.c
       logging.c
       lut_dump.c
+      jep106.c
    )
 endif(COBS_TEST)
 

@@ -120,6 +120,9 @@ uint32_t gEEPROM_Len;
 #define P1_EPD_CS       0x02
 #define P1_EPD_RESET    0x04
 
+// in jep106.c
+const char *JEP106_ID_2_string(uint8_t *pData,int DataLen,uint8_t *pDevId,uint16_t *pManId);
+
 int BbTestCmd(char *CmdLine);
 int ChipTypeCmd(char *CmdLine);
 int BoardTypeCmd(char *CmdLine);
@@ -1221,20 +1224,21 @@ int GetEEPROM_Id(bool bSilent)
 {
    int Ret = RESULT_FAIL;
    uint8_t Cmd[2] = {CMD_EEPROM_ID};
-   uint8_t ManufactureID;
+   uint16_t ManufactureID = 0x7f;
    uint8_t DeviceID;
+   const char *Desc;
 
    AsyncResp *pMsg = SendCmd(Cmd,1,2000);
    if(pMsg != NULL) {
       Ret = RESULT_OK;
 
-      ManufactureID = pMsg->Msg[0];
-      DeviceID = pMsg->Msg[1];
+      Desc = JEP106_ID_2_string(pMsg->Msg,pMsg->MsgLen,&DeviceID,&ManufactureID);
+
       if(!bSilent) {
-         printf("EEPROM Manufacture ID: 0x%02x, DeviceID: 0x%02x",
-                ManufactureID,DeviceID);
-         if(ManufactureID == 0xc2) {
-            printf(" (Macronix ");
+         printf("EEPROM Manufacture ID: 0x%02x, DeviceID: 0x%02x (%s",
+                ManufactureID,DeviceID,Desc);
+         if(ManufactureID == 0x42) {
+            printf(" ");
             switch(DeviceID) {
                case 0x10:
                   printf("MX25V1006E, 128K");
@@ -1249,12 +1253,25 @@ int GetEEPROM_Id(bool bSilent)
                   break;
 
             }
-            printf(")");
          }
-         printf("\n");
+         else if(ManufactureID == 0x1f) {
+            printf(" ");
+            switch(DeviceID) {
+               case 0x46:
+                  printf("AT25FF161A, 2 Mbytes");
+                  break;
+
+               default:
+                  printf("0x%02x",DeviceID);
+                  break;
+
+            }
+         }
+
+         printf(") \n");
       }
 
-      if(ManufactureID == 0xc2) {
+      if(ManufactureID == 0x42) {
          switch(DeviceID) {
             case 0x10:
             // MX25V1006E, 128K

@@ -1,70 +1,307 @@
-<Project Version="10.0" VendorName="SlickEdit" TemplateName="Other C/C++" WorkingDir="../chroma_shell">
-	<Config Name="Debug" Type="cpp" DebugCallbackName="gdb" OutputFile="%bdchroma_shell" CompilerConfigName="Latest Version">
+<Project
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="Other C/C++"
+	WorkingDir="../chroma_shell">
+	<Config
+		Name="Debug"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdchroma_shell"
+		CompilerConfigName="Latest Version">
 		<Menu>
-			<Target Name="Compile" MenuCaption="&amp;Compile" CaptureOutputWith="ProcessBuffer" OutputExts="*.o" SaveOption="SaveCurrent" RunFromDir="%rw">
-				<Exec CmdLine="cc -c -g %i %defd -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
 			</Target>
-			<Target Name="Link" MenuCaption="&amp;Link">
-				<Exec CmdLine="cc -g -o &quot;%o&quot; %f %libs" />
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -g -o "%o" %f %libs'/>
 			</Target>
-			<Target Name="Build" MenuCaption="&amp;Build" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; build &quot;%w&quot; &quot;%r&quot;" />
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
 			</Target>
-			<Target Name="Rebuild" MenuCaption="&amp;Rebuild" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; rebuild &quot;%w&quot; &quot;%r&quot;" />
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
 			</Target>
-			<Target Name="Debug" MenuCaption="&amp;Debug" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-				<Exec CmdLine="vsdebugio -prog &quot;%o&quot;" />
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
 			</Target>
-			<Target Name="Execute" MenuCaption="E&amp;xecute" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%o&quot;" />
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
 			</Target>
 		</Menu>
 	</Config>
-	<Config Name="Release" Type="cpp" DebugCallbackName="gdb" OutputFile="%bdchroma_shell" CompilerConfigName="Latest Version">
+	<Config
+		Name="Release"
+		Type="cpp"
+		DebugCallbackName="gdb"
+		OutputFile="%bdchroma_shell"
+		CompilerConfigName="Latest Version">
 		<Menu>
-			<Target Name="Compile" MenuCaption="&amp;Compile" CaptureOutputWith="ProcessBuffer" SaveOption="SaveCurrent" OutputExts="*.o" RunFromDir="%rw">
-				<Exec CmdLine="cc -c -O %i %defd -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				OutputExts="*.o"
+				RunFromDir="%rw">
+				<Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
 			</Target>
-			<Target Name="Link" MenuCaption="&amp;Link">
-				<Exec CmdLine="cc -O -o &quot;%o&quot; %f %libs" />
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link">
+				<Exec CmdLine='cc -O -o "%o" %f %libs'/>
 			</Target>
-			<Target Name="Build" MenuCaption="&amp;Build" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; build &quot;%w&quot; &quot;%r&quot;" />
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
 			</Target>
-			<Target Name="Rebuild" MenuCaption="&amp;Rebuild" CaptureOutputWith="ProcessBuffer" SaveOption="SaveWorkspaceFiles" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%(VSLICKBIN1)vsbuild&quot; rebuild &quot;%w&quot; &quot;%r&quot;" />
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
 			</Target>
-			<Target Name="Debug" MenuCaption="&amp;Debug" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-				<Exec CmdLine="vsdebugio -prog &quot;%o&quot;" />
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='vsdebugio -prog "%o"'/>
 			</Target>
-			<Target Name="Execute" MenuCaption="E&amp;xecute" SaveOption="SaveNone" BuildFirst="1" CaptureOutputWith="ProcessBuffer" RunFromDir="%rw">
-				<Exec CmdLine="&quot;%o&quot;" />
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				RunFromDir="%rw">
+				<Exec CmdLine='"%o"'/>
 			</Target>
 		</Menu>
 	</Config>
 	<Rules Name="Compile">
-		<Rule InputExts="*.s" OutputExts="*.o" LinkObject="1">
-			<Exec CmdLine="as -o &quot;%bd%n.o&quot; &quot;%f&quot;" />
+		<Rule
+			InputExts="*.s"
+			OutputExts="*.o"
+			LinkObject="1">
+			<Exec CmdLine='as -o "%bd%n.o" "%f"'/>
 		</Rule>
 	</Rules>
 	<Files>
-		<Folder Name="Source Files" Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d"><F N="../chroma_shell/chroma_cmds.c" /><F N="../chroma_shell/linenoise/linenoise.c" /><F N="../chroma_shell/logging.c" /><F N="../chroma_shell/lut_dump.c" /><F N="../chroma_shell/serial_shell.c" /><F N="../chroma_shell/sfdp-parser.c" /><F N="../common/CobsFraming.c" /></Folder><Folder Name="Header Files" Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if"><F N="../bb_epaper/src/bb_epaper.h" /><F N="../bb_epaper/src/Group5.h" /><F N="../chroma_shell/chroma_shell.h" /><F N="../chroma_shell/cmds.h" /><F N="../common/CobsFraming.h" /><F N="../common/proxy_msgs.h" /><F N="../firmware/rfcat/include/cc1110-ext.h" /><F N="../chroma_shell/linenoise/linenoise.h" /><F N="../chroma_shell/logging.h" /><F N="../chroma_shell/serial_shell.h" /><F N="../common/CobsFraming.h" /><F N="../../../../../usr/include/alloca.h" /><F N="../../../../../usr/include/asm-generic/bitsperlong.h" /><F N="../../../../../usr/include/asm-generic/errno-base.h" /><F N="../../../../../usr/include/asm-generic/errno.h" /><F N="../../../../../usr/include/asm-generic/int-ll64.h" /><F N="../../../../../usr/include/asm-generic/ioctl.h" /><F N="../../../../../usr/include/asm-generic/ioctls.h" /><F N="../../../../../usr/include/asm-generic/posix_types.h" /><F N="../../../../../usr/include/asm-generic/types.h" /><F N="../../../../../usr/include/byteswap.h" /><F N="../../../../../usr/include/ctype.h" /><F N="../../../../../usr/include/endian.h" /><F N="../../../../../usr/include/err.h" /><F N="../../../../../usr/include/errno.h" /><F N="../../../../../usr/include/fcntl.h" /><F N="../../../../../usr/include/features.h" /><F N="../../../../../usr/include/features-time64.h" /><F N="../../../../../usr/include/linux/const.h" /><F N="../../../../../usr/include/linux/errno.h" /><F N="../../../../../usr/include/linux/ioctl.h" /><F N="../../../../../usr/include/linux/posix_types.h" /><F N="../../../../../usr/include/linux/serial.h" /><F N="../../../../../usr/include/linux/stddef.h" /><F N="../../../../../usr/include/linux/tty_flags.h" /><F N="../../../../../usr/include/linux/types.h" /><F N="../../../../../usr/include/stdc-predef.h" /><F N="../../../../../usr/include/stdint.h" /><F N="../../../../../usr/include/stdio.h" /><F N="../../../../../usr/include/stdlib.h" /><F N="../../../../../usr/include/string.h" /><F N="../../../../../usr/include/strings.h" /><F N="../../../../../usr/include/termios.h" /><F N="../../../../../usr/include/time.h" /><F N="../../../../../usr/include/unistd.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/bitsperlong.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/errno.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/ioctl.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/ioctls.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/posix_types_64.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/posix_types.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/asm/types.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/byteswap.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/confname.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/endian.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/endianness.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/environments.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/errno.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/fcntl.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/fcntl-linux.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/floatn-common.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/floatn.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/getopt_core.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/getopt_posix.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/ioctls.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/ioctl-types.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/libc-header-start.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/long-double.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/posix_opt.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/pthreadtypes.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/select.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stat.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-intn.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-least.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-uintn.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdio_lim.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdlib-float.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_mutex.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_rwlock.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_stat.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-baud.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_cc.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_cflag.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_iflag.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_lflag.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_oflag.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-misc.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-struct.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-tcflow.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/thread-shared-types.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/time64.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/time.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/timesize.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/clockid_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/clock_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__FILE.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/FILE.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/typesizes.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__locale_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/locale_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/sigset_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_tm.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/timer_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/time_t.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/uintn-identity.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/unistd_ext.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/waitflags.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/waitstatus.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/wchar.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/bits/wordsize.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/gnu/stubs-64.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/gnu/stubs.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/cdefs.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/ioctl.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/select.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/stat.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/time.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/ttydefaults.h" /><F N="../../../../../usr/include/x86_64-linux-gnu/sys/types.h" /><F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h" /><F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h" /><F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h" /><F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h" /><F N="../bb_epaper/src/bb_ep_gfx.inl" /><F N="../bb_epaper/src/bb_ep.inl" /><F N="../bb_epaper/src/g5dec.inl" /><F N="../chroma_shell/chroma_shell_io.inl" /></Folder><Folder Name="RfStudio" Filters="">
-			<F N="../RfStudio/CC1101/settings/gs_typical.xml" />
-			<F N="../RfStudio/CC1101/settings/ts_esp-idf-cc1101.xml" />
-			<F N="../RfStudio/cc1110/typical_settings.xml" />
+		<Folder
+			Name="Source Files"
+			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+			<F N="../chroma_shell/chroma_cmds.c"/>
+			<F N="../common/CobsFraming.c"/>
+			<F N="../chroma_shell/jep106.c"/>
+			<F N="../chroma_shell/linenoise/linenoise.c"/>
+			<F N="../chroma_shell/logging.c"/>
+			<F N="../chroma_shell/lut_dump.c"/>
+			<F N="../chroma_shell/serial_shell.c"/>
+			<F N="../chroma_shell/sfdp-parser.c"/>
 		</Folder>
-		<Folder Name="Other Files" Filters="">
-			<F N="../chroma_shell/.gitignore" />
-			<F N="../docs/cc1101_vrs_cc111x.md" />
-			<F N="../docs/Chroma.md" />
-			<F N="../docs/Chroma29.md" />
-			<F N="../docs/Chroma42.md" />
-			<F N="../chroma_shell/CMakeLists.txt" />
-			<F N="/cc1xxx/docs/notes.txt" />
-			<F N="../README.md" />
-			<F N="../chroma_shell/README.md" />
-			<F N="../docs/Station.md" />
+		<Folder
+			Name="Header Files"
+			Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+			<F N="../bb_epaper/src/bb_epaper.h"/>
+			<F N="../bb_epaper/src/Group5.h"/>
+			<F N="../chroma_shell/chroma_shell.h"/>
+			<F N="../chroma_shell/cmds.h"/>
+			<F N="../common/CobsFraming.h"/>
+			<F N="../common/proxy_msgs.h"/>
+			<F N="../firmware/rfcat/include/cc1110-ext.h"/>
+			<F N="../chroma_shell/linenoise/linenoise.h"/>
+			<F N="../chroma_shell/logging.h"/>
+			<F N="../chroma_shell/serial_shell.h"/>
+			<F N="../common/CobsFraming.h"/>
+			<F N="../../../../../usr/include/alloca.h"/>
+			<F N="../../../../../usr/include/asm-generic/bitsperlong.h"/>
+			<F N="../../../../../usr/include/asm-generic/errno-base.h"/>
+			<F N="../../../../../usr/include/asm-generic/errno.h"/>
+			<F N="../../../../../usr/include/asm-generic/int-ll64.h"/>
+			<F N="../../../../../usr/include/asm-generic/ioctl.h"/>
+			<F N="../../../../../usr/include/asm-generic/ioctls.h"/>
+			<F N="../../../../../usr/include/asm-generic/posix_types.h"/>
+			<F N="../../../../../usr/include/asm-generic/types.h"/>
+			<F N="../../../../../usr/include/byteswap.h"/>
+			<F N="../../../../../usr/include/ctype.h"/>
+			<F N="../../../../../usr/include/endian.h"/>
+			<F N="../../../../../usr/include/err.h"/>
+			<F N="../../../../../usr/include/errno.h"/>
+			<F N="../../../../../usr/include/fcntl.h"/>
+			<F N="../../../../../usr/include/features.h"/>
+			<F N="../../../../../usr/include/features-time64.h"/>
+			<F N="../../../../../usr/include/linux/const.h"/>
+			<F N="../../../../../usr/include/linux/errno.h"/>
+			<F N="../../../../../usr/include/linux/ioctl.h"/>
+			<F N="../../../../../usr/include/linux/posix_types.h"/>
+			<F N="../../../../../usr/include/linux/serial.h"/>
+			<F N="../../../../../usr/include/linux/stddef.h"/>
+			<F N="../../../../../usr/include/linux/tty_flags.h"/>
+			<F N="../../../../../usr/include/linux/types.h"/>
+			<F N="../../../../../usr/include/stdc-predef.h"/>
+			<F N="../../../../../usr/include/stdint.h"/>
+			<F N="../../../../../usr/include/stdio.h"/>
+			<F N="../../../../../usr/include/stdlib.h"/>
+			<F N="../../../../../usr/include/string.h"/>
+			<F N="../../../../../usr/include/strings.h"/>
+			<F N="../../../../../usr/include/termios.h"/>
+			<F N="../../../../../usr/include/time.h"/>
+			<F N="../../../../../usr/include/unistd.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/bitsperlong.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/errno.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/ioctl.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/ioctls.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/posix_types_64.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/posix_types.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/asm/types.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/byteswap.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/confname.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/endian.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/endianness.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/environments.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/errno.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/fcntl.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/fcntl-linux.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/floatn-common.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/floatn.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/getopt_core.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/getopt_posix.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/ioctls.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/ioctl-types.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/libc-header-start.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/long-double.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/posix_opt.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/pthreadtypes.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/select.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stat.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-intn.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-least.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdint-uintn.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdio_lim.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/stdlib-float.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_mutex.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_rwlock.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/struct_stat.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-baud.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_cc.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_cflag.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_iflag.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_lflag.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-c_oflag.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-misc.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-struct.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/termios-tcflow.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/thread-shared-types.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/time64.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/time.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/timesize.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/clockid_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/clock_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__FILE.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/FILE.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/typesizes.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__locale_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/locale_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/sigset_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/struct_tm.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/timer_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/types/time_t.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/uintn-identity.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/unistd_ext.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/waitflags.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/waitstatus.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/wchar.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/bits/wordsize.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/gnu/stubs-64.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/gnu/stubs.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/cdefs.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/ioctl.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/select.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/stat.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/time.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/ttydefaults.h"/>
+			<F N="../../../../../usr/include/x86_64-linux-gnu/sys/types.h"/>
+			<F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h"/>
+			<F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h"/>
+			<F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h"/>
+			<F N="../../../../../usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h"/>
+			<F N="../bb_epaper/src/bb_ep_gfx.inl"/>
+			<F N="../bb_epaper/src/bb_ep.inl"/>
+			<F N="../bb_epaper/src/g5dec.inl"/>
+			<F N="../chroma_shell/chroma_shell_io.inl"/>
+		</Folder>
+		<Folder
+			Name="RfStudio"
+			Filters="">
+			<F N="../RfStudio/CC1101/settings/gs_typical.xml"/>
+			<F N="../RfStudio/CC1101/settings/ts_esp-idf-cc1101.xml"/>
+			<F N="../RfStudio/cc1110/typical_settings.xml"/>
+		</Folder>
+		<Folder
+			Name="Other Files"
+			Filters="">
+			<F N="../chroma_shell/.gitignore"/>
+			<F N="../docs/cc1101_vrs_cc111x.md"/>
+			<F N="../docs/Chroma.md"/>
+			<F N="../docs/Chroma29.md"/>
+			<F N="../docs/Chroma42.md"/>
+			<F N="../chroma_shell/CMakeLists.txt"/>
+			<F N="/cc1xxx/docs/notes.txt"/>
+			<F N="../README.md"/>
+			<F N="../chroma_shell/README.md"/>
+			<F N="../docs/Station.md"/>
 		</Folder>
 	</Files>
 </Project>
