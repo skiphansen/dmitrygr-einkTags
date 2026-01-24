@@ -3,6 +3,8 @@
 // Originally from https://github.com/petris/sfdp-parser.git
 // 
 // Macronix vendor table support added  by Skip Hansen 
+// SFDP is defined in JEDEC spec SJESD216H
+
 #include <byteswap.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -359,7 +361,7 @@ uint32_t sfdp_dump(uint32_t *buf,int sz,bool bSilent)
 		for (j = 0; j < ARRAY_SIZE(handlers); j++) {
          if(id == 0xff00 && bSilent) {
          // just wanted flash memory size
-            return sfdp_basic_get_size(&buf[off/4]);
+            return sfdp_basic_get_size(&buf[off/4]) + 1;
          }
 			if (id == handlers[i].id) {
 				h = &handlers[i];

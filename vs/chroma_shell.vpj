@@ -131,12 +131,18 @@
 			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
 			<F N="../chroma_shell/chroma_cmds.c"/>
 			<F N="../common/CobsFraming.c"/>
+			<F N="../chroma_shell/test_large_bwr/EPD_Driver.cpp"/>
+			<F N="../chroma_shell/test_large_bwr/Image_970_Masterfm_01.c"/>
+			<F N="../chroma_shell/test_large_bwr/Image_970_Masterfm_02.c"/>
+			<F N="../chroma_shell/test_large_bwr/Image_970_Slavefm_01.c"/>
+			<F N="../chroma_shell/test_large_bwr/Image_970_Slavefm_02.c"/>
 			<F N="../chroma_shell/jep106.c"/>
 			<F N="../chroma_shell/linenoise/linenoise.c"/>
 			<F N="../chroma_shell/logging.c"/>
 			<F N="../chroma_shell/lut_dump.c"/>
 			<F N="../chroma_shell/serial_shell.c"/>
 			<F N="../chroma_shell/sfdp-parser.c"/>
+			<F N="../chroma_shell/test_large_bwr/test_large_bwr.cpp"/>
 		</Folder>
 		<Folder
 			Name="Header Files"
@@ -151,6 +157,8 @@
 			<F N="../chroma_shell/linenoise/linenoise.h"/>
 			<F N="../chroma_shell/logging.h"/>
 			<F N="../chroma_shell/serial_shell.h"/>
+			<F N="../chroma_shell/test_large_bwr/EPD_Configuration.h"/>
+			<F N="../chroma_shell/test_large_bwr/EPD_Driver.h"/>
 			<F N="../common/CobsFraming.h"/>
 			<F N="../../../../../usr/include/alloca.h"/>
 			<F N="../../../../../usr/include/asm-generic/bitsperlong.h"/>
@@ -298,10 +306,12 @@
 			<F N="../docs/Chroma29.md"/>
 			<F N="../docs/Chroma42.md"/>
 			<F N="../chroma_shell/CMakeLists.txt"/>
+			<F N="../chroma_shell/jep106.inc"/>
 			<F N="/cc1xxx/docs/notes.txt"/>
 			<F N="../README.md"/>
 			<F N="../chroma_shell/README.md"/>
 			<F N="../docs/Station.md"/>
 		</Folder>
+		<F N="../chroma_shell/test_large_bwr/readme.md"/>
 	</Files>
 </Project>

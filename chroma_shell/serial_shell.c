@@ -610,7 +610,7 @@ char *TimeStamp2String(uint32_t TAISecs)
 {
    struct tm *pTm; 
    time_t Time;
-   static char TimeString[] = "xx/xx/xxxx xx:xx:xx";
+   static char TimeString[80];
 
    if(TAISecs != 0) {
    // date -d"1/1/2000" -u +%s

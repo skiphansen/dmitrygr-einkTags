@@ -42,6 +42,12 @@
 #define MAX_PORTS       4
 #define EPD_DATA_LOG    0
 
+#if EPD_DATA_LOG
+#define EPD_LOG(format, ...) _LOG("%s: " format,__FUNCTION__,## __VA_ARGS__)
+#else
+#define EPD_LOG(format, ...)
+#endif
+
 char *gSn;
 ChromaType gChromaType;
 uint32_t gEEPROM_Len;
@@ -136,6 +142,7 @@ int EEPROM_WrCmd(char *CmdLine);
 int EEPROM_BackupCmd(char *CmdLine);
 int EEPROM_Erase(char *CmdLine);
 int EEPROM_IdCmd(char *CmdLine);
+int EpdTestCmd(char *CmdLine);
 int EEPROM_RestoreCmd(char *CmdLine);
 int DumpLutCmd(char *CmdLine);
 int DumpRfRegsCmd(char *CmdLine);
@@ -157,6 +164,8 @@ int InitEPD(void);
 int EpdBusyWait(int State,int Timeout);
 int sfdp_dump(uint32_t *buf,int sz,bool bSilent);
 int GetEEPROM_Id(bool bSilent);
+int EpdSetPins(uint8_t Enable,uint8_t Reset,uint8_t DC,uint8_t CS,uint8_t CS1);
+void DisplayElapsedTime(const char *Msg);
 
 // Eventual CC1101 API functions.  
 // Function names based on https://github.com/LSatan/SmartRC-CC1101-Driver-Lib
@@ -177,6 +186,7 @@ struct COMMAND_TABLE commandtable[] = {
    { "ee_erase",  "Erase EEPROM sectors","<address> <sectors>",0,EEPROM_Erase},
    { "ee_id", "Display EEPROM manufacture and device IDs",NULL,0,EEPROM_IdCmd},
    { "ee_restore", "Read EEPROM data from a file","<path>",0,EEPROM_RestoreCmd},
+   { "epd_test", "Send test image to EPD",NULL,0,EpdTestCmd},
    { "get_sn", "Read SN from flash or file","[<path>]",0,GetSnCmd},
    { "ping",  "Send a ping",NULL,0,PingCmd},
    { "radio_config", "Set radio configuration",NULL,0,RadioCfgCmd},
@@ -899,9 +909,9 @@ int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
    #define READ_CHUNK_LINES      4
    #define READ_CHUNK_LEN        (READ_CHUNK_LINES * 16)
 
-   int Ret = RESULT_USAGE;
+   int Ret = RESULT_FAIL;
    uint8_t Cmd[6];
-   AsyncMsg *pMsg;
+   AsyncResp *pMsg = NULL;
    int Bytes2Read;
    int Bytes2Dump;
    int DumpOffset;
@@ -936,11 +946,7 @@ int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
          Cmd[MsgLen++] = (uint8_t) (Adr & 0xff);
          Cmd[MsgLen++] = (uint8_t) ((Adr >> 8) & 0xff);
          Cmd[MsgLen++] = (uint8_t) ((Adr >> 16) & 0xff);
-         if(SendAsyncMsg(Cmd,MsgLen) != 0) {
-            break;
-         }
-
-         if((pMsg = Wait4Response(CMD_EEPROM_RD,2000)) == NULL) {
+         if((pMsg = SendCmd(Cmd,MsgLen,2000)) == NULL) {
             break;
          }
 
@@ -953,7 +959,7 @@ int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
                printf("\r%d%% complete",LastProgress);
                fflush(stdout);
             }
-            if(fwrite(&pMsg->Msg[2],Bytes2Read,1,fp) != 1) {
+            if(fwrite(&pMsg->Msg,Bytes2Read,1,fp) != 1) {
                printf("fwrite failed\n");
                break;
             }
@@ -961,13 +967,13 @@ int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
          }
          else if(RdBuf != NULL) {
          // Copy data read to buffer
-            memcpy(RdBuf,&pMsg->Msg[2],Bytes2Read);
+            memcpy(RdBuf,&pMsg->Msg,Bytes2Read);
             RdBuf += Bytes2Read;
             Adr += Bytes2Read;
          }
          else {
          // Dumping EEPROM
-            DumpOffset = 2;
+            DumpOffset = 0;
             while(Bytes2Read > 0) {
                LOG_RAW("%06x ",Adr);
                Bytes2Dump = Bytes2Read;
@@ -981,12 +987,19 @@ int EEPROM_RdInternal(uint32_t Adr,FILE *fp,uint8_t *RdBuf,uint32_t Len)
             }
          }
          free(pMsg);
+         pMsg = NULL;
       }
-      Ret = RESULT_OK;
+      if(BytesRead == Len) {
+         Ret = RESULT_OK;
+      }
    } while(false);
 
    if(fp != NULL) {
       printf("\n");
+   }
+
+   if(pMsg != NULL) {
+      free(pMsg);
    }
 
    return Ret;
@@ -1114,6 +1127,11 @@ int EEPROM_WrCmd(char *CmdLine)
    FILE *fp = NULL;
 
    do {
+      if(EEPROM_Len == 0) {
+         Ret = RESULT_FAIL;
+         LOG_RAW("Couldn't determine EEPROM_Len\n");
+         break;
+      }
       if(sscanf(CmdLine,"%x",&Adr) != 1) {
          break;
       }
@@ -1161,9 +1179,9 @@ int EEPROM_BackupCmd(char *CmdLine)
    time_t StartTime;
    time_t EndTime;
 
-   do {
+   if(EEPROM_Len != 0) do {
       time(&StartTime);
-      printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
+      printf("EEPROM len %dK (%d) bytes\n",(EEPROM_Len + 1) / 1024,EEPROM_Len);
       if((fp = fopen(CmdLine,"w")) == NULL) {
          LOG("fopen(\"%s\") failed - %s\n",strerror(errno));
          Ret = RESULT_FAIL;
@@ -1194,6 +1212,18 @@ int EEPROM_Erase(char *CmdLine)
    AsyncResp *pMsg;
 
    do {
+      DisplayElapsedTime(NULL);
+      if(strncmp(CmdLine,"all",3) == 0) {
+         printf("Erasing entire chip, this may take a while...");
+         fflush(stdout);
+         if((pMsg = SendCmd(Cmd,1,60000)) == NULL) {
+            Ret = RESULT_FAIL;
+            break;
+         }
+         free(pMsg);
+         Ret = RESULT_OK;
+         break;
+      }
       if(sscanf(CmdLine,"%x %d",&Adr,&Sector) != 2) {
          break;
       }
@@ -1208,6 +1238,8 @@ int EEPROM_Erase(char *CmdLine)
       }
       memcpy(&Cmd[1],&Adr,sizeof(uint32_t));
       Cmd[5] = (uint8_t) Sector;
+      printf("Erasing %d sectors ...",Sector);
+      fflush(stdout);
       if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
          Ret = RESULT_FAIL;
          break;
@@ -1215,6 +1247,10 @@ int EEPROM_Erase(char *CmdLine)
       free(pMsg);
       Ret = RESULT_OK;
    } while(false);
+
+   if(Ret == RESULT_OK) {
+      DisplayElapsedTime("\nErase took ");
+   }
 
    return Ret;
 }
@@ -1305,8 +1341,6 @@ int EEPROM_RestoreCmd(char *CmdLine)
    int EEPROM_Len = GetEEPROM_Len();
    FILE *fp = NULL;
    struct stat Stat;
-   AsyncResp *pMsg;
-   uint8_t Cmd[2] = {CMD_EEPROM_ERASE};
 
    if(*CmdLine != 0) do {
       printf("EEPROM len %dK (%d) bytes\n",EEPROM_Len / 1024,EEPROM_Len);
@@ -1328,13 +1362,9 @@ int EEPROM_RestoreCmd(char *CmdLine)
          break;
       }
       
-      printf("Erasing chip...");
-      pMsg = SendCmd(Cmd,1,2000);
-      printf("\n");
-      if(pMsg == NULL) {
+      if((Ret = EEPROM_Erase("all")) != RESULT_OK) {
          break;
       }
-      free(pMsg);
       Ret = EEPROM_WrInternal(0,fp,NULL,EEPROM_Len);
    } while(false);
 
@@ -1345,6 +1375,19 @@ int EEPROM_RestoreCmd(char *CmdLine)
    return Ret;
 }
 
+void EpdTestBWR_9_7(void);
+
+
+int EpdTestCmd(char *CmdLine)
+{
+   printf("Updating display ...");
+   fflush(stdout);
+   DisplayElapsedTime(NULL);
+   EpdTestBWR_9_7();
+   DisplayElapsedTime("\nDisplay update took ");
+
+   return RESULT_OK;
+}
 
 int DumpRfRegsCmd(char *CmdLine)
 {
@@ -1640,17 +1683,13 @@ void HandleResp(uint8_t *Msg,int MsgLen)
             PrintResponse("Ping response received\n");
             break;
 
-         case CMD_EEPROM_RD:
-            break;
-
-         case CMD_EEPROM_LEN:
-            break;
-
          case CMD_COMM_BUF_LEN:
             PrintResponse("Communications buffer len %d bytes\n",*pU16);
             break;
 
-         case CMD_BOARD_TYPE:
+         case CMD_EPD_RW_SIGS:
+            PrintResponse("Enable %d, RST %d, D/C %d, CS %d, CS1 %d, Busy %d\n",
+                          Msg[2],Msg[3],Msg[4],Msg[5],Msg[6]);
             break;
 
          default:
@@ -2712,26 +2751,58 @@ int InitEPD()
 }
 #endif
 
-
 int EpdBusyWait(int State,int Timeout)
 {
    int Ret = RESULT_FAIL;
    AsyncResp *pMsg;
    bool bFirst = true;
    uint8_t Cmd[4] = {CMD_PORT_RW,1,0,0};
+   uint8_t NewCmd[6];
    uint8_t Busy;
+   uint8_t  Err;
+// Try CMD_EPD_RW_SIGS and then fallback to CMD_PORT_RW if it isn't
+// supported for backwards compatibility with older Proxies
+   bool bUseNewCommand = true;   
+
+   memset(NewCmd,0xff,sizeof(Cmd));
+   NewCmd[0] = CMD_EPD_RW_SIGS;
 
    while(true) {
-      if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
-         LOG_RAW("Timeout\n");
-         Ret = RESULT_TIMEOUT;
-         break;
+      if(bUseNewCommand) {
+         if((pMsg = SendCmd(NewCmd,sizeof(NewCmd),2000)) == NULL) {
+            LOG_RAW("Timeout\n");
+            Ret = RESULT_TIMEOUT;
+            break;
+         }
+         Err = pMsg->Err;
+         Busy = pMsg->Msg[5];
+         free(pMsg);
+         if(Err == CMD_ERR_UNKNOWN_CMD) {
+            bUseNewCommand = false;
+            continue;
+         }
+         else if(Err != CMD_ERR_NONE) {
+            break;
+         }
       }
-      Busy = pMsg->Msg[0] & P1_EPD_BUSY;
-      free(pMsg);
+      else {
+         if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) == NULL) {
+            LOG_RAW("Timeout\n");
+            Ret = RESULT_TIMEOUT;
+            break;
+         }
+         Err = pMsg->Err;
+         Busy = pMsg->Msg[0] & P1_EPD_BUSY;
+         free(pMsg);
+         if(Err != CMD_ERR_NONE) {
+            break;
+         }
+      }
+
       if(Busy == State) {
+         Ret = RESULT_OK;
          if(!bFirst) {
-            LOG_RAW("\n");
+            LOG_RAW("\nBusy when %s\n",State ? "high" : "low");
          }
          break;
       }
@@ -2754,14 +2825,14 @@ void ListBBTypes()
    }
 }
 
-void DisplayElapsedTime(bool bPrint)
+void DisplayElapsedTime(const char *Msg)
 {
    static time_t StartTime;
    time_t EndTime;
 
-   if(bPrint) {
+   if(Msg != NULL) {
       time(&EndTime);
-      printf("\n%ld secs\n",EndTime - StartTime);
+      printf("%s%ld secs\n",Msg,EndTime - StartTime);
       StartTime = EndTime;
    }
    else {
@@ -2900,9 +2971,9 @@ int BbTestCmd(char *CmdLine)
 
       printf("bbepFill ...");
       fflush(stdout);
-      DisplayElapsedTime(false);
+      DisplayElapsedTime(NULL);
       bbepFill(&bbep,BBEP_WHITE,PLANE_BOTH);
-      DisplayElapsedTime(true);
+      DisplayElapsedTime("\n");
       if(Mode & MODE_LINES) {
          int x0 = 0;
          int x1 = 0;
@@ -2927,7 +2998,7 @@ int BbTestCmd(char *CmdLine)
          x0 = 0; y0 = bbep.height-1; x1 = bbep.width - 1; y1 = 0;
          printf("from %d,%d to %d,%d (in plane 1 color)",x0,y0,x1,y1);
          bbepDrawLine(&bbep,x0,y0,x1,y1,BBEP_RED); 
-         DisplayElapsedTime(true);
+         DisplayElapsedTime("\n");
       }
       if(Mode & MODE_TEXT) {
          printf("bbepWriteString...");
@@ -2944,7 +3015,7 @@ int BbTestCmd(char *CmdLine)
             printf(" failed %d\n",Err);
             break;
          }
-         DisplayElapsedTime(true);
+         DisplayElapsedTime("\n");
       }
 
       if(Mode & MODE_BUFFERED) {
@@ -2955,7 +3026,7 @@ int BbTestCmd(char *CmdLine)
             printf(" failed %d\n",Err);
             break;
          }
-         DisplayElapsedTime(true);
+         DisplayElapsedTime("\n");
       }
       printf("bbepRefresh ...");
       fflush(stdout);
@@ -2964,7 +3035,7 @@ int BbTestCmd(char *CmdLine)
          break;
       }
       bbepWaitBusy(&bbep);
-      DisplayElapsedTime(true);
+      DisplayElapsedTime("\n");
       printf("bbepSleep ...");
       fflush(stdout);
       bbepSleep(&bbep,DEEP_SLEEP);
@@ -3159,9 +3230,7 @@ void bbepCMD2(BBEPDISP *pBBEP, uint8_t cmd1, uint8_t cmd2)
        bbepWakeUp(pBBEP);
        pBBEP->is_awake = 1;
    }
-#if EPD_DATA_LOG
-   LOG("Cmd 0x%x, Data 0x%x\n",cmd1,cmd2);
-#endif
+   EPD_LOG("Cmd 0x%x, Data 0x%x\n",cmd1,cmd2);
    uint8_t Cmd[5] = {CMD_EPD, EPD_FLG_CMD};
    Cmd[2] = 2;
    Cmd[3] = cmd1;
@@ -3188,9 +3257,7 @@ void bbepWriteCmd(BBEPDISP *pBBEP, uint8_t cmd)
 
    Cmd[2] = 1;
    Cmd[3] = cmd;
-#if EPD_DATA_LOG
-   LOG("Cmd 0x%02x\n",cmd);
-#endif
+   EPD_LOG("Cmd 0x%02x\n",cmd);
 
    if((pMsg = SendCmd(Cmd,sizeof(Cmd),2000)) != NULL) {
       free(pMsg);
@@ -3212,6 +3279,147 @@ void bbepSetCS2(BBEPDISP *pBBEP, uint8_t cs)
    LOG("Called\n");
 }
 
+
+// Send EPD command then 0 or more bytes of data
+void SendEpdData(uint8_t EpdCmd,uint8_t Flags,const uint8_t *pData, uint32_t DataBytes)
+{
+// Cmd format: CMD_EPD + Flags + data count [+ cmd [+ epd data...]]
+   #define OVERHEAD_BYTES  3  // (CMD_EPD + Flags + data count)
+   uint8_t Cmd[MAX_FRAME_IO_LEN];
+   AsyncResp *pMsg;
+   int TotaDatalBytes = 1 + DataBytes;  // include EPD command byte
+   int Bytes2Send;
+   int DataBytes2Send;
+   int DataBytesSent = 0;
+   int CmdLen;
+
+   memset(Cmd,0,sizeof(Cmd));
+// Cmd format: opcode + Flags + data count + epd data
+   Cmd[0] = CMD_EPD;
+   Cmd[1] = Flags;
+
+   while(DataBytesSent < TotaDatalBytes) {
+      Bytes2Send = OVERHEAD_BYTES + (TotaDatalBytes - DataBytesSent);
+      if(Bytes2Send > MAX_FRAME_IO_LEN) {
+         Bytes2Send = MAX_FRAME_IO_LEN;
+      }
+
+      DataBytes2Send = Bytes2Send - OVERHEAD_BYTES;
+      Cmd[2] = DataBytes2Send;
+      CmdLen = OVERHEAD_BYTES;
+      if(DataBytesSent == 0) {
+      // first message, prepend EPD command to data
+         Cmd[CmdLen++] = EpdCmd;
+         DataBytesSent++;
+         DataBytes2Send--;
+      }
+      else {
+      // Command byte sent, just send data
+         Cmd[1] &= ~EPD_FLG_CMD;
+      }
+
+      if(DataBytes2Send > 0) {
+         memcpy(&Cmd[CmdLen],pData,DataBytes2Send);
+         CmdLen += DataBytes2Send;
+         pData += DataBytes2Send;
+         DataBytesSent += DataBytes2Send;
+      }
+
+      if(DataBytesSent == TotaDatalBytes) {
+      // Last frame, end the transfer
+         Cmd[1] |= EPD_FLG_END_XFER;
+      }
+      if((pMsg = SendCmd(Cmd,CmdLen,2000)) == NULL) {
+         break;
+      }
+      free(pMsg);
+   }
+}
+
+// SPI Master protocol setup
+void SendIndexDataM(uint8_t Cmd,const uint8_t *pData,uint32_t DataBytes) 
+{
+   uint8_t Flags = EPD_FLG_DEFAULT;
+
+   SendEpdData(Cmd,Flags,pData,DataBytes);
+}
+
+// Sent to slave chip
+void SendIndexDataS(uint8_t Cmd,const uint8_t *pData,uint32_t DataBytes) 
+{
+   uint8_t Flags = EPD_FLG_DEFAULT;
+   Flags &= ~EPD_FLG_CS;
+   Flags |= EPD_FLG_CS1;
+
+   SendEpdData(Cmd,Flags,pData,DataBytes);
+}
+
+// Send to both chips
+void SendIndexData(uint8_t Cmd,const uint8_t *pData,uint32_t DataBytes) 
+{
+   uint8_t Flags = EPD_FLG_DEFAULT;
+   Flags |= EPD_FLG_CS1;
+
+   SendEpdData(Cmd,Flags,pData,DataBytes);
+}
+
+// Command: CMD_EPD_RW_PINS <enable> <reset> <d/c> <cs0> <cs1>
+//    0,1 = set signal as specified, 0xff = don't set signal
+//    if signal is 0xff it is ignored
+// Response: <ErrCode> <enable> <reset> <d/c> <cs0> <cs1> <busy>
+int EpdSetPins(uint8_t Enable,uint8_t Reset,uint8_t DC,uint8_t CS,uint8_t CS1)
+{
+   AsyncResp *pMsg;
+   uint8_t Cmd[6] = {CMD_EPD_RW_SIGS};
+   int Ret = 1;
+
+   Cmd[1] = Enable;
+   Cmd[2] = Reset;
+   Cmd[3] = DC;
+   Cmd[4] = CS;
+   Cmd[5] = CS1;
+   pMsg = SendCmd(Cmd,sizeof(Cmd),2000);
+   if(pMsg == NULL) {
+      Ret = CMD_ERR_TIMEOUT;
+   }
+   else {
+      Ret = pMsg->Err;
+#if EPD_DATA_LOG
+      if(pMsg->MsgLen == 8) {
+         uint8_t *Msg = pMsg->Msg;
+         EPD_LOG("Enable %d, RST %d, D/C %d, CS %d, CS1 %d, Busy %d\n",
+                 Msg[0],Msg[1],Msg[2],Msg[3],Msg[4],Msg[5]);
+      }
+#endif
+      free(pMsg);
+   }
+
+   return Ret;
+}
+
+int EpdSetEnable(uint8_t Enable)
+{
+   EPD_LOG("Enable <- %d\n",Enable);
+   return EpdSetPins(Enable,0xff,0xff,0xff,0xff);
+}
+
+int EpdSetReset(uint8_t Reset)
+{
+   EPD_LOG("Reset <- %d\n",Reset);
+   return EpdSetPins(0xff,Reset,0xff,0xff,0xff);
+}
+
+int EpdSetDC(uint8_t DC)
+{
+   EPD_LOG("DC <- %d\n",DC);
+   return EpdSetPins(0xff,0xff,DC,0xff,0xff);
+}
+
+int EpdSetCS(uint8_t CS,uint8_t CS1)
+{
+   EPD_LOG("CS <- %d, CS1 <- %d\n",CS,CS1);
+   return EpdSetPins(0xff,0xff,0xff,CS,CS1);
+}
 
 void Usage()
 {
