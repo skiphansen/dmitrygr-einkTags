@@ -100,7 +100,6 @@ static int CalcOverhead(int MaxMsgLen)
 
 int SerialFrameIO_CalcBufLen(int MaxMsgLen)
 {
-   gCOBS.MaxMsgLen = MaxMsgLen;
    return MaxMsgLen + CalcOverhead(MaxMsgLen);
 }
 
@@ -114,7 +113,7 @@ int SerialFrameIO_Init(uint8_t *Buf,int BufSize)
    gCOBS.MaxMsgLen = BufSize - OverHead;
    gCOBS.RxBuf = Buf;
 
-   return gCOBS.MaxMsgLen;
+   return gCOBS.MaxMsgLen - 2;
 }
 
 // Parse a byte of data
