@@ -10,7 +10,9 @@
   * 20-pin rainbow jumper cable
 */
 
+#include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "EPD_Driver.h"
 
@@ -18,24 +20,74 @@
 #include "Image_970_Masterfm_02.c"
 #include "Image_970_Slavefm_01.c"
 #include "Image_970_Slavefm_02.c"
-#define Masterfm1        (uint8_t *)&Image_970_Masterfm_01
-#define Masterfm2        (uint8_t *)&Image_970_Masterfm_02
-#define Slavefm1         (uint8_t *)&Image_970_Slavefm_01
-#define Slavefm2         (uint8_t *)&Image_970_Slavefm_02
+#define Masterfm1        Image_970_Masterfm_01
+#define Masterfm2        Image_970_Masterfm_02
+#define Slavefm1         Image_970_Slavefm_01
+#define Slavefm2         Image_970_Slavefm_02
 
-//------------------------------------------------------------
+#include "logging.h"
 
-extern "C" void EpdTestBWR_9_7()
+/* 
+   0,0                0,479            0,959
+      +----------------+----------------+
+      |                |                |
+      |                |                |
+      |                |                |
+      |                |                |
+  Y   |     Master     |   Slave        | Physical
+      |                |                |
+      |                |                |
+      |                |                |
+      |                |                |
+671,0 +----------------+----------------+ 671,959
+                       X
+ 
+ 8 pixels per byte in the X direction
+ 
+ NB: x = short dimension = vertical with display in normal orientation
+     y = short dimension = horizontal with display in normal orientation
+ 
+*/
+extern "C" void EpdTestBWR_9_7(char *CmdLine)
 {
-   EPD_Driver epdtest(eScreen_EPD_969);
-// EPD_Driver epdtest(eScreen_EPD_B98, boardESP32DevKitC_EXT3);
-  // Initialize CoG
-  // epdtest.COG_initial();
+   do {
+      int TestType = 0;
 
-  // Global Update Call
-  epdtest.globalUpdate(Masterfm1, Masterfm2, Slavefm1, Slavefm2);
+      EPD_Driver epdtest(eScreen_EPD_969);
 
-  // Turn off CoG
-  epdtest.COG_powerOff();
+      sscanf(CmdLine,"%d",&TestType);
+      if(TestType <= 0 || TestType > 2) {
+         if(TestType != 0) {
+            printf("Invalid test type\n");
+         }
+         printf("select test type:\n");
+         printf("  1 - test pattern\n");
+         printf("  2 - test image\n");
+         break;
+      }
+      if(TestType == 1) {
+         memset(Image_970_Masterfm_01,0,sizeof(Image_970_Masterfm_01));
+         memset(Image_970_Masterfm_02,0,sizeof(Image_970_Masterfm_01));
+         memset(Image_970_Slavefm_01,0,sizeof(Image_970_Slavefm_01));
+         memset(Image_970_Slavefm_02,0,sizeof(Image_970_Slavefm_02));
+
+      // draw horizontal black line across middle of display
+         int xIncrement = (960 / 8) / 2;  // byte address increase for each line of y
+         int yOffset = xIncrement * (672 / 2);
+
+         memset(&Image_970_Masterfm_01[yOffset],0xff,(960/8) / 2);
+         memset(&Image_970_Slavefm_01[yOffset],0xff,(960/8) / 2);
+
+      // draw double width vertical red line across middle of display
+         for(int y = 0; y < 672; y++) {
+         // last bit byte of master image
+            Image_970_Masterfm_02[(xIncrement * y) + xIncrement - 1] = 0x80;
+         // first bit byte of slave image
+            Image_970_Slavefm_02[(xIncrement * y)] = 0x01;
+         }
+      }
+      epdtest.globalUpdate(Masterfm1, Masterfm2, Slavefm1, Slavefm2);
+      epdtest.COG_powerOff();
+   } while(false);
 }
 

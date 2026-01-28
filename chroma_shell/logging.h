@@ -14,6 +14,9 @@
 #ifndef _LOGGING_H_
 #define _LOGGING_H_
 
+#ifdef __cplusplus
+extern "C" { 
+#endif
 void _log(const char *fmt,...);
 // The ALOG macro always prints
 #ifndef ALOG
@@ -53,5 +56,8 @@ void DumpHexAdr(void *AdrIn,int Len,int AdrValue);
 
 void DumpHexSrc(void *AdrIn,int Len);
 
+#ifdef __cplusplus
+}
+#endif
 #endif   // _LOGGING_H_
 

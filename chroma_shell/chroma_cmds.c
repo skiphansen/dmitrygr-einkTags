@@ -1375,7 +1375,7 @@ int EEPROM_RestoreCmd(char *CmdLine)
    return Ret;
 }
 
-void EpdTestBWR_9_7(void);
+void EpdTestBWR_9_7(char *CmdLine);
 
 
 int EpdTestCmd(char *CmdLine)
@@ -1383,7 +1383,7 @@ int EpdTestCmd(char *CmdLine)
    printf("Updating display ...");
    fflush(stdout);
    DisplayElapsedTime(NULL);
-   EpdTestBWR_9_7();
+   EpdTestBWR_9_7(CmdLine);
    DisplayElapsedTime("\nDisplay update took ");
 
    return RESULT_OK;
