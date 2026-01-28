@@ -44,9 +44,6 @@
  
  8 pixels per byte in the X direction
  
- NB: x = short dimension = vertical with display in normal orientation
-     y = short dimension = horizontal with display in normal orientation
- 
 */
 extern "C" void EpdTestBWR_9_7(char *CmdLine)
 {
@@ -85,6 +82,11 @@ extern "C" void EpdTestBWR_9_7(char *CmdLine)
          // first bit byte of slave image
             Image_970_Slavefm_02[(xIncrement * y)] = 0x01;
          }
+      // draw short arrow pointing to the upper left hand corner
+         for(int y = 0; y < 8; y++) {
+            Image_970_Masterfm_01[(xIncrement * y)] = (1 << y) | 1;
+         }
+         Image_970_Masterfm_01[0] = 0xff;
       }
       epdtest.globalUpdate(Masterfm1, Masterfm2, Slavefm1, Slavefm2);
       epdtest.COG_powerOff();
