@@ -2,6 +2,12 @@
 
 <a href="https://github.com/user-attachments/assets/bab9f8c8-bdba-4524-86ee-aad85661f514"> <img src="https://github.com/user-attachments/assets/bab9f8c8-bdba-4524-86ee-aad85661f514" width=50%>
 
+Spider board for displays that are attached directly to the controller PCB.
+
+<a href="https://github.com/user-attachments/assets/e5224219-d20c-45e2-9940-7b0960061252"> <img src="https://github.com/user-attachments/assets/e5224219-d20c-45e2-9940-7b0960061252" width=50%></a>
+
+Breakout board for displays that are attached to the controller PCB via a 24 pin connector.
+
 This directory contains logic analyzer traces of the EPD's SPI bus
 that I used for reverse engineering.
 
