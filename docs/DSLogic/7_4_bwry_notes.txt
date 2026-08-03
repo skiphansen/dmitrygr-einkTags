@@ -29,7 +29,7 @@ FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 53
 31 32 37 34 31 51 53 30 42 33 31 41 39 FF 
 D: FF	End of Otp data
 
-C: E6	?? not defined for JD79665AA
+C: E6	?? not defined for JD79665AA  perhaps TSSET (ed2208) or PLL (SDD1963)
 D: 19
 
 C: E0	(CCSET): Cascade Setting ??? b1 is not defined for JD79665AA
@@ -93,12 +93,12 @@ D: 40
 D: 40
 D: 40
 
-C: 03  ?? not defined for JD79665AA
+C: 03  ?? not defined for JD79665AA perhaps POFS (various JD devices
 D: 00
 D: 00
 D: 00
 
-C: E7 ?? not defined for JD79665AA
+C: E7 ?? not defined for JD79665AA perhaps SPI2 enable (ST7789)
 D: 3C
 
 C: 65 (GSST): Gate/Source Start Setting Register
@@ -113,7 +113,7 @@ D: 08
 C: 50 (CDI): VCOM and DATA interval setting Register
 D: 37
 
-C: 60 ?? not defined for JD79665AA
+C: 60 ?? not defined for JD79665AA perhaps TCON ? (various controllers
 D: 03
 D: 03
 
@@ -133,7 +133,7 @@ D: 19
 D: 0F
 D: 09
 
-C: DC ?? not defined for JD79665AA
+C: DC ?? not defined for JD79665AA perhaps RDID3 ?
 D: 01
 
 C: DD ?? not defined for JD79665AA 
@@ -142,16 +142,16 @@ D: 04
 C: DE ?? not defined for JD79665AA  
 D: 01
 
-C: E8 ?? not defined for JD79665AA
+C: E8 ?? not defined for JD79665AA perhaps PWCTRL2 ?
 D: 01
 
-C: DA ?? not defined for JD79665AA
+C: DA ?? not defined for JD79665AA perhaps ILI9341_RDID1
 D: 3F
 
 C: FF ?? not defined for JD79665AA
 D: E3
 
-C: E9 ?? not defined for JD79665AA
+C: E9 ?? not defined for JD79665AA perhaps ST7789_EQCTRL
 D: 01
 
 C: 10 (DTM): Data Start transmission Register
